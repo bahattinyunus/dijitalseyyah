@@ -1,10 +1,44 @@
 /**
  * Anadolu Seyahatnamesi - Single Page Application Engine
- * Web Audio API Ambient Synthesizer, Dynamic Route Planner, City Explorer & Map Modal
+ * Web Audio API Sufi Soundscapes, 2-Opt Route Optimizer + SVG Map,
+ * Achievements & Rank System, Turkish-Aware Search & Mobile Drawer
  */
 
 (function () {
   'use strict';
+
+  // Turkish Normalization Helper
+  function normalizeTurkish(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/İ/g, 'i')
+      .replace(/I/g, 'ı')
+      .toLowerCase()
+      .replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ş/g, 's')
+      .replace(/ü/g, 'u')
+      .trim();
+  }
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Soundscape Presets
+  const SOUNDSCAPES = [
+    { id: 'ney', label: 'Ney & Bozkır', freq1: 146.83, freq2: 220.0, filterFreq: 380, noiseVol: 0.045 },
+    { id: 'rain', label: 'Kütüphane Yağmuru', freq1: 110.0, freq2: 164.81, filterFreq: 950, noiseVol: 0.075 },
+    { id: 'sukunet', label: 'Kervansaray Sükuneti', freq1: 130.81, freq2: 196.0, filterFreq: 260, noiseVol: 0.03 }
+  ];
 
   // Global State
   const state = {
@@ -14,9 +48,14 @@
     searchQuery: '',
     selectedCityKey: null,
     currentView: 'dashboard', // 'dashboard', 'city', 'route'
-    ambientPlaying: false,
+    routeStartCity: 'Ankara',
+    routeRegion: 'all',
+    routeStops: 7,
+    routeOptimize: true,
+    soundIndex: -1, // -1 = off, 0..2 = preset
     audioCtx: null,
-    audioNodes: []
+    audioNodes: [],
+    currentQuote: null
   };
 
   // DOM Elements
@@ -28,22 +67,42 @@
     searchInput: document.getElementById('search-input'),
     regionSelect: document.getElementById('region-select'),
     filterPills: document.querySelectorAll('.filter-pill'),
+    pillAll: document.getElementById('pill-all'),
+    pillVisited: document.getElementById('pill-visited'),
+    pillUnvisited: document.getElementById('pill-unvisited'),
     viewportContent: document.getElementById('viewport-content'),
     logoSection: document.getElementById('logo-section'),
     btnDashboard: document.getElementById('btn-dashboard'),
     btnMap: document.getElementById('btn-map'),
     btnRoute: document.getElementById('btn-route'),
+    btnRandom: document.getElementById('btn-random'),
     btnAmbient: document.getElementById('btn-ambient'),
     btnQuote: document.getElementById('btn-quote'),
     btnExport: document.getElementById('btn-export'),
+    btnMobileSidebar: document.getElementById('btn-mobile-sidebar'),
+    btnCloseSidebar: document.getElementById('btn-close-sidebar'),
+    sidebar: document.getElementById('city-sidebar'),
+    sidebarBackdrop: document.getElementById('sidebar-backdrop'),
     mapModal: document.getElementById('map-modal'),
+    quoteModal: document.getElementById('quote-modal'),
+    quoteModalText: document.getElementById('quote-modal-text'),
+    quoteModalAuthor: document.getElementById('quote-modal-author'),
+    btnNextQuote: document.getElementById('btn-next-quote'),
+    btnCopyQuote: document.getElementById('btn-copy-quote'),
     modalCloseBtns: document.querySelectorAll('.modal-close-btn')
   };
 
   // Initialize App
   function init() {
     if (!state.data) {
-      console.error("TRAVEL_DATA yüklenemedi!");
+      if (els.viewportContent) {
+        els.viewportContent.innerHTML = `
+          <div class="glass-card detail-card" style="max-width: 600px; margin: 40px auto; text-align: center;">
+            <h2 style="color: var(--accent-gold);">Veri Modülü Yüklenemedi</h2>
+            <p style="color: var(--text-secondary);">Lütfen <code>python dijital_seyyah.py build</code> komutunu çalıştırarak <code>web_data.js</code> dosyasını oluşturun.</p>
+          </div>
+        `;
+      }
       return;
     }
 
@@ -54,18 +113,28 @@
     setupEventListeners();
   }
 
-  // Header Statistics
+  // Update active nav highlight
+  function updateNavHighlight() {
+    if (els.btnDashboard) els.btnDashboard.classList.toggle('nav-active', state.currentView === 'dashboard');
+    if (els.btnRoute) els.btnRoute.classList.toggle('nav-active', state.currentView === 'route');
+  }
+
+  // Header Statistics & Filter Counts
   function renderHeaderStats() {
     const s = state.data.stats;
     if (els.statsPct) els.statsPct.textContent = `%${s.progress_pct}`;
     if (els.statsCount) els.statsCount.textContent = `(${s.visited_cities}/${s.total_cities})`;
     if (els.statsBar) els.statsBar.style.width = `${s.progress_pct}%`;
+
+    if (els.pillAll) els.pillAll.textContent = `Tümü (${s.total_cities})`;
+    if (els.pillVisited) els.pillVisited.textContent = `✅ Gezildi (${s.visited_cities})`;
+    if (els.pillUnvisited) els.pillUnvisited.textContent = `⏳ Bekliyor (${s.unvisited_cities})`;
   }
 
   // Populate Regions Dropdown
   function populateRegionSelect() {
     if (!els.regionSelect) return;
-    els.regionSelect.innerHTML = '<option value="all">Tüm Bölgeler (7/7)</option>';
+    els.regionSelect.innerHTML = '<option value="all">Tüm Bölgeler (7 Bölge)</option>';
     for (const [code, info] of Object.entries(state.data.regions)) {
       const regStat = state.data.stats.regional_breakdown[code];
       const opt = document.createElement('option');
@@ -75,30 +144,32 @@
     }
   }
 
-  // Filter Cities
+  // Filter & Sort Cities (Turkish locale)
   function getFilteredCities() {
     const entries = Object.entries(state.data.provinces);
-    const q = state.searchQuery.toLowerCase().trim();
+    const q = normalizeTurkish(state.searchQuery);
 
-    return entries.filter(([key, p]) => {
-      // Visited Filter
-      if (state.filter === 'visited' && !p.visited) return false;
-      if (state.filter === 'unvisited' && p.visited) return false;
+    return entries
+      .filter(([, p]) => {
+        if (state.filter === 'visited' && !p.visited) return false;
+        if (state.filter === 'unvisited' && p.visited) return false;
+        if (state.selectedRegion !== 'all' && p.region_code !== state.selectedRegion) return false;
 
-      // Region Filter
-      if (state.selectedRegion !== 'all' && p.region_code !== state.selectedRegion) return false;
-
-      // Search Query Filter
-      if (q) {
-        const matchName = p.name.toLowerCase().includes(q);
-        const matchPlate = String(p.plate).includes(q);
-        const matchLandmarks = (p.landmarks || []).some(l => l.toLowerCase().includes(q));
-        const matchSpecialties = (p.specialties || []).some(s => s.toLowerCase().includes(q));
-        if (!matchName && !matchPlate && !matchLandmarks && !matchSpecialties) return false;
-      }
-
-      return true;
-    });
+        if (q) {
+          const haystack = normalizeTurkish([
+            p.name,
+            p.slug,
+            String(p.plate),
+            p.region,
+            ...(p.landmarks || []),
+            ...(p.specialties || []),
+            p.custom_library || p.library || ''
+          ].join(' '));
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => a[1].name.localeCompare(b[1].name, 'tr'));
   }
 
   // Render Cities List in Sidebar
@@ -121,12 +192,12 @@
       const statusText = p.visited ? '✓ Gezildi' : '⏳ Bekliyor';
 
       return `
-        <div class="city-item ${isSelected ? 'active' : ''}" data-city-key="${key}">
+        <div class="city-item ${isSelected ? 'active' : ''}" data-city-key="${escapeHtml(key)}">
           <div class="city-info-group">
             <div class="city-plate">${String(p.plate).padStart(2, '0')}</div>
             <div>
-              <div class="city-name-text">${p.name}</div>
-              <div class="city-region-sub">${p.region}</div>
+              <div class="city-name-text">${escapeHtml(p.name)}</div>
+              <div class="city-region-sub">${escapeHtml(p.region)}</div>
             </div>
           </div>
           <span class="city-status-badge ${statusClass}">${statusText}</span>
@@ -134,38 +205,97 @@
       `;
     }).join('');
 
-    // Attach click events
     els.citiesList.querySelectorAll('.city-item').forEach(el => {
       el.addEventListener('click', () => {
         const key = el.getAttribute('data-city-key');
         selectCity(key);
+        closeMobileSidebar();
       });
     });
+  }
+
+  // Mobile Sidebar Helpers
+  function openMobileSidebar() {
+    if (els.sidebar) els.sidebar.classList.add('mobile-open');
+    if (els.sidebarBackdrop) els.sidebarBackdrop.classList.add('active');
+  }
+
+  function closeMobileSidebar() {
+    if (els.sidebar) els.sidebar.classList.remove('mobile-open');
+    if (els.sidebarBackdrop) els.sidebarBackdrop.classList.remove('active');
   }
 
   // Select City & Render Detail
   function selectCity(key) {
     state.selectedCityKey = key;
     state.currentView = 'city';
-    renderCitiesList(); // Re-render to update active class
+    updateNavHighlight();
+    renderCitiesList();
     renderCityDetail(key);
+    if (els.viewportContent) els.viewportContent.scrollTop = 0;
+  }
+
+  // Select Random City
+  function selectRandomCity() {
+    const keys = Object.keys(state.data.provinces);
+    if (!keys.length) return;
+    let pick = keys[Math.floor(Math.random() * keys.length)];
+    if (keys.length > 1 && pick === state.selectedCityKey) {
+      pick = keys[(keys.indexOf(pick) + 1) % keys.length];
+    }
+    selectCity(pick);
+  }
+
+  // Haversine Distance (km)
+  function calcDistKm(lat1, lon1, lat2, lon2) {
+    const R = 6371.0;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  // Get Nearest Neighbor Cities
+  function getNearestCities(originKey, count = 4) {
+    const origin = state.data.provinces[originKey];
+    if (!origin) return [];
+    return Object.entries(state.data.provinces)
+      .filter(([k]) => k !== originKey)
+      .map(([k, p]) => ({
+        key: k,
+        province: p,
+        distKm: Math.round(calcDistKm(origin.lat, origin.lng, p.lat, p.lng) * 1.35)
+      }))
+      .sort((a, b) => a.distKm - b.distKm)
+      .slice(0, count);
   }
 
   // Render Dashboard View
   function renderDashboard() {
     state.currentView = 'dashboard';
     state.selectedCityKey = null;
+    updateNavHighlight();
     renderCitiesList();
 
     const s = state.data.stats;
+    const ach = state.data.achievements || null;
     const quote = state.data.quotes[Math.floor(Math.random() * state.data.quotes.length)];
+    const visitedRegions = s.visited_regions != null
+      ? s.visited_regions
+      : Object.values(s.regional_breakdown || {}).filter(r => r.visited > 0).length;
+    const totalRegions = s.total_regions || 7;
+    const daysOnRoad = s.days_on_road || (s.visited_cities * 5);
+    const libraryHours = s.library_hours || (daysOnRoad * 4);
 
     const regionsHtml = Object.entries(state.data.regions).map(([code, rInfo]) => {
       const rStat = s.regional_breakdown[code] || { visited: 0, total: 0, percentage: 0 };
       return `
-        <div class="glass-card region-card" data-region-code="${code}" style="cursor: pointer;">
+        <div class="glass-card region-card" data-region-code="${escapeHtml(code)}" style="cursor: pointer;">
           <div class="region-card-top">
-            <div class="region-card-title">${rInfo.icon} ${rInfo.name}</div>
+            <div class="region-card-title">${rInfo.icon} ${escapeHtml(rInfo.name)}</div>
             <div class="region-card-pct">%${rStat.percentage}</div>
           </div>
           <div class="mini-progress-bar" style="width: 100%; height: 6px;">
@@ -173,12 +303,65 @@
           </div>
           <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
             <span>${rStat.visited} / ${rStat.total} İl Ziyaret Edildi</span>
-            <span style="color: ${rInfo.color};">Detay ➔</span>
+            <span style="color: ${rInfo.color};">İlleri Filtrele ➔</span>
           </div>
-          <div class="region-card-desc">${rInfo.desc}</div>
+          <div class="region-card-desc">${escapeHtml(rInfo.desc)}</div>
         </div>
       `;
     }).join('');
+
+    let achievementsHtml = '';
+    if (ach && ach.rank) {
+      const nextText = ach.next_rank
+        ? `Sonraki Rütbe: ${ach.next_rank.icon} ${escapeHtml(ach.next_rank.title)} (+${ach.cities_to_next_rank} il)`
+        : '👑 Zirve Mertebe Tamamlandı!';
+
+      const badgesCards = (ach.badges || []).map(b => {
+        const pct = b.target ? Math.min(100, Math.round((b.current / b.target) * 100)) : 0;
+        return `
+          <div class="glass-card badge-card ${b.unlocked ? 'unlocked' : 'locked'}">
+            <div class="badge-top">
+              <div class="badge-title-row">
+                <span>${b.icon}</span>
+                <span>${escapeHtml(b.title)}</span>
+              </div>
+              <span class="badge-status-pill ${b.unlocked ? 'open' : 'closed'}">${b.unlocked ? '✓ Açık' : '🔒'}</span>
+            </div>
+            <div class="badge-desc">${escapeHtml(b.desc)}</div>
+            <div class="mini-progress-bar" style="width: 100%; height: 5px;">
+              <div class="mini-progress-fill" style="width: ${pct}%; background: ${b.unlocked ? 'var(--accent-emerald)' : 'var(--accent-gold)'};"></div>
+            </div>
+            <div class="badge-progress-meta">
+              <span>${b.current.toLocaleString('tr-TR')} / ${b.target.toLocaleString('tr-TR')}</span>
+              <span>%${pct}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      achievementsHtml = `
+        <div class="glass-card rank-banner">
+          <div class="rank-info">
+            <div class="rank-icon-circle">${ach.rank.icon}</div>
+            <div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Seyyah Rütbesi</div>
+              <div class="rank-title">${escapeHtml(ach.rank.title)}</div>
+              <div class="rank-desc">${escapeHtml(ach.rank.desc)}</div>
+            </div>
+          </div>
+          <div class="rank-next">${nextText}</div>
+        </div>
+
+        <div>
+          <div class="section-title">
+            <span>🏆 Seyyah Başarım Rozetleri (${ach.unlocked_count}/${ach.total_badges})</span>
+          </div>
+          <div class="badges-grid">
+            ${badgesCards}
+          </div>
+        </div>
+      `;
+    }
 
     els.viewportContent.innerHTML = `
       <div class="dashboard-view">
@@ -186,10 +369,11 @@
         <div class="hero-banner">
           <div class="hero-tag">🕌 Sefer Der Vatan</div>
           <h2>DİJİTAL SEYYAH: ANADOLU SEYAHATNAMESİ</h2>
-          <p class="hero-quote">"${quote.quote}" — <strong>${quote.author}</strong></p>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <p class="hero-quote">"${escapeHtml(quote.quote)}" — <strong>${escapeHtml(quote.author)}</strong></p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button class="btn btn-primary" id="dash-btn-map">🗺️ İnteraktif Keşif Haritası</button>
-            <button class="btn btn-outline" id="dash-btn-route">🧭 Gezi Rotası Planla</button>
+            <button class="btn btn-outline" id="dash-btn-route">🧭 2-Opt Rota Planla</button>
+            <button class="btn btn-outline" id="dash-btn-random">🎲 Rastgele Menzil</button>
             <button class="btn btn-outline" id="dash-btn-export">📚 Seyahatnameyi İndir</button>
           </div>
         </div>
@@ -210,8 +394,8 @@
               <span>Menzil İzi</span>
               <span>🛣️</span>
             </div>
-            <div class="stat-card-value" style="color: var(--accent-cyan);">${s.estimated_km.toLocaleString()} km</div>
-            <div class="stat-card-desc">Tahmini kat edilen seyahat hattı</div>
+            <div class="stat-card-value" style="color: var(--accent-cyan);">${s.estimated_km.toLocaleString('tr-TR')} km</div>
+            <div class="stat-card-desc">Tahmini kat edilen karayolu hattı</div>
           </div>
 
           <div class="glass-card stat-card">
@@ -220,7 +404,7 @@
               <span>📖</span>
             </div>
             <div class="stat-card-value" style="color: var(--accent-gold);">${s.visited_cities}</div>
-            <div class="stat-card-desc">Yazılım ve ilim tahsil edilen il</div>
+            <div class="stat-card-desc">${daysOnRoad} gün sefer • ${libraryHours} saat ilim mesaisi</div>
           </div>
 
           <div class="glass-card stat-card">
@@ -228,10 +412,13 @@
               <span>Kapsanan Bölge</span>
               <span>🌍</span>
             </div>
-            <div class="stat-card-value" style="color: var(--accent-purple);">7 / 7</div>
-            <div class="stat-card-desc">Tüm coğrafi bölgelere ayak basıldı</div>
+            <div class="stat-card-value" style="color: var(--accent-purple);">${visitedRegions} / ${totalRegions}</div>
+            <div class="stat-card-desc">${visitedRegions === totalRegions ? 'Tüm coğrafi bölgelere ayak basıldı' : 'Güneydoğu Anadolu sıradaki sefer!'}</div>
           </div>
         </div>
+
+        <!-- Rank & Achievements -->
+        ${achievementsHtml}
 
         <!-- Regional Progress -->
         <div>
@@ -248,29 +435,30 @@
           <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
             💻 Dijital Seyyahın Çalışma Disiplini
           </h3>
-          <p style="font-size: 0.85rem; color: var(--text-secondary);">
-            Gündüzün ilk 4 saati şehrin İl Halk Kütüphanesinde yazılım geliştirme, okuma ve araştırma mesaisi yapılır. 
-            Öğleden sonra ise şehrin kadim sokakları, camileri ve tabiatı tefekkürle adımlanır. Konaklamalarda GSB Seyahatsever kervansarayları tercih edilir.
+          <p style="font-size: 0.86rem; color: var(--text-secondary);">
+            Gündüzün ilk 4 saati şehrin İl Halk Kütüphanesinde yazılım geliştirme, okuma ve araştırma mesaisi yapılır.
+            Öğleden sonra ise şehrin kadim sokakları, camileri ve tabiatı tefekkürle adımlanır. Her menzilde 5 gün kalarak GSB Seyahatsever kervansaraylarında sürdürülebilir keşif sürdürülür.
           </p>
         </div>
       </div>
     `;
 
-    // Re-bind dashboard quick buttons
     const dMap = document.getElementById('dash-btn-map');
     const dRoute = document.getElementById('dash-btn-route');
+    const dRandom = document.getElementById('dash-btn-random');
     const dExport = document.getElementById('dash-btn-export');
     if (dMap) dMap.addEventListener('click', openMapModal);
-    if (dRoute) dRoute.addEventListener('click', renderRoutePlanner);
+    if (dRoute) dRoute.addEventListener('click', () => renderRoutePlanner());
+    if (dRandom) dRandom.addEventListener('click', selectRandomCity);
     if (dExport) dExport.addEventListener('click', exportMarkdownBook);
 
-    // Region cards click to filter
     document.querySelectorAll('.region-card').forEach(card => {
       card.addEventListener('click', () => {
         const code = card.getAttribute('data-region-code');
         state.selectedRegion = code;
         if (els.regionSelect) els.regionSelect.value = code;
         renderCitiesList();
+        if (window.innerWidth <= 960) openMobileSidebar();
       });
     });
   }
@@ -283,35 +471,90 @@
     const bannerImg = p.has_banner ? p.banner_rel : 'assets/banner.jpg';
     const quoteText = p.custom_quote || p.quote;
     const libraryText = p.custom_library || p.library;
-    const statusBadge = p.visited 
+    const statusBadge = p.visited
       ? '<span class="tag-badge" style="background: rgba(16,185,129,0.2); color: #6ee7b7; border-color: #10b981;">✓ Ziyaret Edildi & Tefekkür Edildi</span>'
       : '<span class="tag-badge" style="background: rgba(245,158,11,0.2); color: #fcd34d; border-color: #f59e0b;">⏳ Gelecek Rotalarda Bekleniyor</span>';
 
     const landmarksHtml = (p.landmarks || []).map(lm => `
       <div class="landmark-item">
         <span style="color: ${p.visited ? '#10b981' : '#64748b'};">${p.visited ? '✓' : '○'}</span>
-        <span>${lm}</span>
+        <span>${escapeHtml(lm)}</span>
       </div>
     `).join('');
 
     const specialtiesHtml = (p.specialties || []).map(sp => `
       <span class="tag-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">
-        🍽️ ${sp}
+        🍽️ ${escapeHtml(sp)}
       </span>
     `).join('');
+
+    // Rich extracted markdown sections (history, reflection, literary quotes)
+    const historyCard = p.history ? `
+      <div class="glass-card detail-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-blue);">
+          🌍 Şehrin Dokusu ve Tarihsel Arka Planı
+        </h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65;">
+          ${escapeHtml(p.history)}
+        </p>
+      </div>
+    ` : '';
+
+    const reflectionCard = p.reflection ? `
+      <div class="glass-card detail-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-purple);">
+          🕊️ Gezginin Not Defterinden (Manevi Boyut ve Tefekkür)
+        </h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65;">
+          ${escapeHtml(p.reflection)}
+        </p>
+      </div>
+    ` : '';
+
+    const literaryCard = (p.literary_quotes && p.literary_quotes.length > 0) ? `
+      <div class="glass-card detail-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-gold);">
+          💬 Şehir Hakkında Edebi ve Tarihi Alıntılar
+        </h3>
+        <div class="literary-quotes-list">
+          ${p.literary_quotes.map(lq => `<div class="literary-quote-item">${escapeHtml(lq)}</div>`).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    // Nearest Neighbors
+    const neighbors = getNearestCities(key, 4);
+    const neighborsHtml = neighbors.map(n => `
+      <div class="neighbor-card" data-neighbor-key="${escapeHtml(n.key)}">
+        <div class="neighbor-card-top">
+          <span>${escapeHtml(n.province.name)}</span>
+          <span style="font-size: 0.78rem; color: var(--accent-cyan);">~${n.distKm} km</span>
+        </div>
+        <div class="neighbor-card-meta">
+          <span>${escapeHtml(n.province.region)}</span>
+          <span>${n.province.visited ? '✅ Gezildi' : '⏳ Bekliyor'}</span>
+        </div>
+      </div>
+    `).join('');
+
+    // Prev / Next in filtered list
+    const filtered = getFilteredCities();
+    const curIdx = filtered.findIndex(([k]) => k === key);
+    const prevEntry = curIdx > 0 ? filtered[curIdx - 1] : null;
+    const nextEntry = curIdx >= 0 && curIdx < filtered.length - 1 ? filtered[curIdx + 1] : null;
 
     els.viewportContent.innerHTML = `
       <div class="city-detail-view">
         <!-- Hero Header -->
-        <div class="city-hero" style="background-image: url('${bannerImg}');">
+        <div class="city-hero" style="background-image: url('${escapeHtml(bannerImg)}');">
           <div class="city-hero-overlay"></div>
           <div class="city-hero-content">
-            <div class="city-hero-badges">
-              <span class="tag-badge">${p.region} Bölgesi</span>
+            <div class="city-hero-badges" style="flex-wrap: wrap;">
+              <span class="tag-badge">${escapeHtml(p.region)} Bölgesi</span>
               <span class="tag-badge">Plaka: ${String(p.plate).padStart(2, '0')}</span>
               ${statusBadge}
             </div>
-            <h1 class="city-hero-title">📍 ${p.name}</h1>
+            <h1 class="city-hero-title">📍 ${escapeHtml(p.name)}</h1>
           </div>
         </div>
 
@@ -321,12 +564,14 @@
             📜 Şehrin Ruhu & Tefekkür Notu
           </div>
           <p style="font-size: 1.05rem; font-style: italic; color: var(--text-primary); border-left: 3px solid var(--accent-cyan); padding-left: 14px; line-height: 1.6;">
-            "${quoteText}"
+            "${escapeHtml(quoteText)}"
           </p>
         </div>
 
+        ${historyCard}
+
         <!-- Landmarks & Specialties Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="two-col-grid">
           <div class="glass-card detail-card">
             <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-cyan);">
               🏛️ Öne Çıkan Miras & Duraklar
@@ -343,7 +588,7 @@
             <div class="tags-cloud">
               ${specialtiesHtml}
             </div>
-            
+
             <div style="margin-top: 16px; border-top: 1px solid var(--border-glass); padding-top: 14px;">
               <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">
                 🗺️ Koordinat Bilgisi
@@ -355,74 +600,216 @@
           </div>
         </div>
 
+        ${reflectionCard}
+        ${literaryCard}
+
         <!-- Library Nomad Card -->
         <div class="glass-card detail-card">
           <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-emerald); display: flex; align-items: center; gap: 8px;">
             📖 Seyyahın Kütüphane Ofisi (Çalışma Ortamı)
           </h3>
           <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
-            ${libraryText}
+            ${escapeHtml(libraryText)}
           </p>
         </div>
 
-        <!-- Actions -->
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <a href="${p.readme_rel}" target="_blank" class="btn btn-primary">
-            📄 Markdown Günlüğünü Görüntüle ➔
-          </a>
-          <button class="btn btn-outline" id="city-back-btn">
-            ⬅️ Genel Bakışa Dön
-          </button>
+        <!-- Nearest Neighbor Cities -->
+        <div class="glass-card detail-card">
+          <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-cyan);">
+            🧭 En Yakın Komşu Menziller
+          </h3>
+          <div class="neighbor-cards-grid">
+            ${neighborsHtml}
+          </div>
+        </div>
+
+        <!-- Actions & Navigation -->
+        <div class="city-actions-bar">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            ${prevEntry ? `<button class="btn btn-outline" id="city-prev-btn">⬅️ ${escapeHtml(prevEntry[1].name)}</button>` : ''}
+            ${nextEntry ? `<button class="btn btn-outline" id="city-next-btn">${escapeHtml(nextEntry[1].name)} ➡️</button>` : ''}
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-outline" id="city-route-btn">🧭 Buradan Rota Planla</button>
+            <a href="${escapeHtml(p.readme_rel)}" target="_blank" class="btn btn-primary">
+              📄 Markdown Günlüğü ➔
+            </a>
+            <button class="btn btn-outline" id="city-back-btn">🏠 Genel Bakış</button>
+          </div>
         </div>
       </div>
     `;
 
     const backBtn = document.getElementById('city-back-btn');
     if (backBtn) backBtn.addEventListener('click', renderDashboard);
+
+    const routeBtn = document.getElementById('city-route-btn');
+    if (routeBtn) routeBtn.addEventListener('click', () => renderRoutePlanner(p.name));
+
+    const prevBtn = document.getElementById('city-prev-btn');
+    if (prevBtn && prevEntry) prevBtn.addEventListener('click', () => selectCity(prevEntry[0]));
+
+    const nextBtn = document.getElementById('city-next-btn');
+    if (nextBtn && nextEntry) nextBtn.addEventListener('click', () => selectCity(nextEntry[0]));
+
+    els.viewportContent.querySelectorAll('.neighbor-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const nk = card.getAttribute('data-neighbor-key');
+        if (nk) selectCity(nk);
+      });
+    });
+  }
+
+  // 2-Opt TSP Optimizer (keeps start city fixed)
+  function twoOptOptimize(stops) {
+    if (stops.length <= 3) return stops;
+
+    function pathDist(seq) {
+      let sum = 0;
+      for (let i = 0; i < seq.length - 1; i++) {
+        sum += calcDistKm(seq[i].lat, seq[i].lng, seq[i + 1].lat, seq[i + 1].lng);
+      }
+      return sum;
+    }
+
+    let best = [...stops];
+    let bestDist = pathDist(best);
+    let improved = true;
+
+    while (improved) {
+      improved = false;
+      for (let i = 1; i < best.length - 1; i++) {
+        for (let j = i + 1; j < best.length; j++) {
+          const candidate = [
+            ...best.slice(0, i),
+            ...best.slice(i, j + 1).reverse(),
+            ...best.slice(j + 1)
+          ];
+          const candDist = pathDist(candidate);
+          if (candDist + 0.1 < bestDist) {
+            best = candidate;
+            bestDist = candDist;
+            improved = true;
+          }
+        }
+      }
+    }
+    return best;
+  }
+
+  // Render SVG Preview Map of Turkey + Planned Route
+  function buildRouteSvg(route) {
+    const W = 820;
+    const H = 310;
+    const minLng = 25.5, maxLng = 45.0;
+    const minLat = 35.7, maxLat = 42.3;
+
+    const projX = lng => 28 + ((lng - minLng) / (maxLng - minLng)) * (W - 56);
+    const projY = lat => (H - 26) - ((lat - minLat) / (maxLat - minLat)) * (H - 52);
+
+    const routeNames = new Set(route.map(r => r.name));
+
+    // Background dots for all 81 provinces
+    const bgDots = Object.values(state.data.provinces).map(p => {
+      if (routeNames.has(p.name)) return '';
+      const x = projX(p.lng).toFixed(1);
+      const y = projY(p.lat).toFixed(1);
+      const fill = p.visited ? 'rgba(16, 185, 129, 0.55)' : 'rgba(148, 163, 184, 0.35)';
+      return `<circle cx="${x}" cy="${y}" r="3.2" fill="${fill}"><title>${escapeHtml(p.name)}</title></circle>`;
+    }).join('');
+
+    // Polyline for route
+    const pointsAttr = route.map(s => `${projX(s.lng).toFixed(1)},${projY(s.lat).toFixed(1)}`).join(' ');
+
+    // Numbered route stops
+    const routeNodes = route.map((s, idx) => {
+      const x = projX(s.lng);
+      const y = projY(s.lat);
+      const isStart = idx === 0;
+      const fill = isStart ? '#f59e0b' : '#00f2fe';
+      const labelY = y - 12;
+      return `
+        <g>
+          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isStart ? 9 : 7.5}" fill="${fill}" stroke="#04121d" stroke-width="2" />
+          <text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="800" fill="#04121d" font-family="Outfit, sans-serif">${idx + 1}</text>
+          <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="#f8fafc" font-family="Plus Jakarta Sans, sans-serif">${escapeHtml(s.name)}</text>
+        </g>
+      `;
+    }).join('');
+
+    return `
+      <svg class="route-svg-map" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anadolu Rota Haritası Önizlemesi">
+        ${bgDots}
+        <polyline points="${pointsAttr}" fill="none" stroke="#00f2fe" stroke-width="2.5" stroke-dasharray="6,5" stroke-opacity="0.85" />
+        ${routeNodes}
+      </svg>
+    `;
   }
 
   // Render Route Planner View
-  function renderRoutePlanner() {
+  function renderRoutePlanner(presetStartCity) {
     state.currentView = 'route';
     state.selectedCityKey = null;
+    if (presetStartCity) state.routeStartCity = presetStartCity;
+    updateNavHighlight();
     renderCitiesList();
 
-    const visitedKeys = Object.keys(state.data.provinces).filter(k => state.data.provinces[k].visited);
-    const optionsHtml = Object.entries(state.data.provinces).map(([k, p]) => `
-      <option value="${p.name}" ${p.name === 'Ankara' ? 'selected' : ''}>${p.name} (${p.region})</option>
+    const sortedProvinces = Object.entries(state.data.provinces)
+      .sort((a, b) => a[1].name.localeCompare(b[1].name, 'tr'));
+
+    const optionsHtml = sortedProvinces.map(([, p]) => `
+      <option value="${escapeHtml(p.name)}" ${p.name === state.routeStartCity ? 'selected' : ''}>${escapeHtml(p.name)} (${escapeHtml(p.region)})</option>
     `).join('');
+
+    const regionOptionsHtml = `
+      <option value="all" ${state.routeRegion === 'all' ? 'selected' : ''}>Tüm Türkiye (7 Bölge)</option>
+      ${Object.entries(state.data.regions).map(([code, r]) => `
+        <option value="${escapeHtml(code)}" ${state.routeRegion === code ? 'selected' : ''}>${r.icon} Sadece ${escapeHtml(r.name)}</option>
+      `).join('')}
+    `;
 
     els.viewportContent.innerHTML = `
       <div class="dashboard-view">
         <div class="glass-card detail-card">
           <h2 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 10px;">
-            🧭 Akıllı Rota Planlayıcı (Greedy Route Optimizer)
+            🧭 Akıllı Rota Planlayıcı (Greedy + 2-Opt TSP Optimizer)
           </h2>
           <p style="font-size: 0.85rem; color: var(--text-secondary);">
-            Seçtiğiniz başlangıç noktasından itibaren henüz ziyaret edilmemiş iller arasından en kısa karayolu mesafesine göre optimize edilmiş keşif rotası hesaplar.
+            Seçtiğiniz başlangıç noktasından itibaren henüz ziyaret edilmemiş iller arasından en kısa karayolu mesafesini hesaplar ve 2-Opt algoritmasıyla çapraz yolları optimize eder.
           </p>
 
-          <div style="display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px;">
-              <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Başlangıç Şehri</label>
+          <div style="display: flex; gap: 14px; margin-top: 12px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 190px;">
+              <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Başlangıç Şehri</label>
               <select id="route-start-select" class="region-select" style="margin-top: 4px;">
                 ${optionsHtml}
               </select>
             </div>
 
-            <div style="width: 140px;">
-              <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Durak Sayısı</label>
-              <select id="route-stops-select" class="region-select" style="margin-top: 4px;">
-                <option value="5">5 Durak</option>
-                <option value="7" selected>7 Durak</option>
-                <option value="10">10 Durak</option>
-                <option value="15">15 Durak</option>
+            <div style="flex: 1; min-width: 190px;">
+              <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Hedef Bölge</label>
+              <select id="route-region-select" class="region-select" style="margin-top: 4px;">
+                ${regionOptionsHtml}
               </select>
             </div>
 
-            <div style="display: flex; align-items: flex-end;">
-              <button class="btn btn-primary" id="btn-calc-route">⚡ Rotayı Hesapla</button>
+            <div style="width: 130px;">
+              <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Durak Sayısı</label>
+              <select id="route-stops-select" class="region-select" style="margin-top: 4px;">
+                <option value="5" ${state.routeStops === 5 ? 'selected' : ''}>5 Durak</option>
+                <option value="7" ${state.routeStops === 7 ? 'selected' : ''}>7 Durak</option>
+                <option value="9" ${state.routeStops === 9 ? 'selected' : ''}>9 Durak</option>
+                <option value="12" ${state.routeStops === 12 ? 'selected' : ''}>12 Durak</option>
+                <option value="15" ${state.routeStops === 15 ? 'selected' : ''}>15 Durak</option>
+              </select>
             </div>
+
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-secondary); padding: 9px 12px; background: rgba(30,41,59,0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-md); cursor: pointer;">
+              <input type="checkbox" id="route-opt-check" ${state.routeOptimize ? 'checked' : ''} />
+              2-Opt Optimizasyon
+            </label>
+
+            <button class="btn btn-primary" id="btn-calc-route">⚡ Rotayı Hesapla</button>
           </div>
         </div>
 
@@ -431,43 +818,48 @@
     `;
 
     document.getElementById('btn-calc-route').addEventListener('click', calculateAndRenderRoute);
+    document.getElementById('route-start-select').addEventListener('change', calculateAndRenderRoute);
+    document.getElementById('route-region-select').addEventListener('change', calculateAndRenderRoute);
+    document.getElementById('route-stops-select').addEventListener('change', calculateAndRenderRoute);
+    document.getElementById('route-opt-check').addEventListener('change', calculateAndRenderRoute);
     calculateAndRenderRoute();
-  }
-
-  // Calculate Haversine Distance in JS
-  function calcDistKm(lat1, lon1, lat2, lon2) {
-    const R = 6371.0;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return Math.round(R * c);
   }
 
   function calculateAndRenderRoute() {
     const startName = document.getElementById('route-start-select').value;
+    const regionCode = document.getElementById('route-region-select').value;
     const stopsCount = parseInt(document.getElementById('route-stops-select').value, 10);
+    const useTwoOpt = document.getElementById('route-opt-check').checked;
 
-    const allProvinces = Object.values(state.data.provinces);
-    const startCity = allProvinces.find(p => p.name.toLowerCase() === startName.toLowerCase()) || allProvinces[0];
-    const unvisited = allProvinces.filter(p => !p.visited);
+    state.routeStartCity = startName;
+    state.routeRegion = regionCode;
+    state.routeStops = stopsCount;
+    state.routeOptimize = useTwoOpt;
 
+    const allEntries = Object.entries(state.data.provinces).map(([key, p]) => ({ ...p, _key: key }));
+    const startCity = allEntries.find(p => p.name.toLowerCase() === startName.toLowerCase()) || allEntries[0];
+    const unvisited = allEntries.filter(p =>
+      !p.visited &&
+      p.name !== startCity.name &&
+      (regionCode === 'all' || p.region_code === regionCode)
+    );
+
+    const container = document.getElementById('route-results-container');
     if (unvisited.length === 0) {
-      document.getElementById('route-results-container').innerHTML = `
+      container.innerHTML = `
         <div class="glass-card detail-card" style="text-align: center; color: var(--accent-emerald);">
-          🎉 Tebrikler! 81 ilin tamamı keşfedildi!
+          🎉 Tebrikler! Seçilen bölgede ziyaret edilmemiş il kalmadı!
         </div>
       `;
       return;
     }
 
+    // Greedy Nearest Neighbor
     let current = startCity;
     let remaining = [...unvisited];
-    const route = [{ ...current, distFromPrev: 0 }];
+    let greedyRoute = [current];
 
-    while (remaining.length > 0 && route.length <= stopsCount) {
+    while (remaining.length > 0 && greedyRoute.length <= stopsCount) {
       let nearest = remaining[0];
       let minDist = Infinity;
       for (const candidate of remaining) {
@@ -477,85 +869,125 @@
           nearest = candidate;
         }
       }
-      route.push({ ...nearest, distFromPrev: Math.round(minDist * 1.35) });
+      greedyRoute.push(nearest);
       remaining = remaining.filter(c => c.name !== nearest.name);
       current = nearest;
     }
 
-    let totalKm = route.reduce((acc, curr) => acc + curr.distFromPrev, 0);
+    const computeRoadKm = seq => {
+      let total = 0;
+      for (let i = 1; i < seq.length; i++) {
+        total += Math.round(calcDistKm(seq[i - 1].lat, seq[i - 1].lng, seq[i].lat, seq[i].lng) * 1.35);
+      }
+      return total;
+    };
+
+    const greedyKm = computeRoadKm(greedyRoute);
+    const finalSeq = useTwoOpt ? twoOptOptimize(greedyRoute) : greedyRoute;
+
+    let cumulative = 0;
+    const route = finalSeq.map((stop, idx) => {
+      const dist = idx === 0
+        ? 0
+        : Math.round(calcDistKm(finalSeq[idx - 1].lat, finalSeq[idx - 1].lng, stop.lat, stop.lng) * 1.35);
+      cumulative += dist;
+      return { ...stop, distFromPrev: dist, cumulativeKm: cumulative };
+    });
+
+    const totalKm = route[route.length - 1].cumulativeKm;
+    const savedKm = Math.max(0, greedyKm - totalKm);
+    const estHours = (totalKm / 80).toFixed(1);
+    const seferDays = (route.length - 1) * 5;
+
+    const svgMapHtml = buildRouteSvg(route);
 
     const stopsHtml = route.map((stop, idx) => `
-      <div class="glass-card" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+      <div class="glass-card route-stop-card" data-stop-key="${escapeHtml(stop._key)}">
         <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 32px; height: 32px; border-radius: 50%; background: ${idx === 0 ? 'var(--accent-cyan)' : 'rgba(30,41,59,0.9)'}; color: ${idx === 0 ? '#04121d' : 'var(--accent-cyan)'}; border: 1px solid var(--accent-cyan); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
+          <div style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: ${idx === 0 ? 'var(--accent-gold)' : 'rgba(30,41,59,0.9)'}; color: ${idx === 0 ? '#04121d' : 'var(--accent-cyan)'}; border: 1px solid ${idx === 0 ? 'var(--accent-gold)' : 'var(--accent-cyan)'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
             ${idx + 1}
           </div>
           <div>
             <div style="font-family: var(--font-heading); font-weight: 700; font-size: 1rem; color: #ffffff;">
-              ${stop.name} <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(${stop.region})</span>
+              ${escapeHtml(stop.name)} <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(${escapeHtml(stop.region)})</span>
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">
-              📍 ${stop.landmarks ? stop.landmarks[0] : 'Tarihi Merkez'} • 🍽️ ${stop.specialties ? stop.specialties[0] : 'Lezzet'}
+            <div style="font-size: 0.76rem; color: var(--text-secondary);">
+              📍 ${escapeHtml(stop.landmarks ? stop.landmarks[0] : 'Tarihi Merkez')} • 🍽️ ${escapeHtml(stop.specialties ? stop.specialties[0] : 'Lezzet')}
             </div>
           </div>
         </div>
-        <div style="text-align: right;">
+        <div style="text-align: right; flex-shrink: 0;">
           <div style="font-family: var(--font-heading); font-weight: 700; color: var(--accent-gold); font-size: 0.9rem;">
-            ${idx === 0 ? 'BAŞLANGIÇ' : `+${stop.distFromPrev} km`}
+            ${idx === 0 ? 'BAŞLANGIÇ' : `+${stop.distFromPrev.toLocaleString('tr-TR')} km`}
           </div>
+          ${idx > 0 ? `<div style="font-size: 0.72rem; color: var(--text-muted);">Toplam ${stop.cumulativeKm.toLocaleString('tr-TR')} km</div>` : ''}
         </div>
       </div>
     `).join('');
 
-    document.getElementById('route-results-container').innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--text-primary);">
-            🗺️ Önerilen Yolculuk Planı (${route.length} Durak)
-          </h3>
-          <div style="font-family: var(--font-heading); font-weight: 700; color: var(--accent-emerald); font-size: 1rem;">
-            Toplam: ${totalKm.toLocaleString()} km
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="glass-card route-svg-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--text-primary);">
+              🗺️ Anadolu Rota Önizlemesi (${route.length - 1} Yeni Menzil)
+            </h3>
+            <div class="route-summary-pills">
+              <span class="route-summary-pill" style="color: var(--accent-emerald);">🛣️ ${totalKm.toLocaleString('tr-TR')} km</span>
+              <span class="route-summary-pill" style="color: var(--accent-cyan);">⏱️ ~${estHours} saat sürüş</span>
+              <span class="route-summary-pill" style="color: var(--accent-gold);">⛺ ${seferDays} gün (5 Gün Kuralı)</span>
+              ${savedKm > 0 ? `<span class="route-summary-pill" style="color: #a7f3d0; border-color: rgba(16,185,129,0.4);">⚡ 2-Opt Tasarruf: -${savedKm} km</span>` : ''}
+            </div>
           </div>
+          ${svgMapHtml}
         </div>
         ${stopsHtml}
       </div>
     `;
+
+    container.querySelectorAll('.route-stop-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const sk = card.getAttribute('data-stop-key');
+        if (sk) selectCity(sk);
+      });
+    });
   }
 
-  // Web Audio API Ambient Synthesizer (Zero External Dependencies)
-  function toggleAmbientSound() {
-    if (state.ambientPlaying) {
-      stopAmbientSound();
-    } else {
-      startAmbientSound();
+  // Web Audio API Sufi Soundscape Synthesizer (Cycles 3 Presets -> Off)
+  function cycleAmbientSound() {
+    stopAmbientSound(false);
+    state.soundIndex += 1;
+    if (state.soundIndex >= SOUNDSCAPES.length) {
+      state.soundIndex = -1;
+      updateAmbientButton();
+      return;
     }
+    startAmbientPreset(SOUNDSCAPES[state.soundIndex]);
   }
 
-  function startAmbientSound() {
+  function startAmbientPreset(preset) {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!state.audioCtx) {
-        state.audioCtx = new AudioCtx();
-      }
-      if (state.audioCtx.state === 'suspended') {
-        state.audioCtx.resume();
-      }
+      if (!state.audioCtx) state.audioCtx = new AudioCtx();
+      if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
 
-      // Master Gain
+      const now = state.audioCtx.currentTime;
       const masterGain = state.audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.08, state.audioCtx.currentTime);
+      masterGain.gain.setValueAtTime(0.0001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.08, now + 0.6);
       masterGain.connect(state.audioCtx.destination);
 
-      // Ney Drone Oscillator (D Minor / Rast / Saba meditation frequency - 220Hz & 440Hz harmonics)
       const osc1 = state.audioCtx.createOscillator();
       osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(146.83, state.audioCtx.currentTime); // D3
+      osc1.frequency.setValueAtTime(preset.freq1, now);
 
       const osc2 = state.audioCtx.createOscillator();
       osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(220.00, state.audioCtx.currentTime); // A3
+      osc2.frequency.setValueAtTime(preset.freq2, now);
 
-      // Wind Pink Noise Buffer
+      const osc2Gain = state.audioCtx.createGain();
+      osc2Gain.gain.setValueAtTime(0.35, now);
+
       const bufferSize = state.audioCtx.sampleRate * 2;
       const noiseBuffer = state.audioCtx.createBuffer(1, bufferSize, state.audioCtx.sampleRate);
       const output = noiseBuffer.getChannelData(0);
@@ -568,67 +1000,80 @@
         b3 = 0.86650 * b3 + white * 0.3104856;
         b4 = 0.55000 * b4 + white * 0.5329522;
         b5 = -0.7616 * b5 - white * 0.0168980;
-        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
+        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * preset.noiseVol;
         b6 = white * 0.115926;
       }
 
-      const whiteNoise = state.audioCtx.createBufferSource();
-      whiteNoise.buffer = noiseBuffer;
-      whiteNoise.loop = true;
+      const noiseSrc = state.audioCtx.createBufferSource();
+      noiseSrc.buffer = noiseBuffer;
+      noiseSrc.loop = true;
 
-      // Lowpass Filter for Gentle Bozkır Wind
       const filter = state.audioCtx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(400, state.audioCtx.currentTime);
+      filter.frequency.setValueAtTime(preset.filterFreq, now);
 
-      whiteNoise.connect(filter);
+      noiseSrc.connect(filter);
       filter.connect(masterGain);
       osc1.connect(masterGain);
-      osc2.connect(masterGain);
+      osc2.connect(osc2Gain);
+      osc2Gain.connect(masterGain);
 
       osc1.start();
       osc2.start();
-      whiteNoise.start();
+      noiseSrc.start();
 
-      state.audioNodes = [osc1, osc2, whiteNoise, masterGain];
-      state.ambientPlaying = true;
-
-      if (els.btnAmbient) {
-        els.btnAmbient.classList.add('active');
-        els.btnAmbient.innerHTML = '🔊 Tefekkür Sesi: Açık';
-      }
+      state.audioNodes = [osc1, osc2, osc2Gain, noiseSrc, filter, masterGain];
+      updateAmbientButton();
     } catch (err) {
-      console.warn("Audio Context başlatılamadı:", err);
+      console.warn('Audio Context başlatılamadı:', err);
+      state.soundIndex = -1;
+      updateAmbientButton();
     }
   }
 
-  function stopAmbientSound() {
-    if (state.audioNodes) {
+  function stopAmbientSound(resetIndex = true) {
+    if (state.audioNodes && state.audioNodes.length) {
       state.audioNodes.forEach(n => {
         try { if (n.stop) n.stop(); if (n.disconnect) n.disconnect(); } catch (e) {}
       });
       state.audioNodes = [];
     }
-    state.ambientPlaying = false;
-    if (els.btnAmbient) {
+    if (resetIndex) state.soundIndex = -1;
+    updateAmbientButton();
+  }
+
+  function updateAmbientButton() {
+    if (!els.btnAmbient) return;
+    if (state.soundIndex >= 0) {
+      const preset = SOUNDSCAPES[state.soundIndex];
+      els.btnAmbient.classList.add('active');
+      els.btnAmbient.innerHTML = `🔊 <span class="btn-label">${escapeHtml(preset.label)}</span>`;
+    } else {
       els.btnAmbient.classList.remove('active');
-      els.btnAmbient.innerHTML = '🎧 Tefekkür Sesleri';
+      els.btnAmbient.innerHTML = '🎧 <span class="btn-label">Tefekkür Sesi</span>';
     }
   }
 
   // Export Markdown Book
   function exportMarkdownBook() {
-    const visited = Object.values(state.data.provinces).filter(p => p.visited);
+    const visited = Object.values(state.data.provinces)
+      .filter(p => p.visited)
+      .sort((a, b) => a.region_code.localeCompare(b.region_code) || a.name.localeCompare(b.name, 'tr'));
+
+    const s = state.data.stats;
     let md = `# 🕌 ANADOLU SEYAHATNAMESİ: DİJİTAL SEYYAH KÜLLİYATI\n\n`;
     md += `> *"Biz yolların bitmediği, keşfin son bulmadığı bir alemde Hakikati ve Güzelliği arayan yolcularız."*\n\n---\n\n`;
     md += `## 📊 Seyahatname Özeti\n`;
-    md += `* **Toplam Ziyaret Edilen İl:** ${state.data.stats.visited_cities} / 81\n`;
-    md += `* **Keşif Oranı:** %${state.data.stats.progress_pct}\n`;
-    md += `* **Kat Edilen Tahmini Mesafe:** ${state.data.stats.estimated_km.toLocaleString()} km\n\n---\n\n`;
+    md += `* **Toplam Ziyaret Edilen İl:** ${s.visited_cities} / ${s.total_cities}\n`;
+    md += `* **Keşif Oranı:** %${s.progress_pct}\n`;
+    md += `* **Kat Edilen Tahmini Mesafe:** ${s.estimated_km.toLocaleString('tr-TR')} km\n`;
+    md += `* **Kapsanan Bölgeler:** ${s.visited_regions || 6} / ${s.total_regions || 7}\n\n---\n\n`;
 
     visited.forEach((p, idx) => {
       md += `## ${idx + 1}. 📍 ${p.name} (${String(p.plate).padStart(2, '0')}) - ${p.region}\n\n`;
       md += `> *"${p.custom_quote || p.quote}"*\n\n`;
+      if (p.history) md += `### 🌍 Tarihsel Arka Plan\n${p.history}\n\n`;
+      if (p.reflection) md += `### 🕊️ Tefekkür Notu\n${p.reflection}\n\n`;
       md += `### 🏛️ Öne Çıkan Miras\n`;
       (p.landmarks || []).forEach(lm => { md += `- [x] ${lm}\n`; });
       md += `\n### 🍽️ Yöresel Tatlar\n${(p.specialties || []).join(', ')}\n\n`;
@@ -649,14 +1094,36 @@
     if (els.mapModal) els.mapModal.classList.add('active');
   }
 
-  function closeModals() {
-    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+  function openQuoteModal() {
+    renderRandomQuoteInModal();
+    if (els.quoteModal) els.quoteModal.classList.add('active');
   }
 
-  // Show Quote Popup
-  function showRandomQuote() {
-    const q = state.data.quotes[Math.floor(Math.random() * state.data.quotes.length)];
-    alert(`📜 GÜNÜN TEFEKKÜRÜ:\n\n"${q.quote}"\n\n— ${q.author}`);
+  function renderRandomQuoteInModal() {
+    const quotes = state.data.quotes || [];
+    if (!quotes.length) return;
+    let pick = quotes[Math.floor(Math.random() * quotes.length)];
+    if (quotes.length > 1 && state.currentQuote && pick.quote === state.currentQuote.quote) {
+      pick = quotes[(quotes.indexOf(pick) + 1) % quotes.length];
+    }
+    state.currentQuote = pick;
+    if (els.quoteModalText) els.quoteModalText.textContent = `"${pick.quote}"`;
+    if (els.quoteModalAuthor) els.quoteModalAuthor.textContent = `— ${pick.author}`;
+    if (els.btnCopyQuote) els.btnCopyQuote.textContent = '📋 Kopyala';
+  }
+
+  function copyCurrentQuote() {
+    if (!state.currentQuote) return;
+    const text = `"${state.currentQuote.quote}" — ${state.currentQuote.author}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        if (els.btnCopyQuote) els.btnCopyQuote.textContent = '✓ Kopyalandı';
+      }).catch(() => {});
+    }
+  }
+
+  function closeModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
   }
 
   // Event Listeners
@@ -664,12 +1131,31 @@
     if (els.logoSection) els.logoSection.addEventListener('click', renderDashboard);
     if (els.btnDashboard) els.btnDashboard.addEventListener('click', renderDashboard);
     if (els.btnMap) els.btnMap.addEventListener('click', openMapModal);
-    if (els.btnRoute) els.btnRoute.addEventListener('click', renderRoutePlanner);
-    if (els.btnAmbient) els.btnAmbient.addEventListener('click', toggleAmbientSound);
-    if (els.btnQuote) els.btnQuote.addEventListener('click', showRandomQuote);
+    if (els.btnRoute) els.btnRoute.addEventListener('click', () => renderRoutePlanner());
+    if (els.btnRandom) els.btnRandom.addEventListener('click', selectRandomCity);
+    if (els.btnAmbient) els.btnAmbient.addEventListener('click', cycleAmbientSound);
+    if (els.btnQuote) els.btnQuote.addEventListener('click', openQuoteModal);
     if (els.btnExport) els.btnExport.addEventListener('click', exportMarkdownBook);
 
-    els.modalCloseBtns.forEach(btn => btn.addEventListener('click', closeModals));
+    if (els.btnNextQuote) els.btnNextQuote.addEventListener('click', renderRandomQuoteInModal);
+    if (els.btnCopyQuote) els.btnCopyQuote.addEventListener('click', copyCurrentQuote);
+
+    if (els.btnMobileSidebar) els.btnMobileSidebar.addEventListener('click', openMobileSidebar);
+    if (els.btnCloseSidebar) els.btnCloseSidebar.addEventListener('click', closeMobileSidebar);
+    if (els.sidebarBackdrop) els.sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+
+    els.modalCloseBtns.forEach(btn => {
+      if (btn.id !== 'btn-close-sidebar') {
+        btn.addEventListener('click', closeModals);
+      }
+    });
+
+    // Click outside modal content closes modal
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModals();
+      });
+    });
 
     // Search
     if (els.searchInput) {
@@ -696,8 +1182,19 @@
         renderCitiesList();
       });
     });
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModals();
+        closeMobileSidebar();
+      } else if (e.key === '/' && document.activeElement !== els.searchInput && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        if (window.innerWidth <= 960) openMobileSidebar();
+        if (els.searchInput) els.searchInput.focus();
+      }
+    });
   }
 
-  // Run
   document.addEventListener('DOMContentLoaded', init);
 })();

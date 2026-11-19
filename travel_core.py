@@ -4,10 +4,36 @@ Anadolu Seyahatnamesi - Dijital Seyyah Core Engine
 """
 
 import os
+import copy
 import json
 import re
 import math
 from pathlib import Path
+
+# Türkçe Alfabe Sıralama ve Normalizasyon Yardımcıları
+_TURKISH_ALPHABET = "abcçdefgğhıijklmnoöprsştuüvyz"
+_TURKISH_ORDER = {ch: idx for idx, ch in enumerate(_TURKISH_ALPHABET)}
+_TURKISH_FOLD_MAP = str.maketrans({
+    "ç": "c", "ğ": "g", "ı": "i", "İ": "i", "I": "i",
+    "ö": "o", "ş": "s", "ü": "u",
+    "Ç": "c", "Ğ": "g", "Ö": "o", "Ş": "s", "Ü": "u",
+})
+
+
+def turkish_lower(text: str) -> str:
+    """Türkçe büyük/küçük harf kurallarına uygun küçük harfe çevirir."""
+    return text.replace("I", "ı").replace("İ", "i").lower()
+
+
+def turkish_sort_key(text: str):
+    """Türkçe alfabeye göre sıralama anahtarı üretir."""
+    lowered = turkish_lower(text)
+    return [_TURKISH_ORDER.get(ch, 100 + ord(ch)) for ch in lowered]
+
+
+def normalize_turkish(text: str) -> str:
+    """Arama için Türkçe karakterleri ASCII karşılıklarına katlar."""
+    return turkish_lower(text).translate(_TURKISH_FOLD_MAP).strip()
 
 # 81 İl Bilgisi ve Koordinat Veritabanı
 PROVINCES_DATA = {
@@ -704,13 +730,25 @@ TRAVEL_QUOTES = [
 ]
 
 
+# Seyyah Rütbe Merhaleleri (Tasavvuf & Keşif İlerlemesi)
+SEYYAH_RANKS = [
+    {"min_cities": 0,  "title": "Yolun Başında (Sâlik)", "icon": "🌱", "desc": "İlk menzillere niyet eden, haritayı açan yolcu."},
+    {"min_cities": 10, "title": "Menzil Yolcusu",        "icon": "🧭", "desc": "Anadolu yollarında toz yutan, kütüphane disiplini edinen gezgin."},
+    {"min_cities": 25, "title": "Anadolu Kâşifi",        "icon": "🗺️", "desc": "Bölgeleri aşan, kadim şehirlerin ruhunu kayda geçiren seyyah."},
+    {"min_cities": 41, "title": "Evliya Çelebi İzinde",  "icon": "📜", "desc": "Anadolu'nun yarısını aşmış, seyahatnamesini olgunlaştırmış üstat."},
+    {"min_cities": 61, "title": "İbn Battûta Mertebesi", "icon": "🕌", "desc": "Yedi iklimin irfanını harmanlayan, yolların bilgesi."},
+    {"min_cities": 81, "title": "Hâfız-ı Anadolu",       "icon": "👑", "desc": "81 ilin tamamını adımlamış, Sefer der Vatan'ı tamamlamış seyyah."}
+]
+
+
 class SeyyahEngine:
     def __init__(self, repo_root="."):
         self.repo_root = Path(repo_root).resolve()
-        self.provinces = PROVINCES_DATA.copy()
+        self.provinces = copy.deepcopy(PROVINCES_DATA)
         self.visited_provinces = {}
         self.unvisited_provinces = {}
         self.stats = {}
+        self.achievements = {}
         self.refresh()
 
     def refresh(self):
@@ -748,16 +786,53 @@ class SeyyahEngine:
                 self.unvisited_provinces[key] = p_data
 
         self._compute_stats()
+        self.achievements = self.compute_achievements()
 
     def _extract_city_details(self, p_data, content):
-        """Markdown içeriğinden alıntı ve detayları çıkarır."""
+        """Markdown içeriğinden alıntı, tarih, tefekkür ve kütüphane detaylarını çıkarır."""
         quote_match = re.search(r'## 📜 Şehrin Ruhu\s*>\s*"([^"]+)"', content)
         if quote_match:
             p_data["custom_quote"] = quote_match.group(1).strip()
-        
+
         lib_match = re.search(r'\*Seyyahın Kütüphane Notu:\*\s*(.+)', content)
         if lib_match:
             p_data["custom_library"] = lib_match.group(1).strip()
+
+        history_match = re.search(
+            r'### 🌍 Şehrin Dokusu ve Tarihsel Arka Planı\s*\n(.*?)(?=\n### |\n---|\Z)',
+            content,
+            re.DOTALL
+        )
+        if history_match:
+            history_text = " ".join(line.strip() for line in history_match.group(1).strip().splitlines() if line.strip())
+            if history_text:
+                p_data["history"] = history_text
+
+        lit_match = re.search(
+            r'### 💬 Şehir Hakkında Edebi ve Tarihi Alıntılar\s*\n(.*?)(?=\n### |\n---|\Z)',
+            content,
+            re.DOTALL
+        )
+        if lit_match:
+            lit_quotes = []
+            for line in lit_match.group(1).splitlines():
+                cleaned = line.strip()
+                if cleaned.startswith(">"):
+                    q = cleaned.lstrip(">").strip()
+                    if q:
+                        lit_quotes.append(q)
+            if lit_quotes:
+                p_data["literary_quotes"] = lit_quotes
+
+        refl_match = re.search(
+            r'### 🕊️ Gezginin Not Defterinden[^\n]*\n(.*?)(?=\n### |\n---|\Z)',
+            content,
+            re.DOTALL
+        )
+        if refl_match:
+            refl_text = " ".join(line.strip() for line in refl_match.group(1).strip().splitlines() if line.strip())
+            if refl_text:
+                p_data["reflection"] = refl_text
 
     def _compute_stats(self):
         """Genel ve bölgesel istatistikleri hesaplar."""
@@ -767,9 +842,12 @@ class SeyyahEngine:
 
         # Bölgesel istatistikler
         reg_stats = {}
+        visited_regions = 0
         for reg_code, r_info in REGIONS_INFO.items():
             reg_total = sum(1 for k in self.provinces if k.startswith(reg_code))
             reg_visited = sum(1 for k in self.visited_provinces if k.startswith(reg_code))
+            if reg_visited > 0:
+                visited_regions += 1
             reg_pct = round((reg_visited / reg_total) * 100, 1) if reg_total > 0 else 0
             reg_stats[reg_code] = {
                 "name": r_info["name"],
@@ -790,7 +868,112 @@ class SeyyahEngine:
             "unvisited_cities": total - visited,
             "progress_pct": pct,
             "estimated_km": estimated_km,
+            "visited_regions": visited_regions,
+            "total_regions": len(REGIONS_INFO),
+            "days_on_road": visited * 5,
+            "library_hours": visited * 5 * 4,
             "regional_breakdown": reg_stats
+        }
+
+    def compute_achievements(self):
+        """Seyyah rütbesi ve başarım rozetlerini hesaplar."""
+        visited = self.stats.get("visited_cities", 0)
+        km = self.stats.get("estimated_km", 0)
+        visited_regions = self.stats.get("visited_regions", 0)
+        reg = self.stats.get("regional_breakdown", {})
+
+        current_rank = SEYYAH_RANKS[0]
+        next_rank = None
+        for idx, r in enumerate(SEYYAH_RANKS):
+            if visited >= r["min_cities"]:
+                current_rank = r
+                next_rank = SEYYAH_RANKS[idx + 1] if idx + 1 < len(SEYYAH_RANKS) else None
+
+        karadeniz_v = reg.get("05_Karadeniz", {}).get("visited", 0)
+        dogu_v = reg.get("06_DoguAnadolu", {}).get("visited", 0)
+
+        badges = [
+            {
+                "id": "first_step",
+                "icon": "👣",
+                "title": "İlk Adım",
+                "desc": "İlk şehri adımla ve seyahatnameye işle",
+                "current": min(visited, 1),
+                "target": 1,
+                "unlocked": visited >= 1
+            },
+            {
+                "id": "ten_thousand_km",
+                "icon": "🛣️",
+                "title": "10.000 km Menzil",
+                "desc": "Anadolu yollarında 10.000 km karayolu izi bırak",
+                "current": min(km, 10000),
+                "target": 10000,
+                "unlocked": km >= 10000
+            },
+            {
+                "id": "library_scholar",
+                "icon": "📚",
+                "title": "Kütüphane Müdavimi",
+                "desc": "30 farklı İl Halk Kütüphanesinde mesai yap",
+                "current": min(visited, 30),
+                "target": 30,
+                "unlocked": visited >= 30
+            },
+            {
+                "id": "karadeniz_explorer",
+                "icon": "🌲",
+                "title": "Karadeniz Kâşifi",
+                "desc": "Karadeniz bölgesinde en az 10 il ziyaret et",
+                "current": min(karadeniz_v, 10),
+                "target": 10,
+                "unlocked": karadeniz_v >= 10
+            },
+            {
+                "id": "east_summits",
+                "icon": "🏔️",
+                "title": "Doğu Zirveleri",
+                "desc": "Doğu Anadolu'da en az 8 il keşfet",
+                "current": min(dogu_v, 8),
+                "target": 8,
+                "unlocked": dogu_v >= 8
+            },
+            {
+                "id": "halfway_anatolia",
+                "icon": "⭐",
+                "title": "Yarı Yol Eşiğinde",
+                "desc": "81 ilin yarısından fazlasını (41 il) adımla",
+                "current": min(visited, 41),
+                "target": 41,
+                "unlocked": visited >= 41
+            },
+            {
+                "id": "seven_regions",
+                "icon": "🌍",
+                "title": "Yedi İklim Fatihi",
+                "desc": "Türkiye'nin 7 coğrafi bölgesinin tamamına ayak bas",
+                "current": visited_regions,
+                "target": 7,
+                "unlocked": visited_regions >= 7
+            },
+            {
+                "id": "anatolia_master",
+                "icon": "👑",
+                "title": "Hâfız-ı Anadolu",
+                "desc": "Türkiye'nin 81 ilinin tamamını keşfet",
+                "current": visited,
+                "target": 81,
+                "unlocked": visited >= 81
+            }
+        ]
+
+        return {
+            "rank": current_rank,
+            "next_rank": next_rank,
+            "cities_to_next_rank": (next_rank["min_cities"] - visited) if next_rank else 0,
+            "unlocked_count": sum(1 for b in badges if b["unlocked"]),
+            "total_badges": len(badges),
+            "badges": badges
         }
 
     def _calculate_route_km(self):
@@ -822,20 +1005,103 @@ class SeyyahEngine:
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return round(R * c, 1)
 
-    def plan_optimal_route(self, start_city_name=None, max_stops=10):
-        """Ziyaret edilmemiş şehirler arasında en optimize gezi rotasını önerir."""
-        unvisited = list(self.unvisited_provinces.values())
+    def find_province(self, query):
+        """İsim, slug veya plaka koduyla il arar."""
+        if not query:
+            return None
+        q_str = str(query).strip()
+        if q_str.isdigit():
+            plate_num = int(q_str)
+            for p in self.provinces.values():
+                if p["plate"] == plate_num:
+                    return p
+        q_norm = normalize_turkish(q_str)
+        for p in self.provinces.values():
+            if normalize_turkish(p["name"]) == q_norm or normalize_turkish(p["slug"]) == q_norm:
+                return p
+        return None
+
+    def search_provinces(self, query="", region_code=None, visited=None):
+        """Türkçe karakter duyarsız çoklu alan (isim, plaka, miras, lezzet, kütüphane) araması."""
+        q_norm = normalize_turkish(query) if query else ""
+        results = []
+        for key, p in self.provinces.items():
+            if region_code and region_code != "all" and p["region_code"] != region_code:
+                continue
+            if visited is True and not p["visited"]:
+                continue
+            if visited is False and p["visited"]:
+                continue
+            if q_norm:
+                haystack = " ".join([
+                    p["name"],
+                    p["slug"],
+                    str(p["plate"]),
+                    p["region"],
+                    " ".join(p.get("landmarks", [])),
+                    " ".join(p.get("specialties", [])),
+                    p.get("custom_library", p.get("library", ""))
+                ])
+                if q_norm not in normalize_turkish(haystack):
+                    continue
+            results.append(p)
+        return sorted(results, key=lambda item: turkish_sort_key(item["name"]))
+
+    def get_nearest_provinces(self, city_name, count=5, only_unvisited=False):
+        """Verilen şehre kuş uçuşu/karayolu en yakın komşu illeri döndürür."""
+        origin = self.find_province(city_name)
+        if not origin:
+            return []
+        candidates = []
+        for p in self.provinces.values():
+            if p["name"] == origin["name"]:
+                continue
+            if only_unvisited and p["visited"]:
+                continue
+            air_km = self.calculate_distance_km(origin["lat"], origin["lng"], p["lat"], p["lng"])
+            item = p.copy()
+            item["distance_km"] = int(round(air_km * 1.35))
+            candidates.append(item)
+        candidates.sort(key=lambda c: c["distance_km"])
+        return candidates[:count]
+
+    def _two_opt_optimize(self, stops):
+        """Başlangıç noktası sabit kalacak şekilde 2-opt TSP optimizasyonu uygular."""
+        if len(stops) <= 3:
+            return stops
+
+        def path_dist(seq):
+            return sum(
+                self.calculate_distance_km(seq[i]["lat"], seq[i]["lng"], seq[i + 1]["lat"], seq[i + 1]["lng"])
+                for i in range(len(seq) - 1)
+            )
+
+        best = list(stops)
+        best_dist = path_dist(best)
+        improved = True
+        while improved:
+            improved = False
+            for i in range(1, len(best) - 1):
+                for j in range(i + 1, len(best)):
+                    candidate = best[:i] + list(reversed(best[i:j + 1])) + best[j + 1:]
+                    cand_dist = path_dist(candidate)
+                    if cand_dist + 0.1 < best_dist:
+                        best = candidate
+                        best_dist = cand_dist
+                        improved = True
+        return best
+
+    def plan_optimal_route(self, start_city_name=None, max_stops=10, region_code=None, optimize=True):
+        """Ziyaret edilmemiş şehirler arasında Greedy + 2-opt ile optimize gezi rotası önerir."""
+        unvisited = [
+            p for p in self.unvisited_provinces.values()
+            if not region_code or region_code == "all" or p["region_code"] == region_code
+        ]
         if not unvisited:
             return []
 
         # Başlangıç şehri bul
-        start_city = None
-        if start_city_name:
-            for p in self.provinces.values():
-                if p["name"].lower() == start_city_name.lower() or p["slug"].lower() == start_city_name.lower():
-                    start_city = p
-                    break
-
+        start_city = self.find_province(start_city_name) if start_city_name else None
         if not start_city:
             if self.visited_provinces:
                 start_city = list(self.visited_provinces.values())[0]
@@ -843,17 +1109,36 @@ class SeyyahEngine:
                 start_city = self.provinces.get("01_Marmara/Istanbul", unvisited[0])
 
         current = start_city
-        remaining = unvisited.copy()
-        route = [current]
-        
-        while remaining and len(route) <= max_stops:
-            nearest = min(remaining, key=lambda c: self.calculate_distance_km(current["lat"], current["lng"], c["lat"], c["lng"]))
-            dist = self.calculate_distance_km(current["lat"], current["lng"], nearest["lat"], nearest["lng"])
-            nearest_copy = nearest.copy()
-            nearest_copy["distance_from_prev_km"] = int(dist * 1.35)
-            route.append(nearest_copy)
+        remaining = [p for p in unvisited if p["name"] != start_city["name"]]
+        raw_route = [current]
+
+        while remaining and len(raw_route) <= max_stops:
+            nearest = min(
+                remaining,
+                key=lambda c: self.calculate_distance_km(current["lat"], current["lng"], c["lat"], c["lng"])
+            )
+            raw_route.append(nearest)
             remaining.remove(nearest)
             current = nearest
+
+        if optimize and len(raw_route) > 3:
+            raw_route = self._two_opt_optimize(raw_route)
+
+        route = []
+        cumulative_km = 0
+        for idx, stop in enumerate(raw_route):
+            stop_copy = stop.copy()
+            if idx == 0:
+                stop_copy["distance_from_prev_km"] = 0
+            else:
+                prev = raw_route[idx - 1]
+                air_dist = self.calculate_distance_km(prev["lat"], prev["lng"], stop["lat"], stop["lng"])
+                leg_km = int(round(air_dist * 1.35))
+                stop_copy["distance_from_prev_km"] = leg_km
+                cumulative_km += leg_km
+            stop_copy["cumulative_km"] = cumulative_km
+            stop_copy["est_drive_hours"] = round(stop_copy["distance_from_prev_km"] / 80.0, 1)
+            route.append(stop_copy)
 
         return route
 
@@ -861,6 +1146,7 @@ class SeyyahEngine:
         """Frontend web uygulaması için `travel_data.json` ve `web_data.js` üretir."""
         export_data = {
             "stats": self.stats,
+            "achievements": self.achievements,
             "regions": REGIONS_INFO,
             "quotes": TRAVEL_QUOTES,
             "provinces": self.provinces
@@ -879,7 +1165,7 @@ class SeyyahEngine:
         return json_path, js_path
 
     def update_readme_stats(self):
-        """README.md dosyasındaki genel ilerleme, badge'ler ve bölge listesini günceller."""
+        """README.md dosyasındaki genel ilerleme, badge'ler, özet bloğu ve bölge listesini günceller."""
         readme_path = self.repo_root / "README.md"
         if not readme_path.exists():
             return False
@@ -888,11 +1174,20 @@ class SeyyahEngine:
         pct = self.stats["progress_pct"]
         visited_count = self.stats["visited_cities"]
         total_count = self.stats["total_cities"]
+        visited_regions = self.stats["visited_regions"]
+        total_regions = self.stats["total_regions"]
+        region_pct = round((visited_regions / total_regions) * 100, 1) if total_regions else 0
+        estimated_km = self.stats["estimated_km"]
 
-        # Badge güncelle
+        # Badge'leri güncelle
         content = re.sub(
-            r'Keşif-[0-9.]+%%25-brightgreen',
+            r'Keşif-[0-9.]+%25-brightgreen',
             f'Keşif-{pct}%25-brightgreen',
+            content
+        )
+        content = re.sub(
+            r'Bölgeler-[0-9]+%2F[0-9]+-blue',
+            f'Bölgeler-{visited_regions}%2F{total_regions}-blue',
             content
         )
 
@@ -903,9 +1198,25 @@ class SeyyahEngine:
 
         # Genel İlerleme Satırı
         content = re.sub(
-            r'\*\*🏆 Genel İlerleme:\*\* %[0-9.]+ \([0-9]+ / 81 İl\)\n[🟩⬜]+',
+            r'\*\*🏆 Genel İlerleme:\*\* %[0-9.]+ \([0-9]+ / 81 İl\)\r?\n[🟩⬜]+',
             f'**🏆 Genel İlerleme:** %{pct} ({visited_count} / {total_count} İl)\n{progress_bar}',
             content
+        )
+
+        # Özet Kod Bloğunu Güncelle
+        summary_block = (
+            "```\n"
+            f"Toplam Ziyaret Edilen İl:  {visited_count} / {total_count}\n"
+            f"Tahmini Karayolu İzi:      {estimated_km:,} km\n"
+            f"Kütüphane Ofis Mesaisi:    {visited_count} İl Halk Kütüphanesi ({self.stats['library_hours']} saat)\n"
+            f"Coğrafi Bölge Kapsamı:     {visited_regions} / {total_regions} (%{region_pct:.1f})\n"
+            "```"
+        )
+        content = re.sub(
+            r'```\r?\nToplam Ziyaret Edilen İl:[\s\S]*?```',
+            summary_block,
+            content,
+            count=1
         )
 
         # Bölge başlıklarındaki (x/y) sayıları güncelle
@@ -925,27 +1236,33 @@ class SeyyahEngine:
             v = r_stat["visited"]
             t = r_stat["total"]
             p = r_stat["percentage"]
-            visited_names = [prov["name"] for k, prov in sorted(self.visited_provinces.items()) if k.startswith(reg_code)]
+            visited_names = sorted(
+                [prov["name"] for k, prov in self.visited_provinces.items() if k.startswith(reg_code)],
+                key=turkish_sort_key
+            )
             names_str = ", ".join(visited_names) if visited_names else "*Sıradaki Keşif Seferi*"
             f_blocks = int(round((p / 100) * 5))
             e_blocks = 5 - f_blocks
             bar = "🟩" * f_blocks + "⬜" * e_blocks
             short_name = r_info["name"].replace(" Bölgesi", "")
             table_rows.append(f"| **{r_info['icon']} {short_name}** | `%{p:.1f}` ({v}/{t}) | {names_str} | {bar} |")
-        
+
         table_content = "\n".join(table_rows)
         content = re.sub(
-            r'(\| \*\*🏰 Marmara\*\* \|[\s\S]*?\| \*\*🏜️ G\.Doğu Anadolu\*\* \|[^\n]*)',
+            r'(\| \*\*🏰 Marmara\*\* \|[\s\S]*?\| \*\*🏜️ (?:G\.Doğu|Güneydoğu) Anadolu\*\* \|[^\r\n]*)',
             table_content,
             content
         )
 
-        # 81 İl Detaylı Keşif Listesini Güncelle
+        # 81 İl Detaylı Keşif Listesini Güncelle (Türkçe alfabetik sıra)
         checklist_sections = []
         for reg_code, r_info in REGIONS_INFO.items():
             r_stat = self.stats["regional_breakdown"][reg_code]
             section_str = f"**{r_info['icon']} {r_info['name']} ({r_stat['visited']}/{r_stat['total']})**\n"
-            reg_provinces = [(k, prov) for k, prov in sorted(self.provinces.items(), key=lambda x: x[1]["name"]) if k.startswith(reg_code)]
+            reg_provinces = sorted(
+                [(k, prov) for k, prov in self.provinces.items() if k.startswith(reg_code)],
+                key=lambda x: turkish_sort_key(x[1]["name"])
+            )
             for k, prov in reg_provinces:
                 if prov["visited"]:
                     section_str += f"- ✅ [**{prov['name']}**]({prov['readme_rel']})\n"
@@ -955,8 +1272,8 @@ class SeyyahEngine:
 
         full_checklist = "\n\n".join(checklist_sections)
         content = re.sub(
-            r'(## ✅ 81 İl Detaylı Keşif Listesi\n\n)[\s\S]*?(\n\n---)',
-            r'\1' + full_checklist + r'\2',
+            r'(## ✅ 81 İl Detaylı Keşif Listesi\r?\n\r?\n)[\s\S]*?(\r?\n\r?\n---)',
+            lambda m: m.group(1) + full_checklist + m.group(2),
             content
         )
 

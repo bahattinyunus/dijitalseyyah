@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anadolu Seyahatnamesi - Dijital Seyyah Seyir Defteri</title>
-  <meta name="description" content="81 il, 7 bölge, kütüphane ofisleri, menzil notları ve modern seyyahın interaktif seyahat günlüğü.">
-  
+  <meta name="description" content="81 il, 7 bölge, kütüphane ofisleri, menzil notları, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.">
+
   <!-- Favicon & Fonts -->
   <link rel="icon" href="assets/banner.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -19,18 +19,24 @@
   <div class="app-container">
     <!-- Header Section -->
     <header class="glass">
-      <div class="logo-section" id="logo-section">
-        <div class="logo-icon">🕌</div>
-        <div class="logo-text">
-          <h1>ANADOLU SEYAHATNAMESİ</h1>
-          <p>Dijital Seyyah • Sefer Der Vatan</p>
+      <div class="header-left">
+        <button class="btn btn-outline mobile-menu-btn" id="btn-mobile-sidebar" aria-label="Şehir Listesini Aç">
+          ☰ <span class="mobile-menu-label">İller</span>
+        </button>
+
+        <div class="logo-section" id="logo-section" title="Genel Bakışa Dön">
+          <div class="logo-icon">🕌</div>
+          <div class="logo-text">
+            <h1>ANADOLU SEYAHATNAMESİ</h1>
+            <p>Dijital Seyyah • Sefer Der Vatan</p>
+          </div>
         </div>
       </div>
 
       <div class="header-actions">
         <!-- Live Progress Indicator -->
         <div class="header-progress-group">
-          <span class="header-progress-label">Keşif İlerlemesi:</span>
+          <span class="header-progress-label">Keşif:</span>
           <span class="header-progress-pct" id="stats-pct">%0.0</span>
           <span style="font-size: 0.75rem; color: var(--text-muted);" id="stats-count">(0/81)</span>
           <div class="mini-progress-bar">
@@ -41,56 +47,69 @@
         <!-- Action Buttons -->
         <button class="btn btn-outline" id="btn-dashboard">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="10"></rect><rect x="14" y="17" width="7" height="4"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          Genel Bakış
+          <span class="btn-label">Genel Bakış</span>
         </button>
 
         <button class="btn btn-primary" id="btn-map">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-          Haritayı Aç
+          <span class="btn-label">Harita</span>
         </button>
 
         <button class="btn btn-outline" id="btn-route">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-          Rota Planlayıcı
+          <span class="btn-label">Rota Planla</span>
         </button>
 
-        <button class="btn btn-sound" id="btn-ambient" title="Bozkır ve Ney Tefekkür Sesi">
-          🎧 Tefekkür Sesleri
+        <button class="btn btn-outline" id="btn-random" title="Rastgele Bir Menzil Keşfet">
+          🎲 <span class="btn-label">Keşfet</span>
+        </button>
+
+        <button class="btn btn-sound" id="btn-ambient" title="Tefekkür Seslerini Aç/Değiştir">
+          🎧 <span class="btn-label">Tefekkür Sesi</span>
         </button>
 
         <button class="btn btn-outline" id="btn-quote" title="Günün Tefekkür Hikmeti">
-          📜 Hikmet
+          📜 <span class="btn-label">Hikmet</span>
         </button>
 
         <button class="btn btn-outline" id="btn-export" title="Seyahatnameyi Markdown Kitabı Olarak İndir">
-          📥 İndir
+          📥 <span class="btn-label">İndir</span>
         </button>
       </div>
     </header>
 
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
     <!-- Main Workspace Layout -->
     <div class="main-layout">
       <!-- Left Sidebar (Search & City Explorer) -->
-      <aside class="sidebar">
+      <aside class="sidebar" id="city-sidebar">
+        <!-- Mobile Sidebar Header -->
+        <div class="sidebar-mobile-header">
+          <span>🗺️ 81 İl Keşif Rehberi</span>
+          <button class="modal-close-btn" id="btn-close-sidebar" aria-label="Listeyi Kapat">&times;</button>
+        </div>
+
         <!-- Search Box -->
         <div class="sidebar-search-box">
           <div class="search-input-wrapper">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="search-input" class="search-input" placeholder="İl, lezzet veya miras ara...">
+            <input type="text" id="search-input" class="search-input" placeholder="İl, plaka, lezzet veya miras ara... (/)">
           </div>
         </div>
 
         <!-- Filter Pills -->
         <div class="filter-pills">
-          <button class="filter-pill active" data-filter="all">Tümü (81)</button>
-          <button class="filter-pill" data-filter="visited">✅ Gezildi</button>
-          <button class="filter-pill" data-filter="unvisited">⏳ Bekliyor</button>
+          <button class="filter-pill active" data-filter="all" id="pill-all">Tümü (81)</button>
+          <button class="filter-pill" data-filter="visited" id="pill-visited">✅ Gezildi</button>
+          <button class="filter-pill" data-filter="unvisited" id="pill-unvisited">⏳ Bekliyor</button>
         </div>
 
         <!-- Region Dropdown -->
         <div class="region-filter-wrapper">
           <select id="region-select" class="region-select">
-            <option value="all">Tüm Bölgeler (7/7)</option>
+            <option value="all">Tüm Bölgeler (7 Bölge)</option>
           </select>
         </div>
 
@@ -108,8 +127,8 @@
   </div>
 
   <!-- Interactive Map Modal Overlay -->
-  <div class="modal-overlay" id="map-modal" role="dialog" aria-modal="true">
-    <div class="modal-content" style="width: 95%; max-width: 1200px; height: 90vh;">
+  <div class="modal-overlay" id="map-modal" role="dialog" aria-modal="true" aria-label="İnteraktif Keşif Haritası">
+    <div class="modal-content" style="width: 95%; max-width: 1240px; height: 90vh;">
       <div class="modal-header">
         <div style="font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
           🗺️ İnteraktif Folium / Leaflet Keşif Haritası
@@ -118,6 +137,26 @@
       </div>
       <div class="modal-body" style="height: 100%;">
         <iframe src="travel_map.html" style="width: 100%; height: 100%; border: none;" title="Seyahat Haritası"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hikmet / Quote Modal Overlay -->
+  <div class="modal-overlay" id="quote-modal" role="dialog" aria-modal="true" aria-label="Günün Tefekkür Hikmeti">
+    <div class="modal-content quote-modal-content">
+      <div class="modal-header">
+        <div style="font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; color: var(--accent-gold); display: flex; align-items: center; gap: 8px;">
+          📜 Günün Tefekkür Hikmeti
+        </div>
+        <button class="modal-close-btn" aria-label="Kapat">&times;</button>
+      </div>
+      <div class="modal-body quote-modal-body">
+        <blockquote class="quote-modal-text" id="quote-modal-text"></blockquote>
+        <div class="quote-modal-author" id="quote-modal-author"></div>
+        <div class="quote-modal-actions">
+          <button class="btn btn-primary" id="btn-next-quote">✨ Yeni Hikmet Getir</button>
+          <button class="btn btn-outline" id="btn-copy-quote">📋 Kopyala</button>
+        </div>
       </div>
     </div>
   </div>

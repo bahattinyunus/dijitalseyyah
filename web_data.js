@@ -6,6 +6,10 @@ const TRAVEL_DATA = {
     "unvisited_cities": 42,
     "progress_pct": 48.1,
     "estimated_km": 10898,
+    "visited_regions": 6,
+    "total_regions": 7,
+    "days_on_road": 195,
+    "library_hours": 780,
     "regional_breakdown": {
       "01_Marmara": {
         "name": "Marmara Bölgesi",
@@ -71,6 +75,97 @@ const TRAVEL_DATA = {
         "percentage": 0.0
       }
     }
+  },
+  "achievements": {
+    "rank": {
+      "min_cities": 25,
+      "title": "Anadolu Kâşifi",
+      "icon": "🗺️",
+      "desc": "Bölgeleri aşan, kadim şehirlerin ruhunu kayda geçiren seyyah."
+    },
+    "next_rank": {
+      "min_cities": 41,
+      "title": "Evliya Çelebi İzinde",
+      "icon": "📜",
+      "desc": "Anadolu'nun yarısını aşmış, seyahatnamesini olgunlaştırmış üstat."
+    },
+    "cities_to_next_rank": 2,
+    "unlocked_count": 5,
+    "total_badges": 8,
+    "badges": [
+      {
+        "id": "first_step",
+        "icon": "👣",
+        "title": "İlk Adım",
+        "desc": "İlk şehri adımla ve seyahatnameye işle",
+        "current": 1,
+        "target": 1,
+        "unlocked": true
+      },
+      {
+        "id": "ten_thousand_km",
+        "icon": "🛣️",
+        "title": "10.000 km Menzil",
+        "desc": "Anadolu yollarında 10.000 km karayolu izi bırak",
+        "current": 10000,
+        "target": 10000,
+        "unlocked": true
+      },
+      {
+        "id": "library_scholar",
+        "icon": "📚",
+        "title": "Kütüphane Müdavimi",
+        "desc": "30 farklı İl Halk Kütüphanesinde mesai yap",
+        "current": 30,
+        "target": 30,
+        "unlocked": true
+      },
+      {
+        "id": "karadeniz_explorer",
+        "icon": "🌲",
+        "title": "Karadeniz Kâşifi",
+        "desc": "Karadeniz bölgesinde en az 10 il ziyaret et",
+        "current": 10,
+        "target": 10,
+        "unlocked": true
+      },
+      {
+        "id": "east_summits",
+        "icon": "🏔️",
+        "title": "Doğu Zirveleri",
+        "desc": "Doğu Anadolu'da en az 8 il keşfet",
+        "current": 8,
+        "target": 8,
+        "unlocked": true
+      },
+      {
+        "id": "halfway_anatolia",
+        "icon": "⭐",
+        "title": "Yarı Yol Eşiğinde",
+        "desc": "81 ilin yarısından fazlasını (41 il) adımla",
+        "current": 39,
+        "target": 41,
+        "unlocked": false
+      },
+      {
+        "id": "seven_regions",
+        "icon": "🌍",
+        "title": "Yedi İklim Fatihi",
+        "desc": "Türkiye'nin 7 coğrafi bölgesinin tamamına ayak bas",
+        "current": 6,
+        "target": 7,
+        "unlocked": false
+      },
+      {
+        "id": "anatolia_master",
+        "icon": "👑",
+        "title": "Hâfız-ı Anadolu",
+        "desc": "Türkiye'nin 81 ilinin tamamını keşfet",
+        "current": 39,
+        "target": 81,
+        "unlocked": false
+      }
+    ]
   },
   "regions": {
     "01_Marmara": {
@@ -255,7 +350,14 @@ const TRAVEL_DATA = {
       "slug": "Bursa",
       "content_size": 2533,
       "custom_quote": "Yeşil Bursa, Osmanlı'nın ilk payitahtı, Uludağ'ın eteklerinde kurulmuş manevi bir sığınaktır.",
-      "custom_library": "Bursa İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Bursa İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Osmanlı Devleti'nin ilk başkenti olan Bursa, imparatorluğun kurucu kodlarını barındırır. İpekyolu'nun en önemli ticaret merkezlerinden biri olarak tarih boyunca parlamıştır.",
+      "literary_quotes": [
+        "\"Bursa'da zaman, bir yeşil şadırvanda şırıldayan suyun musikisidir.\" — Ahmet Hamdi Tanpınar",
+        "\"Bursa, Osmanlı'nın dip diri ve taptaze kökü, maneviyatın beşiğidir.\" — Evliya Çelebi",
+        "\"Bursa'yı görmeyen, Osmanlı'nın ruhunu tam olarak anlayamaz.\" — Yahya Kemal Beyatlı"
+      ],
+      "reflection": "Ulu Cami'nin şadırvanından dökülen suyun sesinde zamanın ve mekanın ötesine geçer, sükuneti tefekkür edersiniz. Emir Sultan'ın ve Üftade'nin manevi huzurunda kalbinizi dinlendirirsiniz."
     },
     "01_Marmara/Canakkale": {
       "plate": 17,
@@ -338,7 +440,15 @@ const TRAVEL_DATA = {
       "slug": "Istanbul",
       "content_size": 2696,
       "custom_quote": "Yedi tepenin üstünde yükselen camileriyle, iki kıtayı birbirine bağlayan boğazıyla dünya tarihinin kalbidir.",
-      "custom_library": "Istanbul İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Istanbul İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Roma, Bizans ve Osmanlı İmparatorluklarına başkentlik yapmış olan İstanbul, insanlık tarihinin en görkemli sahnesidir. Her caddesi, her taşı bir medeniyet vesikasıdır.",
+      "literary_quotes": [
+        "\"Eğer dünya tek bir devlet olsaydı, başkenti İstanbul olurdu.\" — Napolyon Bonapart",
+        "\"İstanbul bir şâhâne şikâr yeridir ki, cihan mülkünde benzeri yoktur.\" — Evliya Çelebi",
+        "\"Sana dün bir tepeden baktım aziz İstanbul! Görmedim gezmediğim, sevmediğim hiçbir yer.\" — Yahya Kemal Beyatlı",
+        "\"İstanbul, Doğu ile Batı'nın, madde ile mananın nihai vuslat noktasıdır.\" — Cemil Meriç"
+      ],
+      "reflection": "Ayasofya ve Süleymaniye'nin kubbeleri altında, ilahi aşkın ve mimari dehanın harmanlanışını tefekkür edersiniz. Boğazın sularında iki kıtanın kucaklaşmasını izlerken, birliğin ve çokluğun sırrına erersiniz."
     },
     "01_Marmara/Kirklareli": {
       "plate": 39,
@@ -392,7 +502,13 @@ const TRAVEL_DATA = {
       "slug": "Kocaeli",
       "content_size": 2467,
       "custom_quote": "Sanayinin gri çehresinin arkasında, asırlık çınarların ve körfezin mavi sularının fısıldadığı kadim bir tarih saklıdır.",
-      "custom_library": "Kocaeli İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Kocaeli İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Antik dönemde Bithynia Krallığı'na başkentlik yapmış olan Nicomedia (Kocaeli), Osmanlı döneminde de payitahtın en önemli kapılarından biri olmuştur. Sanayi şehri kimliğinin gerisinde derin bir kültür barındırır.",
+      "literary_quotes": [
+        "\"Nicomedia, Roma'nın doğudaki en parlak tacı, asırların yorulmaz limanıdır.\" — Libanius",
+        "\"Kocaeli, payitahtın bağ ve bahçe kapısı, körfezin sükunet bulduğu konaktır.\" — Evliya Çelebi"
+      ],
+      "reflection": "Körfezin dalgalarında, zamanın akışını ve emeğin kutsallığını tefekkür edersiniz. Tarihi saat kulesinin gölgesinde, geçip giden anların ebediyetle olan bağını idrak edersiniz."
     },
     "01_Marmara/Sakarya": {
       "plate": 54,
@@ -554,7 +670,13 @@ const TRAVEL_DATA = {
       "slug": "Denizli",
       "content_size": 2377,
       "custom_quote": "Pamukkale'nin beyaz travertenleriyle doğanın ve tarihin beyaz bir rüya gibi birleştiği şehir.",
-      "custom_library": "Denizli İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Denizli İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Hierapolis ve Laodikeia antik kentlerine ev sahipliği yapan Denizli, tekstil geleneğini antik dönemden bugüne taşıyan, bereketli topraklara sahip bir Ege durağıdır.",
+      "literary_quotes": [
+        "\"Denizli, suyun taşa can verdiği, beyaz travertenlerin göğe gülümsediği yerdir.\" — Evliya Çelebi",
+        "\"Hierapolis, şifalı suların ve beyaz pamuk yığınlarının sinesinde uyuyan bir tarihtir.\" — Strabon"
+      ],
+      "reflection": "Hierapolis antik havuzunun şifalı sularında, doğanın yaratılış harikalarını ve asırlar boyu süregelen şifa arayışını tefekkür edersiniz."
     },
     "02_Ege/Izmir": {
       "plate": 35,
@@ -586,7 +708,14 @@ const TRAVEL_DATA = {
       "slug": "Izmir",
       "content_size": 2584,
       "custom_quote": "Ege'nin incisi İzmir, körfezin serin imbat rüzgarıyla yıkanan, hoşgörünün ve özgürlüğün simgesi kadim kent.",
-      "custom_library": "Izmir İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Izmir İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Smyrna adıyla 8500 yıllık bir geçmişe sahip olan İzmir, İpekyolu'nun batıya açılan en büyük liman kenti olmuş, kozmopolit yapısıyla tarih boyunca ticaretin ve kültürün kalbi sayılmıştır.",
+      "literary_quotes": [
+        "\"İzmir, Akdeniz'in incisidir, suyun ve mermerin rüya gördüğü yerdir.\" — Victor Hugo",
+        "\"Güzel İzmir! Körfezinin mavi sularında tarihin ve güneşin seviştiği şehir.\" — Halikarnas Balıkçısı",
+        "\"İzmir, her sokağında denizin kokusunu ve özgürlüğün nefesini taşıyan şehirdir.\" — Atilla İlhan"
+      ],
+      "reflection": "Kordon boyunda batan güneşi izlerken, Akdeniz uygarlıklarının ortak ruhunu ve zamanın dalgalar halinde akışını tefekkür edersiniz. Efes'in mermer caddelerinde yürürken insanlığın geçici görkemini idrak edersiniz."
     },
     "02_Ege/Kutahya": {
       "plate": 43,
@@ -669,7 +798,13 @@ const TRAVEL_DATA = {
       "slug": "Mugla",
       "content_size": 2383,
       "custom_quote": "Turkuaz koyları, yeşil çam ormanları ve beyaz Muğla evleriyle doğanın en cömert davrandığı yeryüzü cenneti.",
-      "custom_library": "Mugla İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Mugla İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Karya medeniyetinden bugüne uzanan Muğla, tarihi evleri, yaylaları ve dünyanın en güzel kıyıleriyle tarih boyunca seyyahların uğrak noktası olmuştur.",
+      "literary_quotes": [
+        "\"Muğla, dağların denizle kucaklaştığı, insanın doğayla uyum içinde yaşadığı masaldır.\" — Halikarnas Balıkçısı",
+        "\"Karya toprakları, güneşin ve denizin ebedi vatanıdır.\" — Heredot"
+      ],
+      "reflection": "Kayaköy'ün terk edilmiş hüzünlü sokaklarında zamanın geçiciliğini ve sessizliğin sesini tefekkür edersiniz. Saklıkent Kanyonu'nun serin sularında doğanın gücünü hissedersiniz."
     },
     "02_Ege/Usak": {
       "plate": 64,
@@ -727,7 +862,13 @@ const TRAVEL_DATA = {
       "slug": "Adana",
       "content_size": 2368,
       "custom_quote": "Torosların gölgesinde, Seyhan Nehri'nin bereketli toprakları üzerinde yükselen, sıcakkanlı ve coşkulu şehir.",
-      "custom_library": "Adana İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Adana İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Kilikya bölgesinin en önemli kenti olan Adana, Hititlerden bugüne tarımın, ticaretin ve kültürün merkezi olmuştur. Çukurova'nın bereketli toprakları şehre hayat vermiştir.",
+      "literary_quotes": [
+        "\"Adana, Çukurova'nın altın kalbi, Seyhan'ın nazlı gelinidir.\" — Yaşar Kemal",
+        "\"Taşköprü, nehrin üzerine kurulmuş taştan bir gerdanlık gibidir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Seyhan kıyısında asırlık Taşköprü'nün üzerinde durup altından akan suya bakarken, nehirler gibi akıp giden insan ömrünü ve tarihin sabitliğini tefekkür edersiniz."
     },
     "03_Akdeniz/Antalya": {
       "plate": 7,
@@ -759,7 +900,13 @@ const TRAVEL_DATA = {
       "slug": "Antalya",
       "content_size": 2394,
       "custom_quote": "Akdeniz'in parlayan güneşi, antik limanları, heybetli surları ve eşsiz doğasıyla tarihin ve coğrafyanın zirvesi.",
-      "custom_library": "Antalya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Antalya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Bergama Kralı Attalos tarafından kurulan Attaleia (Antalya), Bizans, Selçuklu ve Osmanlı dönemlerinde Akdeniz'in en stratejik liman kenti olmuştur.",
+      "literary_quotes": [
+        "\"Hiç şüphe yoktur ki Antalya, dünyanın en güzel yeridir.\" — Mustafa Kemal Atatürk",
+        "\"Antalya'nın surları ve bahçeleri öyle bir süsle donanmıştır ki, giren kendini cennette sanır.\" — İbn Battûta"
+      ],
+      "reflection": "Kaleiçi'nin dar sokaklarında yürürken, asırlar boyu bu limana sığınmış gemicileri ve zamanın geçici limanlar olduğunu tefekkür edersiniz."
     },
     "03_Akdeniz/Burdur": {
       "plate": 15,
@@ -816,7 +963,13 @@ const TRAVEL_DATA = {
       "slug": "Hatay",
       "content_size": 2398,
       "custom_quote": "Dinlerin ve dillerin kardeşçe kucaklaştığı, tarihin en eski yerleşim yerlerinden biri olan hoşgörü başkenti.",
-      "custom_library": "Hatay İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Hatay İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Antik çağın en büyük metropollerinden biri olan Antakya (Hatay), ilk Hristiyanların toplandığı ve İslamiyet'in Anadolu'daki ilk camisinin inşa edildiği mukaddes bir şehirdir.",
+      "literary_quotes": [
+        "\"Hatay benim şahsi meselemdir.\" — Mustafa Kemal Atatürk",
+        "\"Medeniyetlerin beşiği, dinlerin ve dillerin kardeşçe kucaklaştığı mukaddes toprak.\" — Cemil Meriç"
+      ],
+      "reflection": "Habib-i Neccar Camii'nin manevi ikliminde, inancın ve sevginin birleştirici gücünü tefekkür eder, Titus Tüneli'nin devasa kayalarında insan azmini görürsünüz."
     },
     "03_Akdeniz/Isparta": {
       "plate": 32,
@@ -845,7 +998,13 @@ const TRAVEL_DATA = {
       "slug": "Isparta",
       "content_size": 2275,
       "custom_quote": "Güllerin ve lavantaların kokusuyla bezenmiş, göller yöresinin incisi, doğa harikası şehir.",
-      "custom_library": "Isparta İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Isparta İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Pisidya bölgesinde yer alan Isparta, Selçuklu ve Hamitoğulları beyliği dönemlerinde önemli bir kültür merkezi olmuş, günümüzde gül tarımıyla dünyaya açılmıştır.",
+      "literary_quotes": [
+        "\"Isparta, güllerin kokusunda cennet bahçelerinden bir esintidir.\" — Evliya Çelebi",
+        "\"Eğirdir, dağların arasında mavi bir ayna gibidir.\" — Seyyah İbn Battûta"
+      ],
+      "reflection": "Eğirdir Gölü'nün sakin sularında, doğanın sunduğu huzuru ve yaratılışın estetiğini tefekkür edersiniz."
     },
     "03_Akdeniz/Kahramanmaras": {
       "plate": 46,
@@ -903,7 +1062,13 @@ const TRAVEL_DATA = {
       "slug": "Mersin",
       "content_size": 2373,
       "custom_quote": "Akdeniz kıyısında uzanan palmiyeleri, Kızkalesi ve antik kentleriyle tarihin denizle buluştuğu liman kent.",
-      "custom_library": "Mersin İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Mersin İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Yumuktepe höyüğüyle 9000 yıllık geçmişe sahip olan Mersin, Klikya'nın kapısı olmuş ve Osmanlı'nın son döneminde büyük bir ticaret limanına dönüşmüştür.",
+      "literary_quotes": [
+        "\"Mersin, Akdeniz'in parlayan yıldızı, tarihin denizle kucaklaştığı yerdir.\" — Özdemir İnce",
+        "\"Kızkalesi, dalgaların ortasında yükselen bir efsane abidesidir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Kizkalesi'nin açıklarında denizin dalgalarını dinlerken, insan yapısı kalelerin bile zamanın aşındırmasına karşı duramayacağını tefekkür edersiniz."
     },
     "03_Akdeniz/Osmaniye": {
       "plate": 80,
@@ -957,7 +1122,13 @@ const TRAVEL_DATA = {
       "slug": "Aksaray",
       "content_size": 2345,
       "custom_quote": "Ihlara Vadisi'nin dik yamaçları arasında, Melendiz Çayı'nın şırıltısıyla demlenen bozkırın mistik kapısı.",
-      "custom_library": "Aksaray İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Aksaray İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Kapadokya'nın batı kapısı olan Aksaray, Selçuklu döneminde İpekyolu'nun en güvenli ve zengin konaklama merkezlerinden biri olmuştur.",
+      "literary_quotes": [
+        "\"Aksaray, Selçuklu'nun adil kalesi, bozkırın ortasındaki ilim yuvasıdır.\" — İbn Battûta",
+        "\"Ihlara, yer altında akan nehrin ve kayalara oyulmuş mabetlerin vadisidir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Ihlara Vadisi'nin derinliklerinde yürürken, doğanın sabırla kayayı nasıl oyduğunu ve ilk Hristiyanların sığındığı mağaralardaki tefekkür dünyasını hissedersiniz."
     },
     "04_IcAnadolu/Ankara": {
       "plate": 6,
@@ -988,7 +1159,13 @@ const TRAVEL_DATA = {
       "slug": "Ankara",
       "content_size": 2447,
       "custom_quote": "Vakur ve tarihi Ankara, Türkiye Cumhuriyeti'nin kalbi, bozkırın ortasında yükselen azim ve kararlılık abidesi.",
-      "custom_library": "Ankara İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Ankara İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Hititlerden Friglere, Romalılardan Selçuklulara uzanan tarihiyle Ankara, 1923'te Türkiye Cumhuriyeti'nin başkenti ilan edilerek modern tarihin dönüm noktası olmuştur.",
+      "literary_quotes": [
+        "\"Ankara, bozkırın kalbinde yanan sönmez bir meşaledir.\" — Yahya Kemal Beyatlı",
+        "\"Ankara Kalesi, asırlar boyu bozkırın ufkunu bekleyen vakur bir nöbetçidir.\" — Ahmet Hamdi Tanpınar"
+      ],
+      "reflection": "Anıtkabir'de kurucu iradenin büyüklüğünü ve milletin bağımsızlık aşkını tefekkür eder; Ankara Kalesi'nin surlarından bozkırın ufkunu izlerken geçmiş medeniyetleri düşünürsünüz."
     },
     "04_IcAnadolu/Cankiri": {
       "plate": 18,
@@ -1045,7 +1222,13 @@ const TRAVEL_DATA = {
       "slug": "Eskisehir",
       "content_size": 2419,
       "custom_quote": "Porsuk Çayı'nın iki yakasında yükselen, gençliğin, sanatın ve Odunpazarı'nın tarihi evlerinin harmanlandığı kültür şehri.",
-      "custom_library": "Eskisehir İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Eskisehir İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Frigya döneminin önemli yerleşimlerinden olan Eskişehir (Dorylaion), Selçuklu ve Osmanlı döneminde de stratejik bir geçiş noktası ve kültür merkezi olmuştur.",
+      "literary_quotes": [
+        "\"Eskişehir, Porsuk'un suladığı modern bir vaha, Anadolu'nun gülen yüzüdür.\" — Yılmaz Büyükerşen",
+        "\"Odunpazarı, ahşabın ve taşın en güzel komşuluk yaptığı tarihi mahalledir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Odunpazarı'nın Arnavut kaldırımlı sokaklarında yürürken, geçmişin sıcak mahalle kültürünü ve ahşap konaklardaki yaşanmışlıkları tefekkür edersiniz."
     },
     "04_IcAnadolu/Karaman": {
       "plate": 70,
@@ -1129,7 +1312,12 @@ const TRAVEL_DATA = {
       "slug": "Kirikkale",
       "content_size": 2327,
       "custom_quote": "Bozkırın ortasında Kızılırmak'ın sularıyla hayat bulan, cumhuriyetin sanayi hamleleriyle gelişmiş mütevazı şehir.",
-      "custom_library": "Kirikkale İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Kirikkale İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Tarih boyunca İpekyolu üzerinde önemli bir geçiş noktası olan Kırıkkale bölgesi, cumhuriyet döneminde kurulan savunma sanayi fabrikalarıyla şehirleşmiştir.",
+      "literary_quotes": [
+        "\"Çeşnigir Köprüsü, Kızılırmak'ın hırçın sularına vurulmuş Selçuklu mührüdür.\" — Evliya Çelebi"
+      ],
+      "reflection": "Kızılırmak üzerindeki tarihi Çeşnigir Köprüsü'nden akan nehre bakarken, asırlar boyu bu kalede nöbet tutan askerleri ve tarihin nöbetleşe geçen doğasını düşünürsünüz."
     },
     "04_IcAnadolu/Kirsehir": {
       "plate": 40,
@@ -1187,7 +1375,14 @@ const TRAVEL_DATA = {
       "slug": "Konya",
       "content_size": 2465,
       "custom_quote": "Hazreti Mevlana'nın hoşgörü ve aşk iklimiyle demlenmiş, Selçuklu'nun muhteşem payitahtı, irfan merkezi.",
-      "custom_library": "Konya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Konya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Anadolu Selçuklu Devleti'ne uzun yıllar başkentlik yapan Konya, yetiştirdiği alimler, sufiler ve bıraktığı eşsiz mimari eserlerle İslam medeniyetinin kurucu şehirlerindendir.",
+      "literary_quotes": [
+        "\"Gel, gel, ne olursan ol, yine gel...\" — Mevlânâ Celâleddîn-i Rûmî",
+        "\"Konya, Selçuklu medeniyetinin ruhunu taşa nakşettiği mukaddes şehirdir.\" — Ahmet Hamdi Tanpınar",
+        "\"Konya, maneviyatın göğe yükseldiği, dervişlerin sema ettiği huzur yurdudur.\" — Evliya Çelebi"
+      ],
+      "reflection": "Mevlana Türbesi'nin yeşil kubbesi altında, ilahi aşkı, 'hamdım, piştim, yandım' diyen dervişlerin sabrını tefekkür edersiniz."
     },
     "04_IcAnadolu/Nevsehir": {
       "plate": 50,
@@ -1218,7 +1413,13 @@ const TRAVEL_DATA = {
       "slug": "Nevsehir",
       "content_size": 2421,
       "custom_quote": "Kapadokya'nın masalsı vadilerinde, peri bacalarının rüzgarla fısıldaştığı, zamanın ve mekanın ötesinde bir rüya coğrafyası.",
-      "custom_library": "Nevsehir İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Nevsehir İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Hititlerden ilk Hristiyan sığınaklarına kadar uzanan Kapadokya, volkanik tüflerin aşınmasıyla oluşan peri bacalarıyla dünya miraslarının en özgün olanıdır.",
+      "literary_quotes": [
+        "\"Kapadokya, taşın rüya gördüğü, rüzgarın ise o rüyayı fısıldadığı büyülü coğrafyadır.\" — Ahmet Hamdi Tanpınar",
+        "\"Ürgüp ve Göreme vadileri, yeryüzünün en benzersiz yaratılış mucizeleridir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Balonların gökyüzünde süzülüşünü izlerken, insan ruhunun özgürlük arayışını ve yeryüzünün eşsiz sanatını tefekkür edersiniz."
     },
     "04_IcAnadolu/Nigde": {
       "plate": 51,
@@ -1275,7 +1476,14 @@ const TRAVEL_DATA = {
       "slug": "Sivas",
       "content_size": 2511,
       "custom_quote": "Selçuklu çinilerinde gökyüzünü arayan, bozkırın ortasında yükselen ulu medreseleriyle vakur ve tarihi şehir.",
-      "custom_library": "Sivas İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Sivas İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Selçuklu döneminin en büyük eğitim ve kültür merkezlerinden biri olan Sivas, Cumhuriyetin temellerinin atıldığı Sivas Kongresi'ne de ev sahipliği yapmıştır.",
+      "literary_quotes": [
+        "\"Sivas, Selçuklu çinilerinde gökyüzünü arayan, bozkırın asil şaheseridir.\" — Âşık Veysel",
+        "\"Divriği Ulu Camii, mimarinin ve taş işçiliğinin yeryüzündeki nihai mucizesidir.\" — Evliya Çelebi",
+        "\"Sivas, Selçuklu'nun taşa işlenmiş ruhu, bozkırın en vakur kalesidir.\" — Ahmet Hamdi Tanpınar"
+      ],
+      "reflection": "Divriği Ulu Camii'nin kapısındaki namaz kılan insan gölgesini izlerken, taş ustalarının ilahi aşkla mermere nasıl şekil verdiğini tefekkür edersiniz."
     },
     "04_IcAnadolu/Yozgat": {
       "plate": 66,
@@ -1335,7 +1543,13 @@ const TRAVEL_DATA = {
       "slug": "Amasya",
       "content_size": 2401,
       "custom_quote": "Kral Kaya Mezarları'nın gölgesinde, Yeşilırmak'ın iki yakasında yükselen Yalıboyu evleriyle tarihin secdesi.",
-      "custom_library": "Amasya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Amasya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Pontus Krallığı'na başkentlik yapan ve Osmanlı döneminde Şehzadeler Şehri olarak parlayan Amasya, zengin kültürel birikimiyle Karadeniz'in incisidir.",
+      "literary_quotes": [
+        "\"Amasya, nehrin iki yakasında tarihin ve dağların secdesidir.\" — Evliya Çelebi",
+        "\"Yeşilırmak, Amasya'nın içinden akan bir zaman şeridi gibidir.\" — Ahmet Hamdi Tanpınar"
+      ],
+      "reflection": "Yeşilırmak'ın akışını izlerken, Amasya'da yetişen şehzadeleri ve taht kavgalarının geçiciliğini, dağları delen Ferhat'ın ilahi aşkını tefekkür edersiniz."
     },
     "05_Karadeniz/Artvin": {
       "plate": 8,
@@ -1366,7 +1580,13 @@ const TRAVEL_DATA = {
       "slug": "Artvin",
       "content_size": 2364,
       "custom_quote": "Karagöl'ün büyüleyici yansımasında yeşilin binbir tonunu barındıran, dik yamaçların ve sisli yaylaların şehri.",
-      "custom_library": "Artvin İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Artvin İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Çoruh Nehrinin şekillendirdiği Artvin, Gürcü krallıklarından Osmanlı'ya uzanan tarihi kaleleri ve eşsiz tabiatıyla doğu sınırımızın en dik duruşlu şehridir.",
+      "literary_quotes": [
+        "\"Artvin, gökyüzüne komşu toprakların, bulutlarla oynaşan dağların vatanıdır.\" — Bedri Rahmi Eyüboğlu",
+        "\"Karagöl, yeşil dağların ortasına düşmüş zümrüt bir damla gibidir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Karagöl'ün kenarında sessizce otururken, doğanın kusursuz dengesini ve yaratıcının 'Musavvir' esmasının tecellilerini hayranlıkla tefekkür edersiniz."
     },
     "05_Karadeniz/Bartin": {
       "plate": 74,
@@ -1423,7 +1643,13 @@ const TRAVEL_DATA = {
       "slug": "Bayburt",
       "content_size": 2359,
       "custom_quote": "Baksı Müzesi ile modern sanatı bozkırın tepesinde buluşturan, Çoruh'un serinlettiği tarihi kale şehir.",
-      "custom_library": "Bayburt İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Bayburt İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "İpek Yolu üzerinde yer alan Bayburt, tarihi kalesi ve yetiştirdiği aşıklarla meşhur olup, Baksı Müzesi ile geleneksel ve moderni harmanlamıştır.",
+      "literary_quotes": [
+        "\"Bayburt Kalesi, Çoruh'un üzerinde yükselen ihtişamlı bir kartal yuvasıdır.\" — Evliya Çelebi",
+        "\"Baksı, bozkırın tepesinde yükselen bir çağdaş sanat ve irfan vahasıdır.\" — Hüsamettin Koçan"
+      ],
+      "reflection": "Bayburt Kalesi'nin surlarından Çoruh Nehrini izlerken, asırlar boyu bu kalede nöbet tutan askerleri ve tarihin nöbetleşe geçen doğasını tefekkür edersiniz."
     },
     "05_Karadeniz/Bolu": {
       "plate": 14,
@@ -1480,7 +1706,13 @@ const TRAVEL_DATA = {
       "slug": "Corum",
       "content_size": 2438,
       "custom_quote": "Hattuşaş antik kentinin binlerce yıllık mabet kalıntılarıyla Hitit uygarlığının gücünü fısıldayan kadim topraklar.",
-      "custom_library": "Corum İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Corum İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Hitit İmparatorluğu'nun başkenti olan Hattuşaş ve Alacahöyük gibi dünyanın en eski arkeolojik alanlarına sahip olan Çorum, insanlık tarihinin en önemli kapılarından biridir.",
+      "literary_quotes": [
+        "\"Hattuşaş, taşın ve demirin Hitit ustaları eliyle şekillendiği, tarihin ilk büyük başkentidir.\" — Ekrem Akurgal",
+        "\"Çorum, Hitit mirasının üzerinde yükselen bereketli bir Anadolu vahasıdır.\" — Evliya Çelebi"
+      ],
+      "reflection": "Hattuşaş Yazılıkaya'daki kaya kabartmalarını incelerken, binlerce yıl önce yaşamış insanların inanç dünyasını ve zamanın acımasız akışını tefekkür edersiniz."
     },
     "05_Karadeniz/Duzce": {
       "plate": 81,
@@ -1537,7 +1769,13 @@ const TRAVEL_DATA = {
       "slug": "Giresun",
       "content_size": 2342,
       "custom_quote": "Karadeniz'in tek yaşanabilir adasına sahip olan, fındığın ve yeşilin dalgalarla buluştuğu sahil şehri.",
-      "custom_library": "Giresun İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Giresun İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Antik adı Kerasus olan Giresun, fındığın anavatanı kabul edilir. Tarihi kalesi ve adasıyla Karadeniz mitolojisinde önemli bir yer tutar.",
+      "literary_quotes": [
+        "\"Giresun Kalesi, denize tepeden bakan ve dalgaların sesini dinleyen bir bekçidir.\" — Evliya Çelebi",
+        "\"Giresun, fındık bahçelerinin yeşilliğinde saklanmış bir deniz güzelidir.\" — Bedri Rahmi Eyüboğlu"
+      ],
+      "reflection": "Giresun Kalesi'nden Karadeniz'in sonsuz ufkuna bakarken, denizin azametini ve doğanın sunduğu sonsuz bereketi tefekkür edersiniz."
     },
     "05_Karadeniz/Gumushane": {
       "plate": 29,
@@ -1568,7 +1806,12 @@ const TRAVEL_DATA = {
       "slug": "Gumushane",
       "content_size": 2262,
       "custom_quote": "Karaca Mağarası'nın büyüleyici sarkıtlarıyla yeraltı saraylarını andıran, vadiler arasına gizlenmiş gümüş şehir.",
-      "custom_library": "Gumushane İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Gumushane İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Tarih boyunca gümüş madenleriyle bilinen ve İpek Yolu'nun güvenliğini sağlayan Gümüşhane, tarihi konakları ve mağaralarıyla ünlüdür.",
+      "literary_quotes": [
+        "\"Gümüşhane, adı gibi gümüş madenleriyle parlayan, vadilerin arasına gizlenmiş hazinedir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Karaca Mağarası'nın derinliklerinde, binlerce yılda oluşan damlaların inşa ettiği sütunlara bakıp doğanın sabrını tefekkür edersiniz."
     },
     "05_Karadeniz/Karabuk": {
       "plate": 78,
@@ -1656,7 +1899,13 @@ const TRAVEL_DATA = {
       "slug": "Ordu",
       "content_size": 2348,
       "custom_quote": "Boztepe'den Karadeniz'i ayaklar altına seren, mavi ile yeşilin en kusursuz birleştiği huzurlu sahil şehri.",
-      "custom_library": "Ordu İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Ordu İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Antik dönemde Cotyora adıyla kurulan Ordu, Karadeniz'in en sakin ve gelişmiş kültür kentlerinden biridir. Yason Burnu'ndaki Argonotlar efsanesiyle bilinir.",
+      "literary_quotes": [
+        "\"Boztepe'ye çıkmalı ve Ordu'nun yeşilliğinde denizin nasıl eridiğini izlemeli.\" — Bedri Rahmi Eyüboğlu",
+        "\"Yason Burnu, Karadeniz'in hırçın sularına uzanan tarihi ve sakin bir limandır.\" — Evliya Çelebi"
+      ],
+      "reflection": "Boztepe'den şehri ve denizi seyrederken, yeryüzünün güzelliğini ve gökyüzüyle bütünleşen ufuk çizgisini tefekkür edersiniz."
     },
     "05_Karadeniz/Rize": {
       "plate": 53,
@@ -1688,7 +1937,13 @@ const TRAVEL_DATA = {
       "slug": "Rize",
       "content_size": 2343,
       "custom_quote": "Fırtına Deresi'nin coşkulu sesi, Zil Kale'nin sarp kayalıklardaki asil duruşu ve yeşilin vatanı Rize.",
-      "custom_library": "Rize İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Rize İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Çay tarımıyla özdeşleşen Rize, sarp vadileri, tarihi taş köprüleri ve geçit vermez kaleleriyle Karadeniz'in en karakteristik şehridir.",
+      "literary_quotes": [
+        "\"Zil Kale, bulutların arasında, sarp kayalarda yükselen manevi bir abide gibidir.\" — Evliya Çelebi",
+        "\"Rize, çay yapraklarının yeşilliğinde her sabah yeniden doğan şehirdir.\" — Bedri Rahmi Eyüboğlu"
+      ],
+      "reflection": "Kaçkarların sisli zirvelerine bakarken, bulutların dağlarla yaptığı zikri izler, Zil Kale'nin yalnızlığında zamanın geçiciliğini düşünürsünüz."
     },
     "05_Karadeniz/Samsun": {
       "plate": 55,
@@ -1719,7 +1974,13 @@ const TRAVEL_DATA = {
       "slug": "Samsun",
       "content_size": 2340,
       "custom_quote": "Milli Mücadele'nin ilk adımının atıldığı, kurtuluş meşalesinin yandığı vakur ve öncü sahil şehri.",
-      "custom_library": "Samsun İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Samsun İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "19 Mayıs 1919'da Mustafa Kemal Atatürk'ün ayak basmasıyla Kurtuluş Savaşı'nın başlangıç noktası olan Samsun, Karadeniz'in en büyük limanı ve ticaret merkezidir.",
+      "literary_quotes": [
+        "\"Samsun, vatanın kurtuluş meşalesinin tutuşturulduğu mübarek limandır.\" — Mustafa Kemal Atatürk",
+        "\"Samsun limanı, Karadeniz'in en işlek ve bereketli iskelesidir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Bandırma Vapuru'nun önünde durup bağımsızlık mücadelesinin ilk günlerini tefekkür eder, özgürlüğün ne büyük bir nimet olduğunu düşünürsünüz."
     },
     "05_Karadeniz/Sinop": {
       "plate": 57,
@@ -1748,7 +2009,13 @@ const TRAVEL_DATA = {
       "slug": "Sinop",
       "content_size": 2259,
       "custom_quote": "Karadeniz'in en uç noktasında, Hamsilos fiyordu ve tarihi cezaeviyle sükunet bulmuş sakin şehir.",
-      "custom_library": "Sinop İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Sinop İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Diyojen'in doğum yeri olan Sinop, Karadeniz'in tek doğal limanıdır. Tarihi surları ve ünlü cezaeviyle derin bir geçmişe sahiptir.",
+      "literary_quotes": [
+        "\"Gölge etme, başka ihsan istemem.\" — Sinoplu Diyojen",
+        "\"Sinop, Karadeniz'in en güvenli limanı, kaleli asil bir yarımadadır.\" — Evliya Çelebi"
+      ],
+      "reflection": "Hamsilos Koyu'nun sakin sularında doğanın sunduğu benzersiz fiyort yapısını ve yaratılış estetiğini hayranlıkla tefekkür edersiniz."
     },
     "05_Karadeniz/Tokat": {
       "plate": 60,
@@ -1810,7 +2077,14 @@ const TRAVEL_DATA = {
       "slug": "Trabzon",
       "content_size": 2526,
       "custom_quote": "Sümela Manastırı'nın dik yamacında yükselen mistik duruşu, Uzungöl'ün sisli doğası ve köklü geçmişiyle Karadeniz'in kalbi.",
-      "custom_library": "Trabzon İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Trabzon İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Trabzon İmparatorluğu'na başkentlik yapmış ve Fatih Sultan Mehmet tarafından fethedilmiş olan Trabzon, Osmanlı şehzadelerinin yetiştiği ulu bir şehirdir.",
+      "literary_quotes": [
+        "\"Trabzon, Karadeniz'in gözbebeği, fırtınanın ve yeşilin yurdudur.\" — Evliya Çelebi",
+        "\"Trabzon, koca bir tarihi sinesinde saklayan, Karadeniz'in serin rüzgarıyla yıkanan vakur şehirdir.\" — Bedri Rahmi Eyüboğlu",
+        "\"Burası Trabzon'dur; Fatih'in fethettiği, Yavuz'un yönettiği, Kanuni'nin doğduğu ulu şehir.\" — Tarihi Levha"
+      ],
+      "reflection": "Sümela Manastırı'nın merdivenlerini tırmanırken, insan inancının sarp kayaları nasıl aştığını ve inzivanın manevi gücünü tefekkür edersiniz."
     },
     "05_Karadeniz/Zonguldak": {
       "plate": 67,
@@ -1866,7 +2140,13 @@ const TRAVEL_DATA = {
       "slug": "Agri",
       "content_size": 2892,
       "custom_quote": "Türkiye'nin zirvesi Ağrı Dağı'nın heybeti, ovaya kartal yuvası gibi bakan İshak Paşa Sarayı'nın masalsı silüeti ve Doğubayazıt'ın kadim nefesi.",
-      "custom_library": "Ağrı İl Halk Kütüphanesi - Sessiz, geniş çalışma masaları ve odaklanmayı artıran vakur bir çalışma ortamı."
+      "custom_library": "Ağrı İl Halk Kütüphanesi - Sessiz, geniş çalışma masaları ve odaklanmayı artıran vakur bir çalışma ortamı.",
+      "history": "Urartulardan Selçuklulara ve Osmanlı'ya uzanan tarihi İpekyolu kavşağı üzerinde kurulu olan Ağrı, Doğu Anadolu'nun en yüksek ve stratejik menzillerinden biridir. 17. yüzyılda inşa edilen ve Lale Devri'nin Doğu'daki en muhteşem eseri kabul edilen İshak Paşa Sarayı, saray mimarisi, camisi ve kalorifer sistemi benzeri taş ısıtma kanallarıyla mimarlık tarihinin şaheseridir.",
+      "literary_quotes": [
+        "\"Ağrı Dağı'nın doruğunda gökyüzü yeryüzüyle birleşir; insan kendi faniliğini ve Yaratıcı'nın celalini en derinden burada hisseder.\" — Seyyah Notu",
+        "\"İshak Paşa Sarayı, Osmanlı taş işçiliğinin, Selçuklu motiflerinin ve Fars estetiğinin ovaya bakan taşlaşmış rüyasıdır.\" — Sanat Tarihçileri"
+      ],
+      "reflection": "Doğubayazıt ovasına hakim bir tepede yükselen İshak Paşa Sarayı'nın avlusunda durup Ahmed-i Hânî Hazretleri'nin türbesine doğru tefekküre daldığınızda, dünya saraylarının faniliğini ve ilmin kalıcılığını idrak edersiniz. 5137 metrelik Ağrı Dağı'nın karlı zirvesini seyrederken doğanın sessiz zikrine ortak olursunuz."
     },
     "06_DoguAnadolu/Ardahan": {
       "plate": 75,
@@ -1951,7 +2231,13 @@ const TRAVEL_DATA = {
       "slug": "Bitlis",
       "content_size": 2938,
       "custom_quote": "Kubbetü'l-İslam Ahlat'ın ulu Selçuklu mezar taşları, Van Gölü'nün turkuaz kıyıları ve dünyanın doğa harikası Nemrut Krater Gölü.",
-      "custom_library": "Bitlis İl Halk Kütüphanesi - Tarihi taş binalar arasında sükunet dolu, araştırmaya uygun ortam."
+      "custom_library": "Bitlis İl Halk Kütüphanesi - Tarihi taş binalar arasında sükunet dolu, araştırmaya uygun ortam.",
+      "history": "Bitlis, İslam medeniyetinin Horasan'dan Anadolu'ya akışındaki en önemli üç \"Kubbetü'l-İslam\" (İslam'ın Kubbesi) merkezinden biri olan Ahlat'a ev sahipliği yapar. Dünyanın en büyük Türk-İslam mezarlığı olan Ahlat Selçuklu Meydan Mezarlığı, her biri sanat eseri niteliğindeki yüzlerce yıllık abidevi mezar taşları ve kümbetleriyle tarihin taşa kazınmış tapu senedidir. Ayrıca sönmüş bir volkan olan Nemrut Dağı zirvesindeki kaldera ve krater gölleri eşsiz bir tabiat harikasıdır.",
+      "literary_quotes": [
+        "\"Ahlat, İslam dünyasının ilim, hikmet ve sanat kubbesidir; her taşında bir arifin, bir fatihin nefesi saklıdır.\" — Tarihi Kayıtlar",
+        "\"Bitlis Kalesi ve vadideki taş medreseler, beş minarenin gölgesinde asırlardır nöbet tutar.\" — Evliya Çelebi"
+      ],
+      "reflection": "Ahlat Meydan Mezarlığı'nda 800 yıllık işlemeli şahidelerin arasında yürürken ölümün kaçınılmaz hakikatini, faniliğin ardındaki ebedi güzelliği ve ecdadın estetik anlayışını tefekkür edersiniz. Nemrut Krater Gölü'nün kıyısında buharı tüten sıcak sular ile masmavi soğuk gölün yan yana duruşunda doğanın muazzam dengesine şahit olursunuz."
     },
     "06_DoguAnadolu/Elazig": {
       "plate": 23,
@@ -1982,7 +2268,13 @@ const TRAVEL_DATA = {
       "slug": "Elazig",
       "content_size": 2319,
       "custom_quote": "Harput Kalesi'nin bin yıllık surları, Hazar Gölü'nün mavi sularıyla Doğu'nun köklü kültür havzası.",
-      "custom_library": "Elazig İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Elazig İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Tarihi Harput kentinin devamı olan Elazığ, Urartulardan Selçuklu ve Osmanlıya uzanan zengin kültürü ve musikisiyle ünlüdür.",
+      "literary_quotes": [
+        "\"Harput Kalesi, sinesinde bin yıllık efsaneleri saklayan Doğu'nun ulu nöbetçisidir.\" — Evliya Çelebi",
+        "\"Hazar Gölü, dağların arasında gizlenmiş turkuaz bir doğa mucizesidir.\" — Bedri Rahmi Eyüboğlu"
+      ],
+      "reflection": "Eğri minaresiyle meşhur Harput Ulu Camii'nin avlusunda, asırlardır secdeye varan insanların manevi izlerini tefekkür edersiniz."
     },
     "06_DoguAnadolu/Erzincan": {
       "plate": 24,
@@ -2012,7 +2304,13 @@ const TRAVEL_DATA = {
       "slug": "Erzincan",
       "content_size": 2379,
       "custom_quote": "Girlevik Şelalesi'nin serin suları, Kemaliye Kanyonu'nun dik yamaçlarıyla depremlerden küllerinden doğan şehir.",
-      "custom_library": "Erzincan İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Erzincan İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "İpekyolu üzerinde yer alan Erzincan, yaşadığı büyük depremlere rağmen her seferinde yeniden kurulan dirayetli insanların şehridir. Kemaliye ilçesi özgün mimarisini korumuştur.",
+      "literary_quotes": [
+        "\"Kemaliye, Fırat'ın kıyısında kayalara asılmış tarihi ve yemyeşil bir vaha gibidir.\" — Evliya Çelebi",
+        "\"Girlevik, dağlardan dökülen suların en güzel zikridir.\" — Bedri Rahmi Eyüboğlu"
+      ],
+      "reflection": "Kemaliye Karanlık Kanyonu'nun devasa kayalıkları arasında süzülürken, Fırat'ın coşkusunu ve doğanın haşmetini tefekkür edersiniz."
     },
     "06_DoguAnadolu/Erzurum": {
       "plate": 25,
@@ -2044,7 +2342,13 @@ const TRAVEL_DATA = {
       "slug": "Erzurum",
       "content_size": 2423,
       "custom_quote": "Palandöken Dağı'nın karlı zirveleri, Çifte Minareli Medrese'nin asil taş kapısıyla Doğu'nun kilit taşı vakur şehir.",
-      "custom_library": "Erzurum İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Erzurum İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Selçuklu ve İlhanlı dönemlerinde önemli bir ilim merkezi olan Erzurum, Milli Mücadele döneminde Erzurum Kongresi ile vatanın bölünmezliğini dünyaya ilan etmiştir.",
+      "literary_quotes": [
+        "\"Erzurum, Anadolu'nun kilididir, soğuk iklimin sıcak kalpli yiğit insanlarıdır.\" — Evliya Çelebi",
+        "\"Palandöken'in vakur duruşu, çift minarenin asil duruşu Erzurum'un ruhudur.\" — Ahmet Hamdi Tanpınar"
+      ],
+      "reflection": "Çifte Minareli Medrese'nin kapısındaki Selçuklu hayat ağacı motifini incelerken, medeniyetimizin köklerini ve ebediyet arayışını tefekkür edersiniz."
     },
     "06_DoguAnadolu/Hakkari": {
       "plate": 30,
@@ -2102,7 +2406,13 @@ const TRAVEL_DATA = {
       "slug": "Igdir",
       "content_size": 2894,
       "custom_quote": "Üç ülkeye sınır açan serhat ovası, Doğu'nun Çukurova'sı mikroklima cenneti ve Tuzluca'nın yer altı kristal mağaraları.",
-      "custom_library": "Iğdır İl Halk Kütüphanesi - Şehir merkezinde sakin, aydınlık ve odaklanmayı kolaylaştıran ortam."
+      "custom_library": "Iğdır İl Halk Kütüphanesi - Şehir merkezinde sakin, aydınlık ve odaklanmayı kolaylaştıran ortam.",
+      "history": "Türkiye'nin en doğu ucunda yer alan ve Ermenistan, Azerbaycan (Nahçıvan) ile İran'a komşu olan Iğdır, etrafı yüksek dağlarla çevrili korunaklı bir ovadır. Bu coğrafi yapısı sayesinde Doğu Anadolu'nun sert kış şartlarına tezat olarak mikroklima iklimi yaşar; kayısı bahçeleri, pamuk tarlaları ve bereketli tarım alanlarıyla \"Doğu'nun Çukurova'sı\" unvanını taşır. İlçelerindeki Tuzluca Tuz Mağaraları ise Hititlerden bu yana işletilen devasa yer altı galerileridir.",
+      "literary_quotes": [
+        "\"Iğdır Ovası, Aras Nehri'nin suladığı, Doğu'nun soğuğunda saklı sıcacık bir yeşil vahadır.\" — Seyyah Gözlemi",
+        "\"Tuzluca'nın devasa kaya tuzu mağaralarında yankılanan sessizlik, asırların yer altındaki sabır anıtıdır.\" — Gezi Notları"
+      ],
+      "reflection": "Aras Nehri boyunda üç farklı devletin sınır çizgilerinin birleştiği noktada durup sınırların geçiciliğini, kardeşlik bağlarının ve aynı gökyüzü altında paylaşılan yeryüzünün birliğini tefekkür edersiniz. Tuzluca Mağaraları'nın devasa tavanları altında yürürken yerin yüzlerce metre altındaki şifayı ve nimeti düşünürsünüz."
     },
     "06_DoguAnadolu/Kars": {
       "plate": 36,
@@ -2133,7 +2443,13 @@ const TRAVEL_DATA = {
       "slug": "Kars",
       "content_size": 2388,
       "custom_quote": "Ani Harabeleri'nin hüzünlü ve görkemli kalıntıları, Rus mimarisi tarihi sokaklarıyla sınır boyunun asil şehri.",
-      "custom_library": "Kars İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Kars İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Bagratlı krallığından Selçuklu fethine, Rus işgali döneminden kurtuluşa kadar Kars, askeri ve kültürel tarihimizin en stratejik serhat kentidir.",
+      "literary_quotes": [
+        "\"Ani bir dünya ama dünya bir Ani değil.\" — Tarihi Selçuklu Özdeyişi",
+        "\"Kars Kalesi, doğu sınırımızın en dik duruşlu, en aşılmaz Selçuklu nöbetçisidir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Ani Harabeleri'nde Bizans kiliseleri ile Selçuklu camilerinin yan yana duran kalıntılarında, tarihin çok sesliliğini ve medeniyetlerin faniliğini tefekkür edersiniz."
     },
     "06_DoguAnadolu/Malatya": {
       "plate": 44,
@@ -2165,7 +2481,13 @@ const TRAVEL_DATA = {
       "slug": "Malatya",
       "content_size": 2430,
       "custom_quote": "Arslantepe Höyüğü ile devletleşmenin ilk adımlarına tanıklık eden, kayısının ve bereketli ovaların şehri.",
-      "custom_library": "Malatya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Malatya İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "İnsanlık tarihinin en eski saray ve bürokrasi kalıntılarını barındıran Arslantepe'ye sahip olan Malatya, Fırat nehrinin suladığı en bereketli topraklardandır.",
+      "literary_quotes": [
+        "\"Malatya, Fırat'ın bereketiyle yoğrulmuş, kayısı bahçelerinin kokusunda dinlenen cennet köşesidir.\" — Evliya Çelebi",
+        "\"Somuncu Baba Külliyesi, ruhların arındığı, gönüllerin şifa bulduğu manevi bir limandır.\" — Es-Seyyid Osman Hulusi Efendi"
+      ],
+      "reflection": "Somuncu Baba Külliyesi'nin huzurlu manevi atmosferinde kalbi bir sükunete erer, Tohma Çayı'nın sesinde dinginliği tefekkür edersiniz."
     },
     "06_DoguAnadolu/Mus": {
       "plate": 49,
@@ -2223,7 +2545,13 @@ const TRAVEL_DATA = {
       "slug": "Tunceli",
       "content_size": 2424,
       "custom_quote": "Munzur Vadisi'nin hırçın suları, Ovacık Gözeleri'nin kutsal kaynaklarıyla doğanın en el değmemiş mistik coğrafyası.",
-      "custom_library": "Tunceli İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası."
+      "custom_library": "Tunceli İl Halk Kütüphanesi - Sessiz, çalışma disiplinine uygun, internet imkanı sunan verimli bir ilim yuvası.",
+      "history": "Tarih boyunca sarp dağları sayesinde özgün kültürünü koruyan Tunceli (Dersim), Munzur efsaneleri ve el değmemiş doğasıyla Anadolu'nun gizemli coğrafyalarındandır.",
+      "literary_quotes": [
+        "\"Munzur Vadisi, dağların arasından süzülen hırçın sularıyla doğanın en saf zikir alanıdır.\" — Bedri Rahmi Eyüboğlu",
+        "\"Ovacık Gözeleri, toprağın altından fışkıran berrak sularıyla mistik bir yaratılış mucizesidir.\" — Evliya Çelebi"
+      ],
+      "reflection": "Munzur'un buz gibi berrak sularının yeryüzüne kaynadığı gözelerin başında durup, suyun hayat veren ilahi gücünü hayranlıkla tefekkür edersiniz."
     },
     "06_DoguAnadolu/Van": {
       "plate": 65,

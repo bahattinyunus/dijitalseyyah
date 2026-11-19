@@ -1,12 +1,13 @@
 """
 Anadolu Seyahatnamesi - İnteraktif Folium / Leaflet Harita Üreteci
-Pulsing Glowing Markerlar, Glassmorphism Panel ve Zengin Popup Kartları
+Pulsing Glowing Markerlar, Çoklu Harita Katmanları, Katlanabilir Glassmorphism Panel ve Zengin Popup Kartları
 """
 
-import os
-import folium
+import html
 from pathlib import Path
-from travel_core import SeyyahEngine, REGIONS_INFO
+import folium
+from travel_core import SeyyahEngine, turkish_sort_key
+
 
 class MapGenerator:
     def __init__(self, repo_root="."):
@@ -14,39 +15,48 @@ class MapGenerator:
         self.output_file = Path(repo_root) / "travel_map.html"
 
     def generate(self):
-        # Türkiye merkezli Folium Haritası (Koyu Şık Tema)
+        # Türkiye merkezli Folium Haritası (Çoklu Katman Desteği)
         m = folium.Map(
             location=[39.0, 35.3],
             zoom_start=6,
-            tiles="CartoDB dark_matter",
+            tiles=None,
             control_scale=True,
             prefer_canvas=True
         )
+
+        # Harita Temaları (LayerControl ile değiştirilebilir)
+        folium.TileLayer("CartoDB dark_matter", name="🌑 Gece Teması (Dark)", show=True).add_to(m)
+        folium.TileLayer("CartoDB positron", name="☀️ Gündüz Teması (Light)", show=False).add_to(m)
+        folium.TileLayer("OpenStreetMap", name="🗺️ OpenStreetMap", show=False).add_to(m)
 
         stats = self.engine.stats
         pct = stats["progress_pct"]
         visited_count = stats["visited_cities"]
         total_cities = stats["total_cities"]
+        visited_regions = stats["visited_regions"]
+        total_regions = stats["total_regions"]
+        rank = self.engine.achievements.get("rank", {"icon": "🧭", "title": "Seyyah"})
 
         # Özel CSS Stilleri
         css_style = """
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
-        
+
         .map-title-panel {
             position: absolute;
             top: 20px;
             left: 20px;
             z-index: 1000;
-            background: rgba(15, 23, 42, 0.88);
+            background: rgba(15, 23, 42, 0.90);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 16px;
-            padding: 20px 24px;
+            padding: 18px 20px;
             color: #f8fafc;
             font-family: 'Plus Jakarta Sans', sans-serif;
             box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
             max-width: 340px;
+            width: calc(100vw - 80px);
             pointer-events: auto;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -54,31 +64,72 @@ class MapGenerator:
             border-color: rgba(0, 242, 254, 0.35);
             box-shadow: 0 25px 50px -12px rgba(0, 242, 254, 0.2);
         }
+        .panel-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .panel-toggle-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #cbd5e1;
+            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .panel-toggle-btn:hover {
+            border-color: #00f2fe;
+            color: #00f2fe;
+        }
+        .map-title-panel.collapsed .panel-collapsible {
+            display: none;
+        }
         .map-title-panel h1 {
             font-family: 'Outfit', sans-serif;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 800;
-            margin: 0 0 6px 0;
+            margin: 0;
             background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         .map-title-panel .subtitle {
-            font-size: 12px;
+            font-size: 11.5px;
             color: #94a3b8;
-            margin: 0 0 16px 0;
-            line-height: 1.5;
+            margin: 6px 0 12px 0;
+            line-height: 1.45;
+        }
+        .rank-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.14);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: #fcd34d;
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
         }
         .progress-container {
             background: rgba(30, 41, 59, 0.7);
             border-radius: 10px;
             padding: 10px 12px;
             border: 1px solid rgba(255, 255, 255, 0.06);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
         .progress-info {
             display: flex;
@@ -229,11 +280,11 @@ class MapGenerator:
         }
         .custom-popup-card {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            width: 280px;
+            width: 285px;
         }
         .popup-image-header {
             position: relative;
-            height: 120px;
+            height: 115px;
             background-size: cover;
             background-position: center;
             border-radius: 16px 16px 0 0;
@@ -244,7 +295,7 @@ class MapGenerator:
         .popup-image-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.9) 100%);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.92) 100%);
             border-radius: 16px 16px 0 0;
         }
         .popup-city-title {
@@ -298,88 +349,120 @@ class MapGenerator:
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 242, 254, 0.4);
         }
+        @media (max-width: 640px) {
+            .map-title-panel {
+                top: 10px;
+                left: 10px;
+                padding: 12px 14px;
+                max-width: 280px;
+            }
+        }
         """
 
         m.get_root().header.add_child(folium.Element(f"<style>{css_style}</style>"))
 
-        # Ziyaret Edilen İllerin Badgeleri
+        # Ziyaret Edilen İllerin Badgeleri (Türkçe Alfabetik Sıra)
         visited_badges_html = ""
-        for k, p in sorted(self.engine.visited_provinces.items(), key=lambda x: x[1]["name"]):
-            visited_badges_html += f'<span class="city-badge">{p["name"]}</span>'
+        for _, p in sorted(self.engine.visited_provinces.items(), key=lambda x: turkish_sort_key(x[1]["name"])):
+            visited_badges_html += f'<span class="city-badge">{html.escape(p["name"])}</span>'
 
-        # Floating Panel HTML
+        # Katlanabilir Floating Panel HTML
         title_panel_html = f"""
-        <div class="map-title-panel">
-            <h1>🕌 ANADOLU SEYAHATNAMESİ</h1>
-            <p class="subtitle">Bir seyyahın adımladığı kadim topraklar, kütüphaneler ve tefekkür günlüğü.</p>
-            
-            <div class="progress-container">
-                <div class="progress-info">
-                    <span>Keşif İlerlemesi</span>
-                    <span class="pct">%{pct} ({visited_count}/{total_cities})</span>
-                </div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" style="width: {pct}%"></div>
-                </div>
+        <div class="map-title-panel" id="seyyah-map-panel">
+            <div class="panel-header-row">
+                <h1>🕌 ANADOLU SEYAHATNAMESİ</h1>
+                <button class="panel-toggle-btn" id="seyyah-panel-toggle" title="Paneli Daralt / Genişlet" onclick="
+                    var p = document.getElementById('seyyah-map-panel');
+                    p.classList.toggle('collapsed');
+                    this.textContent = p.classList.contains('collapsed') ? '➕' : '➖';
+                ">➖</button>
             </div>
+            <div class="panel-collapsible">
+                <p class="subtitle">Bir seyyahın adımladığı kadim topraklar, kütüphaneler ve tefekkür günlüğü.</p>
+                <div class="rank-pill">{html.escape(rank['icon'])} Rütbe: {html.escape(rank['title'])}</div>
 
-            <div class="stats-pills">
-                <div class="stat-pill">
-                    <div class="num">{stats['estimated_km']:,} km</div>
-                    <div class="lbl">Menzil</div>
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Keşif İlerlemesi</span>
+                        <span class="pct">%{pct} ({visited_count}/{total_cities})</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: {pct}%"></div>
+                    </div>
                 </div>
-                <div class="stat-pill">
-                    <div class="num">7 / 7</div>
-                    <div class="lbl">Bölge</div>
+
+                <div class="stats-pills">
+                    <div class="stat-pill">
+                        <div class="num">{stats['estimated_km']:,} km</div>
+                        <div class="lbl">Menzil İzi</div>
+                    </div>
+                    <div class="stat-pill">
+                        <div class="num">{visited_regions} / {total_regions}</div>
+                        <div class="lbl">Kapsanan Bölge</div>
+                    </div>
                 </div>
+
+                <div class="visited-cities-list">
+                    <h3>Ziyaret Edilen İller ({visited_count})</h3>
+                    <div class="visited-cities-grid">
+                        {visited_badges_html}
+                    </div>
+                </div>
+
+                <p class="panel-quote">"İyi bir gezginin sabit planları ve varmak gibi bir amacı yoktur."</p>
             </div>
-
-            <div class="visited-cities-list">
-                <h3>Ziyaret Edilen İller ({visited_count})</h3>
-                <div class="visited-cities-grid">
-                    {visited_badges_html}
-                </div>
-            </div>
-
-            <p class="panel-quote">"İyi bir gezginin sabit planları ve varmak gibi bir amacı yoktur."</p>
         </div>
         """
         m.get_root().html.add_child(folium.Element(title_panel_html))
 
-        # Seyahat İzi Çizgisi (Polyline - Ziyaret edilen noktaları sırayla bağla)
-        visited_coords = []
-        for p in sorted(self.engine.visited_provinces.values(), key=lambda c: (c["lng"], c["lat"])):
-            visited_coords.append([p["lat"], p["lng"]])
+        # Katman Grupları
+        route_group = folium.FeatureGroup(name="🛣️ Seyyah Rota İzi", show=True)
+        visited_group = folium.FeatureGroup(name=f"✅ Ziyaret Edilen İller ({visited_count})", show=True)
+        unvisited_group = folium.FeatureGroup(name=f"⏳ Bekleyen İller ({stats['unvisited_cities']})", show=True)
+
+        # Seyahat İzi Çizgisi (Polyline)
+        visited_coords = [
+            [p["lat"], p["lng"]]
+            for p in sorted(self.engine.visited_provinces.values(), key=lambda c: (c["lng"], c["lat"]))
+        ]
 
         if len(visited_coords) > 1:
             folium.PolyLine(
                 locations=visited_coords,
                 color="#00f2fe",
                 weight=2,
-                opacity=0.35,
+                opacity=0.38,
                 dash_array="6, 8",
                 tooltip="Seyyah Rota İzi"
-            ).add_to(m)
+            ).add_to(route_group)
 
         # Ziyaret Edilen İlleri Marker Olarak Ekle
-        for key, p in self.engine.visited_provinces.items():
-            quote_text = p.get("custom_quote", p.get("quote", "Anadolu'nun kadim menzili."))
-            banner_img = p.get("banner_rel", "assets/banner.jpg")
-            readme_url = p.get("readme_rel", "#")
-            
-            # İlk 2 landmark etiketi
-            landmarks_tags = "".join([f'<span class="popup-tag">📍 {lm}</span>' for lm in p.get("landmarks", [])[:2]])
-            specialty_tag = f'<span class="popup-tag">🍽️ {p.get("specialties", ["Lezzet"])[0]}</span>' if p.get("specialties") else ""
+        for _, p in self.engine.visited_provinces.items():
+            quote_text = html.escape(p.get("custom_quote", p.get("quote", "Anadolu'nun kadim menzili.")))
+            banner_img = html.escape(p.get("banner_rel", "assets/banner.jpg"))
+            readme_url = html.escape(p.get("readme_rel", "#"))
+            city_name = html.escape(p["name"])
+            region_name = html.escape(p["region"])
+
+            landmarks_tags = "".join([
+                f'<span class="popup-tag">📍 {html.escape(lm)}</span>'
+                for lm in p.get("landmarks", [])[:2]
+            ])
+            specialty_tag = (
+                f'<span class="popup-tag">🍽️ {html.escape(p["specialties"][0])}</span>'
+                if p.get("specialties") else ""
+            )
 
             popup_html = f"""
             <div class="custom-popup-card">
                 <div class="popup-image-header" style="background-image: url('{banner_img}')">
                     <div class="popup-image-overlay"></div>
-                    <h3 class="popup-city-title">📍 {p['name']} ({p['plate']:02d})</h3>
+                    <h3 class="popup-city-title">📍 {city_name} ({p['plate']:02d})</h3>
                 </div>
                 <div class="popup-body-content">
                     <p class="popup-quote">"{quote_text}"</p>
                     <div class="popup-tags">
+                        <span class="popup-tag">🗺️ {region_name}</span>
                         {landmarks_tags}
                         {specialty_tag}
                     </div>
@@ -397,31 +480,58 @@ class MapGenerator:
 
             folium.Marker(
                 location=[p["lat"], p["lng"]],
-                popup=folium.Popup(popup_html, max_width=300),
-                tooltip=folium.Tooltip(f"✅ {p['name']} ({p['plate']:02d}) - {p['region']}"),
+                popup=folium.Popup(popup_html, max_width=305),
+                tooltip=folium.Tooltip(f"✅ {city_name} ({p['plate']:02d}) - {region_name}"),
                 icon=folium.DivIcon(
                     html=marker_html,
                     class_name="custom-pulsing-icon",
                     icon_size=(18, 18),
                     icon_anchor=(9, 9)
                 )
-            ).add_to(m)
+            ).add_to(visited_group)
 
-        # Henüz Ziyaret Edilmemiş İller (Küçük nokta markerlar)
-        for key, p in self.engine.unvisited_provinces.items():
+        # Henüz Ziyaret Edilmemiş İller (Küçük nokta markerlar + bilgi popup)
+        for _, p in self.engine.unvisited_provinces.items():
+            city_name = html.escape(p["name"])
+            region_name = html.escape(p["region"])
+            quote_text = html.escape(p.get("quote", "Keşfedilmeyi bekleyen menzil."))
+            first_lm = html.escape(p["landmarks"][0]) if p.get("landmarks") else "Tarihi Merkez"
+
+            unvisited_popup = f"""
+            <div class="custom-popup-card">
+                <div class="popup-body-content">
+                    <h3 style="font-family:'Outfit',sans-serif;font-size:15px;margin:0 0 6px 0;color:#fcd34d;">
+                        ⏳ {city_name} ({p['plate']:02d})
+                    </h3>
+                    <p class="popup-quote">"{quote_text}"</p>
+                    <div class="popup-tags">
+                        <span class="popup-tag">🗺️ {region_name}</span>
+                        <span class="popup-tag">📍 {first_lm}</span>
+                    </div>
+                </div>
+            </div>
+            """
             folium.CircleMarker(
                 location=[p["lat"], p["lng"]],
-                radius=4,
-                color="#64748b",
+                radius=4.5,
+                color="#94a3b8",
                 fill=True,
                 fill_color="#1e293b",
-                fill_opacity=0.7,
+                fill_opacity=0.8,
                 weight=1.5,
-                tooltip=folium.Tooltip(f"⏳ {p['name']} ({p['plate']:02d}) - Keşfedilmeyi Bekliyor"),
-            ).add_to(m)
+                popup=folium.Popup(unvisited_popup, max_width=280),
+                tooltip=folium.Tooltip(f"⏳ {city_name} ({p['plate']:02d}) - Keşfedilmeyi Bekliyor"),
+            ).add_to(unvisited_group)
+
+        route_group.add_to(m)
+        visited_group.add_to(m)
+        unvisited_group.add_to(m)
+
+        folium.LayerControl(position="topright", collapsed=True).add_to(m)
 
         m.save(str(self.output_file))
         return self.output_file
+
 
 if __name__ == "__main__":
     mg = MapGenerator()

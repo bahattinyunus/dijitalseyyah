@@ -6,9 +6,9 @@
     <!-- Dynamic Badges -->
     <a href="https://resilient-semifreddo-6651ec.netlify.app/" target="_blank"><img src="https://img.shields.io/badge/Live_Web_App-Dijital_Seyyah-00f2fe?style=for-the-badge&logo=netlify&logoColor=white" alt="Live Demo"></a>
     <img src="https://img.shields.io/badge/Maneviyat-Sefer_der_Vatan-emerald?style=for-the-badge&logo=mosque&logoColor=white" alt="Spiritual">
-    <img src="https://img.shields.io/badge/Bölgeler-7%2F7-blue?style=for-the-badge&logo=map&logoColor=white" alt="Regions">
-    <img src="https://img.shields.io/badge/Keşif-44.4%25-brightgreen?style=for-the-badge&logo=target" alt="Coverage">
-    <img src="https://img.shields.io/badge/Testler-8%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
+    <img src="https://img.shields.io/badge/Bölgeler-6%2F7-blue?style=for-the-badge&logo=map&logoColor=white" alt="Regions">
+    <img src="https://img.shields.io/badge/Keşif-48.1%25-brightgreen?style=for-the-badge&logo=target" alt="Coverage">
+    <img src="https://img.shields.io/badge/Testler-17%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
     <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
     <br><br>
     <strong>🕌 "Yeryüzünde gezip dolaşın ve tefekkür edin..." (Ankebût, 20)</strong>
@@ -124,10 +124,10 @@ Seyahatlerimiz, sırt çantalı bir irfan arayışı ve yarı göçebe çalışm
 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 
 ```
-Toplam Ziyaret Edilen İl:  36 / 81
-Tahmini Karayolu İzi:      10,136 km
-Kütüphane Ofis Mesaisi:    36 İl Halk Kütüphanesi
-Coğrafi Bölge Kapsamı:     7 / 7 (%100)
+Toplam Ziyaret Edilen İl:  39 / 81
+Tahmini Karayolu İzi:      10,898 km
+Kütüphane Ofis Mesaisi:    39 İl Halk Kütüphanesi (780 saat)
+Coğrafi Bölge Kapsamı:     6 / 7 (%85.7)
 ```
 
 ### 🏰 7 Bölge İlerleme Tablosu
@@ -150,24 +150,24 @@ Coğrafi Bölge Kapsamı:     7 / 7 (%100)
 - ❌ Balıkesir
 - ❌ Bilecik
 - ✅ [**Bursa**](01_Marmara/Bursa/README.md)
+- ❌ Çanakkale
 - ❌ Edirne
-- ✅ [**Kocaeli**](01_Marmara/Kocaeli/README.md)
+- ✅ [**İstanbul**](01_Marmara/Istanbul/README.md)
 - ❌ Kırklareli
+- ✅ [**Kocaeli**](01_Marmara/Kocaeli/README.md)
 - ❌ Sakarya
 - ❌ Tekirdağ
 - ❌ Yalova
-- ❌ Çanakkale
-- ✅ [**İstanbul**](01_Marmara/Istanbul/README.md)
 
 **🌊 Ege Bölgesi (3/8)**
 - ❌ Afyonkarahisar
 - ❌ Aydın
 - ✅ [**Denizli**](02_Ege/Denizli/README.md)
+- ✅ [**İzmir**](02_Ege/Izmir/README.md)
 - ❌ Kütahya
 - ❌ Manisa
 - ✅ [**Muğla**](02_Ege/Mugla/README.md)
 - ❌ Uşak
-- ✅ [**İzmir**](02_Ege/Izmir/README.md)
 
 **☀️ Akdeniz Bölgesi (5/8)**
 - ✅ [**Adana**](03_Akdeniz/Adana/README.md)
@@ -182,17 +182,17 @@ Coğrafi Bölge Kapsamı:     7 / 7 (%100)
 **🌾 İç Anadolu Bölgesi (8/13)**
 - ✅ [**Aksaray**](04_IcAnadolu/Aksaray/README.md)
 - ✅ [**Ankara**](04_IcAnadolu/Ankara/README.md)
+- ❌ Çankırı
 - ✅ [**Eskişehir**](04_IcAnadolu/Eskisehir/README.md)
 - ❌ Karaman
 - ❌ Kayseri
-- ✅ [**Konya**](04_IcAnadolu/Konya/README.md)
 - ✅ [**Kırıkkale**](04_IcAnadolu/Kirikkale/README.md)
 - ❌ Kırşehir
+- ✅ [**Konya**](04_IcAnadolu/Konya/README.md)
 - ✅ [**Nevşehir**](04_IcAnadolu/Nevsehir/README.md)
 - ❌ Niğde
 - ✅ [**Sivas**](04_IcAnadolu/Sivas/README.md)
 - ✅ [**Yozgat**](04_IcAnadolu/Yozgat/README.md)
-- ❌ Çankırı
 
 **🌲 Karadeniz Bölgesi (11/18)**
 - ✅ [**Amasya**](05_Karadeniz/Amasya/README.md)
@@ -200,6 +200,7 @@ Coğrafi Bölge Kapsamı:     7 / 7 (%100)
 - ❌ Bartın
 - ✅ [**Bayburt**](05_Karadeniz/Bayburt/README.md)
 - ❌ Bolu
+- ✅ [**Çorum**](05_Karadeniz/Corum/README.md)
 - ❌ Düzce
 - ✅ [**Giresun**](05_Karadeniz/Giresun/README.md)
 - ✅ [**Gümüşhane**](05_Karadeniz/Gumushane/README.md)
@@ -212,11 +213,10 @@ Coğrafi Bölge Kapsamı:     7 / 7 (%100)
 - ❌ Tokat
 - ✅ [**Trabzon**](05_Karadeniz/Trabzon/README.md)
 - ❌ Zonguldak
-- ✅ [**Çorum**](05_Karadeniz/Corum/README.md)
 
 **🏔️ Doğu Anadolu Bölgesi (9/14)**
-- ❌ Ardahan
 - ✅ [**Ağrı**](06_DoguAnadolu/Agri/README.md)
+- ❌ Ardahan
 - ❌ Bingöl
 - ✅ [**Bitlis**](06_DoguAnadolu/Bitlis/README.md)
 - ✅ [**Elazığ**](06_DoguAnadolu/Elazig/README.md)
@@ -248,19 +248,28 @@ Coğrafi Bölge Kapsamı:     7 / 7 (%100)
 Seyahatnamenizi yönetmek, haritayı yeniden derlemek ve rota hesaplamak için dahili CLI aracı:
 
 ```bash
-# 1. Genel seyahat durumunu ve istatistikleri görüntüle
+# 1. Genel seyahat durumunu, rütbeyi ve istatistikleri görüntüle
 python dijital_seyyah.py status
 
-# 2. İnteraktif haritayı ve web veritabanını yeniden derle
+# 2. İnteraktif haritayı, web veritabanını, README ve külliyatı yeniden derle
 python dijital_seyyah.py build
 
-# 3. Akıllı rota algoritmasıyla en yakın durakları planla
-python dijital_seyyah.py plan-route --start Ankara --stops 8
+# 3. 2-Opt TSP rota algoritmasıyla en verimli keşif rotasını planla
+python dijital_seyyah.py plan-route --start Ankara --stops 8 --region 07_GuneydoguAnadolu
 
-# 4. Tüm seyahat notlarını tek bir e-kitaba (Markdown) derle
+# 4. Belirli bir ilin profilini ve en yakın komşu menzillerini incele
+python dijital_seyyah.py info 42
+
+# 5. İl, miras, lezzet veya kütüphane ara (Türkçe karakter duyarsız)
+python dijital_seyyah.py search Mevlana
+
+# 6. Seyyah rütbesi ve başarım rozetlerini görüntüle
+python dijital_seyyah.py badges
+
+# 7. Tüm seyahat notlarını tek bir e-kitaba (Markdown) derle
 python dijital_seyyah.py export-book
 
-# 5. Test paketini çalıştır
+# 8. Test paketini çalıştır
 pytest -v
 ```
 
