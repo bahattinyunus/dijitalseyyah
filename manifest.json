@@ -1,0 +1,33 @@
+{
+  "name": "Dijital Seyyah — Anadolu Seyahatnamesi",
+  "short_name": "Dijital Seyyah",
+  "description": "81 il, 7 bölge, 162 yüksek çözünürlüklü görsel, kütüphane ofisleri, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0a0f1d",
+  "lang": "tr",
+  "dir": "ltr",
+  "categories": [
+    "travel",
+    "navigation",
+    "lifestyle",
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "assets/banner.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/banner.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

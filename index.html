@@ -12,14 +12,16 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 
-  <!-- Favicon & Fonts -->
+  <!-- Favicon, Manifest & Fonts -->
   <link rel="icon" href="assets/banner.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- CSS Stylesheet -->
+  <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/modules.css">
 </head>
 <body>
   <div class="app-container">
@@ -94,6 +96,20 @@
 
     <!-- Mobile Sidebar Backdrop -->
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Secondary Interactive Modules Navigation Strip -->
+    <nav class="module-nav-strip" aria-label="Keşif Modülleri">
+      <button class="module-nav-btn active" data-view="dashboard">🏠 Genel Bakış</button>
+      <button class="module-nav-btn" data-view="gallery">📸 Galeri (162)</button>
+      <button class="module-nav-btn" data-view="route">🧭 Rota &amp; GPX</button>
+      <button class="module-nav-btn" data-view="compare">⚖️ Karşılaştır</button>
+      <button class="module-nav-btn" data-view="gastronomy">🍽️ Lezzet Atlası</button>
+      <button class="module-nav-btn" data-view="libraries">📚 Kütüphane &amp; Pomodoro</button>
+      <button class="module-nav-btn" data-view="quiz">🎯 Bilgi Yarışması</button>
+      <button class="module-nav-btn" data-view="analytics">📊 Analitik &amp; 81 Plaka</button>
+      <button class="module-nav-btn" data-view="journal">📝 Seyir Defterim</button>
+      <button class="module-nav-btn" id="btn-cmd-palette" title="Komut Paletini Aç (Ctrl+K)">⌘K Hızlı Ara</button>
+    </nav>
 
     <!-- Main Workspace Layout -->
     <div class="main-layout">
@@ -197,8 +213,17 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
-  <!-- Data Module & SPA Application Engine -->
+  <!-- Data Module, Interactive Feature Modules & SPA Application Engine -->
   <script src="web_data.js"></script>
+  <script src="js/command-palette.js"></script>
+  <script src="js/city-compare.js"></script>
+  <script src="js/gastronomy-atlas.js"></script>
+  <script src="js/library-directory.js"></script>
+  <script src="js/anatolia-quiz.js"></script>
+  <script src="js/analytics-charts.js"></script>
+  <script src="js/travel-journal.js"></script>
+  <script src="js/route-tools.js"></script>
+  <script src="js/pwa-ux.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

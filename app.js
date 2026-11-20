@@ -203,6 +203,67 @@
     }
   }
 
+  // Module Context Builder
+  function getModuleCtx() {
+    return {
+      data: state.data,
+      state,
+      escapeHtml,
+      normalizeTurkish,
+      selectCity,
+      openView,
+      openLightbox,
+      openMapModal,
+      openQuoteModal,
+      toggleTheme,
+      cycleAmbientSound,
+      selectRandomCity,
+      exportMarkdownBook,
+      showToast,
+      calcDistKm
+    };
+  }
+
+  // Unified View Switcher (Core + 6 Modular Studio Views)
+  function openView(viewName, updateHash = true) {
+    const normalized = viewName === 'library' ? 'libraries' : viewName;
+    if (normalized === 'dashboard') {
+      renderDashboard(updateHash);
+      return;
+    }
+    if (normalized === 'gallery') {
+      renderGalleryView(updateHash);
+      return;
+    }
+    if (normalized === 'route') {
+      renderRoutePlanner(null, updateHash);
+      return;
+    }
+
+    const mods = window.SEYYAH_MODULES || {};
+    const modMap = {
+      compare: mods.cityCompare,
+      gastronomy: mods.gastronomy,
+      libraries: mods.libraries,
+      quiz: mods.quiz,
+      analytics: mods.analytics,
+      journal: mods.journal
+    };
+
+    const targetMod = modMap[normalized];
+    if (targetMod && typeof targetMod.render === 'function' && els.viewportContent) {
+      state.currentView = normalized;
+      state.selectedCityKey = null;
+      if (updateHash) setHash(`#${normalized}`);
+      updateNavHighlight();
+      renderCitiesList();
+      els.viewportContent.scrollTop = 0;
+      targetMod.render(els.viewportContent, getModuleCtx());
+      return;
+    }
+    renderDashboard(updateHash);
+  }
+
   function routeFromHash() {
     const h = window.location.hash || '';
     if (h.startsWith('#city/')) {
@@ -216,6 +277,9 @@
       return true;
     } else if (h === '#gallery') {
       renderGalleryView(false);
+      return true;
+    } else if (['#compare', '#gastronomy', '#libraries', '#library', '#quiz', '#analytics', '#journal'].includes(h)) {
+      openView(h.slice(1), false);
       return true;
     }
     return false;
@@ -243,6 +307,16 @@
       renderDashboard(false);
     }
     setupEventListeners();
+
+    // Initialize Global Enhancer Modules (Command Palette & PWA/UX)
+    const mods = window.SEYYAH_MODULES || {};
+    const ctx = getModuleCtx();
+    if (mods.commandPalette && typeof mods.commandPalette.init === 'function') {
+      mods.commandPalette.init(ctx);
+    }
+    if (mods.pwaUx && typeof mods.pwaUx.init === 'function') {
+      mods.pwaUx.init(ctx);
+    }
   }
 
   // Update active nav highlight
@@ -250,6 +324,9 @@
     if (els.btnDashboard) els.btnDashboard.classList.toggle('nav-active', state.currentView === 'dashboard');
     if (els.btnRoute) els.btnRoute.classList.toggle('nav-active', state.currentView === 'route');
     if (els.btnGallery) els.btnGallery.classList.toggle('nav-active', state.currentView === 'gallery');
+    document.querySelectorAll('.module-nav-btn[data-view]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-view') === state.currentView);
+    });
   }
 
   // Header Statistics & Filter Counts
@@ -1374,6 +1451,11 @@
       </div>
     `).join('');
 
+    const routeToolsMod = (window.SEYYAH_MODULES && window.SEYYAH_MODULES.routeTools) || null;
+    const routeToolsHtml = (routeToolsMod && typeof routeToolsMod.renderToolbar === 'function')
+      ? routeToolsMod.renderToolbar(route, getModuleCtx())
+      : '';
+
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 14px;">
         <div class="glass-card route-svg-card">
@@ -1390,9 +1472,14 @@
           </div>
           ${svgMapHtml}
         </div>
+        ${routeToolsHtml}
         ${stopsHtml}
       </div>
     `;
+
+    if (routeToolsMod && typeof routeToolsMod.bindToolbarEvents === 'function') {
+      routeToolsMod.bindToolbarEvents(container, route, getModuleCtx());
+    }
 
     container.querySelectorAll('[data-remove-stop]').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1632,6 +1719,23 @@
       exportMarkdownBook();
       showToast('📚 ANADOLU_SEYAHATNAMESI.md indirildi!');
     });
+
+    // Module Navigation Strip
+    document.querySelectorAll('.module-nav-btn[data-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.getAttribute('data-view');
+        if (view) openView(view);
+      });
+    });
+
+    const btnCmdPalette = document.getElementById('btn-cmd-palette');
+    if (btnCmdPalette) {
+      btnCmdPalette.addEventListener('click', () => {
+        if (window.SEYYAH_MODULES && window.SEYYAH_MODULES.commandPalette) {
+          window.SEYYAH_MODULES.commandPalette.open();
+        }
+      });
+    }
 
     if (els.sortSelect) {
       els.sortSelect.addEventListener('change', (e) => {
