@@ -20,9 +20,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=6">
-  <link rel="stylesheet" href="css/modules.css?v=6">
-  <link rel="stylesheet" href="css/modules-v2.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="css/modules.css?v=7">
+  <link rel="stylesheet" href="css/modules-v2.css?v=7">
 </head>
 <body>
   <div class="app-container">
@@ -36,16 +36,22 @@
         <div class="logo-section" id="logo-section" title="Genel Bakışa Dön">
           <div class="logo-icon">🕌</div>
           <div class="logo-text">
-            <h1>ANADOLU SEYAHATNAMESİ</h1>
-            <p>Dijital Seyyah • Sefer Der Vatan</p>
+            <h1>DİJİTAL SEYYAH</h1>
+            <p>Anadolu Seyahatnamesi • Sefer Der Vatan</p>
           </div>
         </div>
       </div>
 
+      <!-- Center Spotlight Search Trigger -->
+      <button class="header-spotlight-btn" id="btn-cmd-palette" title="Hızlı Komut & Arama Paleti (Ctrl+K)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span class="spotlight-placeholder">81 il, miras, lezzet veya stüdyo ara...</span>
+        <kbd class="cmd-kbd">Ctrl K</kbd>
+      </button>
+
       <div class="header-actions">
         <!-- Live Progress Indicator -->
         <div class="header-progress-group">
-          <span class="header-progress-label">Keşif:</span>
           <span class="header-progress-pct" id="stats-pct">%0.0</span>
           <span style="font-size: 0.75rem; color: var(--text-muted);" id="stats-count">(0/81)</span>
           <div class="mini-progress-bar">
@@ -53,24 +59,9 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <button class="btn btn-outline" id="btn-dashboard">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="10"></rect><rect x="14" y="17" width="7" height="4"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <span class="btn-label">Genel Bakış</span>
-        </button>
-
-        <button class="btn btn-primary" id="btn-map">
+        <button class="btn btn-primary" id="btn-map" title="İnteraktif Folium Haritasını Aç">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
           <span class="btn-label">Harita</span>
-        </button>
-
-        <button class="btn btn-outline" id="btn-route">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-          <span class="btn-label">Rota Planla</span>
-        </button>
-
-        <button class="btn btn-outline" id="btn-gallery" title="81 İl • 162 Fotoğraf Galerisi">
-          📸 <span class="btn-label">Galeri</span>
         </button>
 
         <button class="btn btn-outline" id="btn-random" title="Rastgele Bir Menzil Keşfet">
@@ -78,19 +69,19 @@
         </button>
 
         <button class="btn btn-sound" id="btn-ambient" title="Tefekkür Seslerini Aç/Değiştir">
-          🎧 <span class="btn-label">Tefekkür Sesi</span>
+          🎧
         </button>
 
         <button class="btn btn-outline" id="btn-quote" title="Günün Tefekkür Hikmeti">
-          📜 <span class="btn-label">Hikmet</span>
+          📜
         </button>
 
         <button class="btn btn-outline" id="btn-theme" title="Gece / Gündüz Teması Değiştir" aria-label="Tema Değiştir">
           ☀️
         </button>
 
-        <button class="btn btn-outline" id="btn-export" title="Seyahatnameyi Markdown Kitabı Olarak İndir">
-          📥 <span class="btn-label">İndir</span>
+        <button class="btn btn-outline" id="btn-export" title="Seyahatnameyi Markdown E-Kitap Olarak İndir">
+          📥
         </button>
       </div>
     </header>
@@ -102,23 +93,22 @@
     <nav class="module-nav-strip" aria-label="Keşif Modülleri">
       <button class="module-nav-btn active" data-view="dashboard">🏠 Genel Bakış</button>
       <button class="module-nav-btn" data-view="atlas">🗺️ Vektör Atlas</button>
-      <button class="module-nav-btn" data-view="gallery">📸 Galeri (162)</button>
       <button class="module-nav-btn" data-view="route">🧭 Rota &amp; GPX</button>
+      <button class="module-nav-btn" data-view="gallery">📸 Galeri (162)</button>
       <button class="module-nav-btn" data-view="compare">⚖️ Karşılaştır</button>
       <button class="module-nav-btn" data-view="gastronomy">🍽️ Lezzetler</button>
       <button class="module-nav-btn" data-view="landmarks">🕌 Miras (373)</button>
-      <button class="module-nav-btn" data-view="libraries">📚 Kütüphane &amp; Pomodoro</button>
+      <button class="module-nav-btn" data-view="libraries">📚 Kütüphaneler</button>
       <button class="module-nav-btn" data-view="quiz">🎯 Bilgi Yarışması</button>
-      <button class="module-nav-btn" data-view="analytics">📊 81 Plaka Analitik</button>
+      <button class="module-nav-btn" data-view="analytics">📊 81 Plaka</button>
       <button class="module-nav-btn" data-view="timeline">🏛️ Kronoloji</button>
-      <button class="module-nav-btn" data-view="seasons">🌤️ Mevsim Takvimi</button>
+      <button class="module-nav-btn" data-view="seasons">🌤️ Mevsimler</button>
       <button class="module-nav-btn" data-view="postcard">📮 Kartpostal</button>
       <button class="module-nav-btn" data-view="sound">🎧 Ses Stüdyosu</button>
       <button class="module-nav-btn" data-view="packing">🎒 Sırt Çantası</button>
       <button class="module-nav-btn" data-view="budget">💰 Bütçe</button>
       <button class="module-nav-btn" data-view="reader">📖 Makaleler</button>
       <button class="module-nav-btn" data-view="journal">📝 Seyir Defterim</button>
-      <button class="module-nav-btn" id="btn-cmd-palette" title="Komut Paletini Aç (Ctrl+K)">⌘K Ara</button>
     </nav>
 
     <!-- Main Workspace Layout -->

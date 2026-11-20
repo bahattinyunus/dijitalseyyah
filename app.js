@@ -655,6 +655,45 @@
           </div>
         </div>
 
+        <!-- Quick Studio Feature Hub -->
+        <div>
+          <div class="section-title">
+            <span>⚡ İnteraktif Keşif Stüdyoları</span>
+          </div>
+          <div class="feature-hub-grid">
+            <div class="glass-card feature-hub-card" data-launch-view="atlas">
+              <div class="feature-hub-card-top"><span class="feature-hub-icon">🗺️</span><span class="cmd-pill">81 İl SVG</span></div>
+              <div class="feature-hub-title">Vektör Keşif Atlası</div>
+              <div class="feature-hub-desc">Zoom/pan destekli Anadolu haritası, 7 bölge ve aktif Ankara ➔ Edirne sefer hattı.</div>
+            </div>
+            <div class="glass-card feature-hub-card" data-launch-view="route">
+              <div class="feature-hub-card-top"><span class="feature-hub-icon">🧭</span><span class="cmd-pill">GPX + Maps</span></div>
+              <div class="feature-hub-title">Rota Planlayıcı & Bütçe</div>
+              <div class="feature-hub-desc">10 duraklı Ankara ➔ Sakarya ➔ İstanbul ➔ Edirne rotası, Google Maps ve GPX indirme.</div>
+            </div>
+            <div class="glass-card feature-hub-card" data-launch-view="quiz">
+              <div class="feature-hub-card-top"><span class="feature-hub-icon">🎯</span><span class="cmd-pill">4 Mod</span></div>
+              <div class="feature-hub-title">Anadolu Bilgi Yarışması</div>
+              <div class="feature-hub-desc">Fotoğraftan şehir tanı, plaka, lezzet ve miras sorularıyla seri rekoru kır.</div>
+            </div>
+            <div class="glass-card feature-hub-card" data-launch-view="postcard">
+              <div class="feature-hub-card-top"><span class="feature-hub-icon">📮</span><span class="cmd-pill">HD PNG</span></div>
+              <div class="feature-hub-title">Dijital Kartpostal Stüdyosu</div>
+              <div class="feature-hub-desc">81 il × 3 tema ile 1200×675 HD kartpostal tasarla ve tek tıkla indir.</div>
+            </div>
+            <div class="glass-card feature-hub-card" data-launch-view="sound">
+              <div class="feature-hub-card-top"><span class="feature-hub-icon">🎧</span><span class="cmd-pill">5 Kanal</span></div>
+              <div class="feature-hub-title">Sufi & Doğa Ses Mikseri</div>
+              <div class="feature-hub-desc">Ney, yağmur, rüzgar, dalga ve ocak seslerini karıştır; canlı dalgayı izle.</div>
+            </div>
+            <div class="glass-card feature-hub-card" data-launch-view="analytics">
+              <div class="feature-hub-card-top"><span class="feature-hub-icon">📊</span><span class="cmd-pill">9×9 Matris</span></div>
+              <div class="feature-hub-title">81 Plaka Analitik Panosu</div>
+              <div class="feature-hub-desc">Tıklanabilir 01–81 plaka ısı haritası, SVG grafikler ve coğrafi uç noktalar.</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Rank & Achievements -->
         ${achievementsHtml}
 
@@ -691,6 +730,13 @@
     if (dGallery) dGallery.addEventListener('click', () => renderGalleryView());
     if (dRandom) dRandom.addEventListener('click', selectRandomCity);
     if (dExport) dExport.addEventListener('click', exportMarkdownBook);
+
+    els.viewportContent.querySelectorAll('[data-launch-view]').forEach(card => {
+      card.addEventListener('click', () => {
+        const v = card.getAttribute('data-launch-view');
+        if (v) openView(v);
+      });
+    });
 
     document.querySelectorAll('.region-card').forEach(card => {
       card.addEventListener('click', () => {
