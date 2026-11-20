@@ -128,15 +128,21 @@
   background: rgba(4, 9, 20, 0.76);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  display: flex;
+  display: none;
   align-items: flex-start;
   justify-content: center;
   padding: 10vh 16px 24px;
   animation: modFadeSlideUp 0.16s ease-out;
 }
 
+.cmd-overlay.active,
+.cmd-overlay.open {
+  display: flex;
+}
+
 .cmd-overlay.hidden,
-.cmd-overlay[hidden] {
+.cmd-overlay[hidden],
+.cmd-overlay[aria-hidden="true"] {
   display: none !important;
 }
 
