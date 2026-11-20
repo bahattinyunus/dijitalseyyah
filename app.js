@@ -80,7 +80,7 @@
     routeMode: 'custom', // 'custom' (Aktif Sefer Rotam) | 'auto' (Otomatik 2-Opt)
     customRouteCities: (typeof TRAVEL_DATA !== 'undefined' && Array.isArray(TRAVEL_DATA.custom_route))
       ? [...TRAVEL_DATA.custom_route]
-      : ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'İstanbul', 'Edirne'],
+      : ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'Sakarya', 'İstanbul', 'Edirne'],
     routeStartCity: 'Ankara',
     routeRegion: 'all',
     routeStops: 7,
@@ -1157,7 +1157,7 @@
 
           <p style="font-size: 0.85rem; color: var(--text-secondary);">
             ${isCustom
-              ? 'Aktif Batı Karadeniz & Trakya sefer rotanız (Bolu hariç; Düzce sonrası İstanbul ve Edirne). Dilediğiniz durağı ekleyip çıkarabilirsiniz.'
+              ? 'Aktif Batı Karadeniz & Trakya sefer rotanız (Bolu hariç; Düzce sonrası Sakarya, İstanbul ve Edirne). Dilediğiniz durağı ekleyip çıkarabilirsiniz.'
               : 'Seçtiğiniz başlangıç noktasından itibaren henüz ziyaret edilmemiş iller arasından en kısa karayolu mesafesini hesaplar ve 2-Opt algoritmasıyla optimize eder.'}
           </p>
 
@@ -1236,7 +1236,7 @@
       document.getElementById('btn-custom-reset').addEventListener('click', () => {
         state.customRouteCities = Array.isArray(state.data.custom_route)
           ? [...state.data.custom_route]
-          : ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'İstanbul', 'Edirne'];
+          : ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'Sakarya', 'İstanbul', 'Edirne'];
         showToast('↺ Varsayılan Ankara ➔ Edirne rotasına dönüldü');
         calculateAndRenderRoute();
       });

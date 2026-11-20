@@ -1197,7 +1197,7 @@ class SeyyahEngine:
 
         return route
 
-    # Özel Planlanan Sefer Rotası (Bolu hariç, Düzce sonrası İstanbul ve Edirne)
+    # Özel Planlanan Sefer Rotası (Bolu hariç, Düzce sonrası Sakarya, İstanbul ve Edirne)
     CUSTOM_EXPEDITION_ROUTE = [
         "Ankara",
         "Çankırı",
@@ -1206,6 +1206,7 @@ class SeyyahEngine:
         "Bartın",
         "Zonguldak",
         "Düzce",
+        "Sakarya",
         "İstanbul",
         "Edirne",
     ]
