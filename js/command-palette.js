@@ -171,6 +171,96 @@
         run: () => safeCall('openView', 'journal')
       },
       {
+        id: 'action-atlas',
+        type: 'action',
+        icon: '🗺️',
+        title: '81 İl Vektör Keşif Atlası',
+        subtitle: 'Zoom/pan destekli SVG Anadolu haritası ve aktif sefer rotası',
+        category: 'Görünüm',
+        keywords: 'atlas vektor svg harita turkiye zoom bolge rota',
+        run: () => safeCall('openView', 'atlas')
+      },
+      {
+        id: 'action-landmarks',
+        type: 'action',
+        icon: '🕌',
+        title: '373 Anadolu Miras & Durak Ansiklopedisi',
+        subtitle: 'Camiler, kaleler, antik kentler ve doğa harikalarını kategorize keşfet',
+        category: 'Keşif',
+        keywords: 'miras durak cami kale antik kent selale kanyon ansiklopedi',
+        run: () => safeCall('openView', 'landmarks')
+      },
+      {
+        id: 'action-timeline',
+        type: 'action',
+        icon: '🏛️',
+        title: '12.000 Yıllık Anadolu Kronolojisi',
+        subtitle: 'Göbeklitepe\'den Cumhuriyet\'e medeniyetler ve manevi mimarlar',
+        category: 'Keşif',
+        keywords: 'kronoloji tarih medeniyet selcuklu osmanli gobeklitepe mevlana',
+        run: () => safeCall('openView', 'timeline')
+      },
+      {
+        id: 'action-seasons',
+        type: 'action',
+        icon: '🌤️',
+        title: '12 Aylık & Mevsimlik Seyahat Takvimi',
+        subtitle: 'Hangi ayda hangi il gezilir? GSB Seyahatsever yaz dönemi rehberi',
+        category: 'Araç',
+        keywords: 'mevsim takvim ay hava durumu yaz kis ilkbahar sonbahar gsb',
+        run: () => safeCall('openView', 'seasons')
+      },
+      {
+        id: 'action-postcard',
+        type: 'action',
+        icon: '📮',
+        title: 'Dijital Kartpostal Stüdyosu',
+        subtitle: '81 il için 1200×675 HD PNG kartpostal tasarla ve indir',
+        category: 'Stüdyo',
+        keywords: 'kartpostal postcard png canvas paylasim kart tasarim',
+        run: () => safeCall('openView', 'postcard')
+      },
+      {
+        id: 'action-sound',
+        type: 'action',
+        icon: '🎧',
+        title: '5 Kanallı Sufi & Doğa Ses Stüdyosu',
+        subtitle: 'Ney, yağmur, rüzgar, dalga ve ocak seslerini karıştır + canlı görselleştirici',
+        category: 'Stüdyo',
+        keywords: 'ses mikser ney yagmur ruzgar dalga ambient tefekkur studyo',
+        run: () => safeCall('openView', 'sound')
+      },
+      {
+        id: 'action-packing',
+        type: 'action',
+        icon: '🎒',
+        title: 'Sırt Çantası & Sefer Hazırlık Listesi',
+        subtitle: 'Mevsimlik çanta kontrol listesi ve canlı gram/kg ağırlık hesabı',
+        category: 'Araç',
+        keywords: 'sirt cantasi packing checklist hazirlik agirlik kyk esya',
+        run: () => safeCall('openView', 'packing')
+      },
+      {
+        id: 'action-budget',
+        type: 'action',
+        icon: '💰',
+        title: 'Sefer Bütçe & GSB Tasarruf Simülatörü',
+        subtitle: '5 Gün Kuralı maliyet hesabı, SVG grafik ve KYK otel tasarrufu',
+        category: 'Araç',
+        keywords: 'butce maliyet tasarruf kyk gsb otobus yakit hesaplayici',
+        run: () => safeCall('openView', 'budget')
+      },
+      {
+        id: 'action-reader',
+        type: 'action',
+        icon: '📖',
+        title: 'Seyyah Yazılım Serisi Okuyucusu',
+        subtitle: '7 bölümlük manifesto ve rehber makalelerini uygulama içinde oku',
+        category: 'Okuma',
+        keywords: 'makale kitap okuyucu reader medium seri manifesto',
+        run: () => safeCall('openView', 'reader')
+      },
+      {
         id: 'action-random',
         type: 'action',
         icon: '🎲',
