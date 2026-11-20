@@ -247,7 +247,16 @@
       libraries: mods.libraries,
       quiz: mods.quiz,
       analytics: mods.analytics,
-      journal: mods.journal
+      journal: mods.journal,
+      atlas: mods.atlas,
+      packing: mods.packing,
+      postcard: mods.postcard,
+      timeline: mods.timeline,
+      sound: mods.soundMixer,
+      seasons: mods.seasons,
+      landmarks: mods.landmarks,
+      reader: mods.reader,
+      budget: mods.budget
     };
 
     const targetMod = modMap[normalized];
@@ -278,7 +287,10 @@
     } else if (h === '#gallery') {
       renderGalleryView(false);
       return true;
-    } else if (['#compare', '#gastronomy', '#libraries', '#library', '#quiz', '#analytics', '#journal'].includes(h)) {
+    } else if ([
+      '#compare', '#gastronomy', '#libraries', '#library', '#quiz', '#analytics', '#journal',
+      '#atlas', '#packing', '#postcard', '#timeline', '#sound', '#seasons', '#landmarks', '#reader', '#budget'
+    ].includes(h)) {
       openView(h.slice(1), false);
       return true;
     }

@@ -22,6 +22,7 @@
   <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/modules.css">
+  <link rel="stylesheet" href="css/modules-v2.css">
 </head>
 <body>
   <div class="app-container">
@@ -100,15 +101,24 @@
     <!-- Secondary Interactive Modules Navigation Strip -->
     <nav class="module-nav-strip" aria-label="Keşif Modülleri">
       <button class="module-nav-btn active" data-view="dashboard">🏠 Genel Bakış</button>
+      <button class="module-nav-btn" data-view="atlas">🗺️ Vektör Atlas</button>
       <button class="module-nav-btn" data-view="gallery">📸 Galeri (162)</button>
       <button class="module-nav-btn" data-view="route">🧭 Rota &amp; GPX</button>
       <button class="module-nav-btn" data-view="compare">⚖️ Karşılaştır</button>
-      <button class="module-nav-btn" data-view="gastronomy">🍽️ Lezzet Atlası</button>
+      <button class="module-nav-btn" data-view="gastronomy">🍽️ Lezzetler</button>
+      <button class="module-nav-btn" data-view="landmarks">🕌 Miras (373)</button>
       <button class="module-nav-btn" data-view="libraries">📚 Kütüphane &amp; Pomodoro</button>
       <button class="module-nav-btn" data-view="quiz">🎯 Bilgi Yarışması</button>
-      <button class="module-nav-btn" data-view="analytics">📊 Analitik &amp; 81 Plaka</button>
+      <button class="module-nav-btn" data-view="analytics">📊 81 Plaka Analitik</button>
+      <button class="module-nav-btn" data-view="timeline">🏛️ Kronoloji</button>
+      <button class="module-nav-btn" data-view="seasons">🌤️ Mevsim Takvimi</button>
+      <button class="module-nav-btn" data-view="postcard">📮 Kartpostal</button>
+      <button class="module-nav-btn" data-view="sound">🎧 Ses Stüdyosu</button>
+      <button class="module-nav-btn" data-view="packing">🎒 Sırt Çantası</button>
+      <button class="module-nav-btn" data-view="budget">💰 Bütçe</button>
+      <button class="module-nav-btn" data-view="reader">📖 Makaleler</button>
       <button class="module-nav-btn" data-view="journal">📝 Seyir Defterim</button>
-      <button class="module-nav-btn" id="btn-cmd-palette" title="Komut Paletini Aç (Ctrl+K)">⌘K Hızlı Ara</button>
+      <button class="module-nav-btn" id="btn-cmd-palette" title="Komut Paletini Aç (Ctrl+K)">⌘K Ara</button>
     </nav>
 
     <!-- Main Workspace Layout -->
@@ -224,6 +234,15 @@
   <script src="js/travel-journal.js"></script>
   <script src="js/route-tools.js"></script>
   <script src="js/pwa-ux.js"></script>
+  <script src="js/turkey-svg-atlas.js"></script>
+  <script src="js/packing-checklist.js"></script>
+  <script src="js/postcard-studio.js"></script>
+  <script src="js/heritage-timeline.js"></script>
+  <script src="js/sound-mixer.js"></script>
+  <script src="js/weather-season-guide.js"></script>
+  <script src="js/landmark-explorer.js"></script>
+  <script src="js/reading-companion.js"></script>
+  <script src="js/budget-planner.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
