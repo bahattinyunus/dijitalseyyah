@@ -4,7 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anadolu Seyahatnamesi - Dijital Seyyah Seyir Defteri</title>
-  <meta name="description" content="81 il, 7 bölge, kütüphane ofisleri, menzil notları, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.">
+  <meta name="description" content="81 il, 7 bölge, 162 yüksek çözünürlüklü görsel, kütüphane ofisleri, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.">
+  <meta name="theme-color" content="#0a0f1d">
+  <meta property="og:title" content="Dijital Seyyah — Anadolu Seyahatnamesi">
+  <meta property="og:description" content="81 il, 7 bölge, 162 fotoğraf, 2-Opt TSP rota planlayıcı, başarım rozetleri ve interaktif keşif haritası.">
+  <meta property="og:image" content="assets/banner.jpg">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- Favicon & Fonts -->
   <link rel="icon" href="assets/banner.svg" type="image/svg+xml">
@@ -60,6 +66,10 @@
           <span class="btn-label">Rota Planla</span>
         </button>
 
+        <button class="btn btn-outline" id="btn-gallery" title="81 İl • 162 Fotoğraf Galerisi">
+          📸 <span class="btn-label">Galeri</span>
+        </button>
+
         <button class="btn btn-outline" id="btn-random" title="Rastgele Bir Menzil Keşfet">
           🎲 <span class="btn-label">Keşfet</span>
         </button>
@@ -70,6 +80,10 @@
 
         <button class="btn btn-outline" id="btn-quote" title="Günün Tefekkür Hikmeti">
           📜 <span class="btn-label">Hikmet</span>
+        </button>
+
+        <button class="btn btn-outline" id="btn-theme" title="Gece / Gündüz Teması Değiştir" aria-label="Tema Değiştir">
+          ☀️
         </button>
 
         <button class="btn btn-outline" id="btn-export" title="Seyahatnameyi Markdown Kitabı Olarak İndir">
@@ -104,12 +118,18 @@
           <button class="filter-pill active" data-filter="all" id="pill-all">Tümü (81)</button>
           <button class="filter-pill" data-filter="visited" id="pill-visited">✅ Gezildi</button>
           <button class="filter-pill" data-filter="unvisited" id="pill-unvisited">⏳ Bekliyor</button>
+          <button class="filter-pill" data-filter="favorites" id="pill-favorites">⭐ Favori (0)</button>
         </div>
 
-        <!-- Region Dropdown -->
-        <div class="region-filter-wrapper">
+        <!-- Region & Sort Controls -->
+        <div class="region-filter-wrapper sidebar-selects-row">
           <select id="region-select" class="region-select">
             <option value="all">Tüm Bölgeler (7 Bölge)</option>
+          </select>
+          <select id="sort-select" class="region-select sort-select" aria-label="Sıralama">
+            <option value="name">A → Z</option>
+            <option value="plate">Plaka 01→81</option>
+            <option value="visited">Gezilenler Önce</option>
           </select>
         </div>
 
@@ -173,6 +193,9 @@
       <button class="lightbox-nav-btn lightbox-next" id="lightbox-next-btn" aria-label="Sonraki Fotoğraf">&#10095;</button>
     </div>
   </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <!-- Data Module & SPA Application Engine -->
   <script src="web_data.js"></script>

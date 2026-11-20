@@ -46,14 +46,37 @@
     { id: 'sukunet', label: 'Kervansaray Sükuneti', freq1: 130.81, freq2: 196.0, filterFreq: 260, noiseVol: 0.03 }
   ];
 
+  // LocalStorage Helpers
+  const STORAGE_KEYS = {
+    theme: 'dijital_seyyah_theme',
+    favorites: 'dijital_seyyah_favorites'
+  };
+
+  function loadFavorites() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.favorites);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveFavorites(favSet) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify([...favSet]));
+    } catch (e) {}
+  }
+
   // Global State
   const state = {
     data: typeof TRAVEL_DATA !== 'undefined' ? TRAVEL_DATA : null,
-    filter: 'all', // 'all', 'visited', 'unvisited'
+    filter: 'all', // 'all', 'visited', 'unvisited', 'favorites'
     selectedRegion: 'all',
+    sortBy: 'name', // 'name', 'plate', 'visited'
     searchQuery: '',
     selectedCityKey: null,
-    currentView: 'dashboard', // 'dashboard', 'city', 'route'
+    currentView: 'dashboard', // 'dashboard', 'city', 'route', 'gallery'
+    galleryRegion: 'all',
     routeStartCity: 'Ankara',
     routeRegion: 'all',
     routeStops: 7,
@@ -63,7 +86,11 @@
     audioNodes: [],
     currentQuote: null,
     lightboxImages: [],
-    lightboxIndex: 0
+    lightboxIndex: 0,
+    favorites: loadFavorites(),
+    theme: (function () {
+      try { return localStorage.getItem(STORAGE_KEYS.theme) || 'dark'; } catch (e) { return 'dark'; }
+    })()
   };
 
   // DOM Elements
@@ -74,18 +101,22 @@
     citiesList: document.getElementById('cities-list'),
     searchInput: document.getElementById('search-input'),
     regionSelect: document.getElementById('region-select'),
+    sortSelect: document.getElementById('sort-select'),
     filterPills: document.querySelectorAll('.filter-pill'),
     pillAll: document.getElementById('pill-all'),
     pillVisited: document.getElementById('pill-visited'),
     pillUnvisited: document.getElementById('pill-unvisited'),
+    pillFavorites: document.getElementById('pill-favorites'),
     viewportContent: document.getElementById('viewport-content'),
     logoSection: document.getElementById('logo-section'),
     btnDashboard: document.getElementById('btn-dashboard'),
     btnMap: document.getElementById('btn-map'),
     btnRoute: document.getElementById('btn-route'),
+    btnGallery: document.getElementById('btn-gallery'),
     btnRandom: document.getElementById('btn-random'),
     btnAmbient: document.getElementById('btn-ambient'),
     btnQuote: document.getElementById('btn-quote'),
+    btnTheme: document.getElementById('btn-theme'),
     btnExport: document.getElementById('btn-export'),
     btnMobileSidebar: document.getElementById('btn-mobile-sidebar'),
     btnCloseSidebar: document.getElementById('btn-close-sidebar'),
@@ -103,11 +134,92 @@
     lightboxCloseBtn: document.getElementById('lightbox-close-btn'),
     lightboxPrevBtn: document.getElementById('lightbox-prev-btn'),
     lightboxNextBtn: document.getElementById('lightbox-next-btn'),
+    toastContainer: document.getElementById('toast-container'),
     modalCloseBtns: document.querySelectorAll('.modal-close-btn')
   };
 
+  // Toast Notification
+  function showToast(message) {
+    if (!els.toastContainer) return;
+    const item = document.createElement('div');
+    item.className = 'toast-item';
+    item.textContent = message;
+    els.toastContainer.appendChild(item);
+    setTimeout(() => {
+      item.style.opacity = '0';
+      item.style.transition = 'opacity 0.25s ease';
+      setTimeout(() => item.remove(), 260);
+    }, 2400);
+  }
+
+  // Theme Toggle
+  function applyTheme(theme) {
+    state.theme = theme;
+    document.body.classList.toggle('light-theme', theme === 'light');
+    if (els.btnTheme) {
+      els.btnTheme.textContent = theme === 'light' ? '🌙' : '☀️';
+      els.btnTheme.title = theme === 'light' ? 'Gece Temasına Geç' : 'Gündüz Temasına Geç';
+    }
+    try { localStorage.setItem(STORAGE_KEYS.theme, theme); } catch (e) {}
+  }
+
+  function toggleTheme() {
+    const next = state.theme === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    showToast(next === 'light' ? '☀️ Gündüz temasına geçildi' : '🌙 Gece temasına geçildi');
+  }
+
+  // Favorites Toggle
+  function toggleFavorite(key) {
+    if (!state.data || !state.data.provinces[key]) return;
+    const cityName = state.data.provinces[key].name;
+    if (state.favorites.has(key)) {
+      state.favorites.delete(key);
+      showToast(`☆ ${cityName} favorilerden çıkarıldı`);
+    } else {
+      state.favorites.add(key);
+      showToast(`⭐ ${cityName} favorilere eklendi`);
+    }
+    saveFavorites(state.favorites);
+    renderHeaderStats();
+    renderCitiesList();
+    if (state.currentView === 'city' && state.selectedCityKey === key) {
+      renderCityDetail(key);
+    }
+  }
+
+  // URL Hash Router
+  function setHash(hash) {
+    if (window.location.hash !== hash) {
+      try {
+        history.replaceState(null, '', hash);
+      } catch (e) {
+        window.location.hash = hash;
+      }
+    }
+  }
+
+  function routeFromHash() {
+    const h = window.location.hash || '';
+    if (h.startsWith('#city/')) {
+      const key = decodeURIComponent(h.slice('#city/'.length));
+      if (state.data && state.data.provinces[key]) {
+        selectCity(key, false);
+        return true;
+      }
+    } else if (h === '#route') {
+      renderRoutePlanner(null, false);
+      return true;
+    } else if (h === '#gallery') {
+      renderGalleryView(false);
+      return true;
+    }
+    return false;
+  }
+
   // Initialize App
   function init() {
+    applyTheme(state.theme);
     if (!state.data) {
       if (els.viewportContent) {
         els.viewportContent.innerHTML = `
@@ -123,7 +235,9 @@
     renderHeaderStats();
     populateRegionSelect();
     renderCitiesList();
-    renderDashboard();
+    if (!routeFromHash()) {
+      renderDashboard(false);
+    }
     setupEventListeners();
   }
 
@@ -131,6 +245,7 @@
   function updateNavHighlight() {
     if (els.btnDashboard) els.btnDashboard.classList.toggle('nav-active', state.currentView === 'dashboard');
     if (els.btnRoute) els.btnRoute.classList.toggle('nav-active', state.currentView === 'route');
+    if (els.btnGallery) els.btnGallery.classList.toggle('nav-active', state.currentView === 'gallery');
   }
 
   // Header Statistics & Filter Counts
@@ -143,6 +258,7 @@
     if (els.pillAll) els.pillAll.textContent = `Tümü (${s.total_cities})`;
     if (els.pillVisited) els.pillVisited.textContent = `✅ Gezildi (${s.visited_cities})`;
     if (els.pillUnvisited) els.pillUnvisited.textContent = `⏳ Bekliyor (${s.unvisited_cities})`;
+    if (els.pillFavorites) els.pillFavorites.textContent = `⭐ Favori (${state.favorites.size})`;
   }
 
   // Populate Regions Dropdown
@@ -164,9 +280,10 @@
     const q = normalizeTurkish(state.searchQuery);
 
     return entries
-      .filter(([, p]) => {
+      .filter(([key, p]) => {
         if (state.filter === 'visited' && !p.visited) return false;
         if (state.filter === 'unvisited' && p.visited) return false;
+        if (state.filter === 'favorites' && !state.favorites.has(key)) return false;
         if (state.selectedRegion !== 'all' && p.region_code !== state.selectedRegion) return false;
 
         if (q) {
@@ -183,7 +300,13 @@
         }
         return true;
       })
-      .sort((a, b) => a[1].name.localeCompare(b[1].name, 'tr'));
+      .sort((a, b) => {
+        if (state.sortBy === 'plate') return a[1].plate - b[1].plate;
+        if (state.sortBy === 'visited') {
+          if (a[1].visited !== b[1].visited) return a[1].visited ? -1 : 1;
+        }
+        return a[1].name.localeCompare(b[1].name, 'tr');
+      });
   }
 
   // Render Cities List in Sidebar
@@ -194,7 +317,7 @@
     if (cities.length === 0) {
       els.citiesList.innerHTML = `
         <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-          Aradığınız kriterlere uygun şehir bulunamadı.
+          ${state.filter === 'favorites' ? 'Henüz favori şehir eklemediniz. Bir il sayfasından ⭐ butonuna tıklayabilirsiniz.' : 'Aradığınız kriterlere uygun şehir bulunamadı.'}
         </div>
       `;
       return;
@@ -202,19 +325,24 @@
 
     els.citiesList.innerHTML = cities.map(([key, p]) => {
       const isSelected = state.selectedCityKey === key;
+      const isFav = state.favorites.has(key);
       const statusClass = p.visited ? 'visited' : 'unvisited';
-      const statusText = p.visited ? '✓ Gezildi' : '⏳ Bekliyor';
+      const statusText = p.visited ? '✓ Gezildi' : '⏳';
+      const thumb = p.has_banner ? p.banner_rel : 'assets/banner.jpg';
 
       return `
         <div class="city-item ${isSelected ? 'active' : ''}" data-city-key="${escapeHtml(key)}">
           <div class="city-info-group">
-            <div class="city-plate">${String(p.plate).padStart(2, '0')}</div>
+            <img class="city-thumb" src="${escapeHtml(thumb)}" alt="${escapeHtml(p.name)}" loading="lazy" />
             <div>
-              <div class="city-name-text">${escapeHtml(p.name)}</div>
+              <div class="city-name-text">${String(p.plate).padStart(2, '0')} • ${escapeHtml(p.name)}</div>
               <div class="city-region-sub">${escapeHtml(p.region)}</div>
             </div>
           </div>
-          <span class="city-status-badge ${statusClass}">${statusText}</span>
+          <div class="city-right-meta">
+            ${isFav ? '<span class="fav-dot" title="Favori">★</span>' : ''}
+            <span class="city-status-badge ${statusClass}">${statusText}</span>
+          </div>
         </div>
       `;
     }).join('');
@@ -240,9 +368,10 @@
   }
 
   // Select City & Render Detail
-  function selectCity(key) {
+  function selectCity(key, updateHash = true) {
     state.selectedCityKey = key;
     state.currentView = 'city';
+    if (updateHash) setHash(`#city/${encodeURIComponent(key)}`);
     updateNavHighlight();
     renderCitiesList();
     renderCityDetail(key);
@@ -288,9 +417,10 @@
   }
 
   // Render Dashboard View
-  function renderDashboard() {
+  function renderDashboard(updateHash = true) {
     state.currentView = 'dashboard';
     state.selectedCityKey = null;
+    if (updateHash) setHash('#dashboard');
     updateNavHighlight();
     renderCitiesList();
 
@@ -380,15 +510,16 @@
     els.viewportContent.innerHTML = `
       <div class="dashboard-view">
         <!-- Hero Section -->
-        <div class="hero-banner">
-          <div class="hero-tag">🕌 Sefer Der Vatan</div>
+        <div class="hero-banner hero-banner-visual">
+          <div class="hero-tag">🕌 Sefer Der Vatan • ${s.total_photos || 162} Fotoğraf Arşivi</div>
           <h2>DİJİTAL SEYYAH: ANADOLU SEYAHATNAMESİ</h2>
           <p class="hero-quote">"${escapeHtml(quote.quote)}" — <strong>${escapeHtml(quote.author)}</strong></p>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button class="btn btn-primary" id="dash-btn-map">🗺️ İnteraktif Keşif Haritası</button>
+            <button class="btn btn-primary" id="dash-btn-map">🗺️ İnteraktif Harita</button>
             <button class="btn btn-outline" id="dash-btn-route">🧭 2-Opt Rota Planla</button>
+            <button class="btn btn-outline" id="dash-btn-gallery">📸 162 Fotoğraf Galerisi</button>
             <button class="btn btn-outline" id="dash-btn-random">🎲 Rastgele Menzil</button>
-            <button class="btn btn-outline" id="dash-btn-export">📚 Seyahatnameyi İndir</button>
+            <button class="btn btn-outline" id="dash-btn-export">📚 E-Kitap İndir</button>
           </div>
         </div>
 
@@ -459,10 +590,12 @@
 
     const dMap = document.getElementById('dash-btn-map');
     const dRoute = document.getElementById('dash-btn-route');
+    const dGallery = document.getElementById('dash-btn-gallery');
     const dRandom = document.getElementById('dash-btn-random');
     const dExport = document.getElementById('dash-btn-export');
     if (dMap) dMap.addEventListener('click', openMapModal);
     if (dRoute) dRoute.addEventListener('click', () => renderRoutePlanner());
+    if (dGallery) dGallery.addEventListener('click', () => renderGalleryView());
     if (dRandom) dRandom.addEventListener('click', selectRandomCity);
     if (dExport) dExport.addEventListener('click', exportMarkdownBook);
 
@@ -714,6 +847,10 @@
             ${nextEntry ? `<button class="btn btn-outline" id="city-next-btn">${escapeHtml(nextEntry[1].name)} ➡️</button>` : ''}
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-outline ${state.favorites.has(key) ? 'btn-fav-active' : ''}" id="city-fav-btn">
+              ${state.favorites.has(key) ? '★ Favoride' : '☆ Favorile'}
+            </button>
+            <button class="btn btn-outline" id="city-share-btn">🔗 Paylaş</button>
             <button class="btn btn-outline" id="city-route-btn">🧭 Buradan Rota Planla</button>
             <a href="${escapeHtml(p.readme_rel)}" target="_blank" class="btn btn-primary">
               📄 Markdown Günlüğü ➔
@@ -725,7 +862,22 @@
     `;
 
     const backBtn = document.getElementById('city-back-btn');
-    if (backBtn) backBtn.addEventListener('click', renderDashboard);
+    if (backBtn) backBtn.addEventListener('click', () => renderDashboard());
+
+    const favBtn = document.getElementById('city-fav-btn');
+    if (favBtn) favBtn.addEventListener('click', () => toggleFavorite(key));
+
+    const shareBtn = document.getElementById('city-share-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        const shareUrl = `${window.location.origin}${window.location.pathname}#city/${encodeURIComponent(key)}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            showToast(`🔗 ${p.name} bağlantısı kopyalandı!`);
+          }).catch(() => showToast('Bağlantı kopyalanamadı'));
+        }
+      });
+    }
 
     const routeBtn = document.getElementById('city-route-btn');
     if (routeBtn) routeBtn.addEventListener('click', () => renderRoutePlanner(p.name));
@@ -844,11 +996,122 @@
     `;
   }
 
+  // Render Full 162-Photo Anatolia Gallery View
+  function renderGalleryView(updateHash = true) {
+    state.currentView = 'gallery';
+    state.selectedCityKey = null;
+    if (updateHash) setHash('#gallery');
+    updateNavHighlight();
+    renderCitiesList();
+    if (els.viewportContent) els.viewportContent.scrollTop = 0;
+
+    const allEntries = Object.entries(state.data.provinces)
+      .filter(([, p]) => state.galleryRegion === 'all' || p.region_code === state.galleryRegion)
+      .sort((a, b) => a[1].name.localeCompare(b[1].name, 'tr'));
+
+    const galleryPhotos = [];
+    allEntries.forEach(([key, p]) => {
+      if (p.has_banner) {
+        galleryPhotos.push({
+          key,
+          city: p.name,
+          region: p.region,
+          visited: p.visited,
+          src: p.banner_rel,
+          caption: `${p.name} (${p.region}) — Menzil Kapak`
+        });
+      }
+      if (p.has_gallery) {
+        galleryPhotos.push({
+          key,
+          city: p.name,
+          region: p.region,
+          visited: p.visited,
+          src: p.gallery_rel,
+          caption: `${p.name} (${p.region}) — Şehir Vitrini`
+        });
+      }
+    });
+
+    const regionButtonsHtml = `
+      <button class="filter-pill ${state.galleryRegion === 'all' ? 'active' : ''}" data-g-region="all">🇹🇷 Tümü (${state.data.stats.total_photos || 162})</button>
+      ${Object.entries(state.data.regions).map(([code, info]) => `
+        <button class="filter-pill ${state.galleryRegion === code ? 'active' : ''}" data-g-region="${escapeHtml(code)}">${info.icon} ${escapeHtml(info.name.replace(' Bölgesi', ''))}</button>
+      `).join('')}
+    `;
+
+    const cardsHtml = galleryPhotos.map((item, idx) => `
+      <div class="glass-card mega-gallery-card">
+        <div class="mega-gallery-img-wrap" data-mega-idx="${idx}">
+          <img src="${escapeHtml(item.src)}" alt="${escapeHtml(item.caption)}" loading="lazy" />
+          <span class="mega-gallery-badge ${item.visited ? 'visited' : 'unvisited'}">${item.visited ? '✓ Gezildi' : '⏳ Bekliyor'}</span>
+        </div>
+        <div class="mega-gallery-card-meta">
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 700; font-size: 0.9rem;">${escapeHtml(item.city)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(item.region)}</div>
+          </div>
+          <button class="mega-gallery-city-btn" data-open-city="${escapeHtml(item.key)}">İncele ➔</button>
+        </div>
+      </div>
+    `).join('');
+
+    els.viewportContent.innerHTML = `
+      <div class="dashboard-view">
+        <div class="glass-card detail-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h2 style="font-family: var(--font-heading); font-size: 1.45rem; color: var(--accent-cyan);">
+                📸 Anadolu Menzil Fotoğraf Galerisi (${galleryPhotos.length} Görsel)
+              </h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                81 ilin tamamına ait yüksek çözünürlüklü kapak ve şehir vitrini fotoğrafları. Tam ekran Lightbox için herhangi bir fotoğrafa tıklayın.
+              </p>
+            </div>
+            <button class="btn btn-outline" id="gallery-back-btn">🏠 Genel Bakış</button>
+          </div>
+          <div class="gallery-filter-bar">
+            ${regionButtonsHtml}
+          </div>
+        </div>
+
+        <div class="mega-gallery-grid">
+          ${cardsHtml}
+        </div>
+      </div>
+    `;
+
+    const backBtn = document.getElementById('gallery-back-btn');
+    if (backBtn) backBtn.addEventListener('click', () => renderDashboard());
+
+    els.viewportContent.querySelectorAll('[data-g-region]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.galleryRegion = btn.getAttribute('data-g-region');
+        renderGalleryView(false);
+      });
+    });
+
+    els.viewportContent.querySelectorAll('[data-mega-idx]').forEach(wrap => {
+      wrap.addEventListener('click', () => {
+        const idx = parseInt(wrap.getAttribute('data-mega-idx'), 10) || 0;
+        openLightbox(galleryPhotos, idx);
+      });
+    });
+
+    els.viewportContent.querySelectorAll('[data-open-city]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ck = btn.getAttribute('data-open-city');
+        if (ck) selectCity(ck);
+      });
+    });
+  }
+
   // Render Route Planner View
-  function renderRoutePlanner(presetStartCity) {
+  function renderRoutePlanner(presetStartCity, updateHash = true) {
     state.currentView = 'route';
     state.selectedCityKey = null;
     if (presetStartCity) state.routeStartCity = presetStartCity;
+    if (updateHash) setHash('#route');
     updateNavHighlight();
     renderCitiesList();
 
@@ -1258,14 +1521,32 @@
 
   // Event Listeners
   function setupEventListeners() {
-    if (els.logoSection) els.logoSection.addEventListener('click', renderDashboard);
-    if (els.btnDashboard) els.btnDashboard.addEventListener('click', renderDashboard);
+    if (els.logoSection) els.logoSection.addEventListener('click', () => renderDashboard());
+    if (els.btnDashboard) els.btnDashboard.addEventListener('click', () => renderDashboard());
     if (els.btnMap) els.btnMap.addEventListener('click', openMapModal);
     if (els.btnRoute) els.btnRoute.addEventListener('click', () => renderRoutePlanner());
+    if (els.btnGallery) els.btnGallery.addEventListener('click', () => renderGalleryView());
     if (els.btnRandom) els.btnRandom.addEventListener('click', selectRandomCity);
     if (els.btnAmbient) els.btnAmbient.addEventListener('click', cycleAmbientSound);
     if (els.btnQuote) els.btnQuote.addEventListener('click', openQuoteModal);
-    if (els.btnExport) els.btnExport.addEventListener('click', exportMarkdownBook);
+    if (els.btnTheme) els.btnTheme.addEventListener('click', toggleTheme);
+    if (els.btnExport) els.btnExport.addEventListener('click', () => {
+      exportMarkdownBook();
+      showToast('📚 ANADOLU_SEYAHATNAMESI.md indirildi!');
+    });
+
+    if (els.sortSelect) {
+      els.sortSelect.addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
+        renderCitiesList();
+      });
+    }
+
+    window.addEventListener('hashchange', () => {
+      if (!routeFromHash()) {
+        renderDashboard(false);
+      }
+    });
 
     if (els.btnNextQuote) els.btnNextQuote.addEventListener('click', renderRandomQuoteInModal);
     if (els.btnCopyQuote) els.btnCopyQuote.addEventListener('click', copyCurrentQuote);
