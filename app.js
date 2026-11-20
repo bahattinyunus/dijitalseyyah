@@ -77,6 +77,10 @@
     selectedCityKey: null,
     currentView: 'dashboard', // 'dashboard', 'city', 'route', 'gallery'
     galleryRegion: 'all',
+    routeMode: 'custom', // 'custom' (Aktif Sefer Rotam) | 'auto' (Otomatik 2-Opt)
+    customRouteCities: (typeof TRAVEL_DATA !== 'undefined' && Array.isArray(TRAVEL_DATA.custom_route))
+      ? [...TRAVEL_DATA.custom_route]
+      : ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'İstanbul', 'Edirne'],
     routeStartCity: 'Ankara',
     routeRegion: 'all',
     routeStops: 7,
@@ -1110,7 +1114,10 @@
   function renderRoutePlanner(presetStartCity, updateHash = true) {
     state.currentView = 'route';
     state.selectedCityKey = null;
-    if (presetStartCity) state.routeStartCity = presetStartCity;
+    if (presetStartCity) {
+      state.routeStartCity = presetStartCity;
+      state.routeMode = 'auto';
+    }
     if (updateHash) setHash('#route');
     updateNavHighlight();
     renderCitiesList();
@@ -1122,6 +1129,10 @@
       <option value="${escapeHtml(p.name)}" ${p.name === state.routeStartCity ? 'selected' : ''}>${escapeHtml(p.name)} (${escapeHtml(p.region)})</option>
     `).join('');
 
+    const addStopOptionsHtml = sortedProvinces.map(([, p]) => `
+      <option value="${escapeHtml(p.name)}">${escapeHtml(p.name)} (${escapeHtml(p.region)})</option>
+    `).join('');
+
     const regionOptionsHtml = `
       <option value="all" ${state.routeRegion === 'all' ? 'selected' : ''}>Tüm Türkiye (7 Bölge)</option>
       ${Object.entries(state.data.regions).map(([code, r]) => `
@@ -1129,122 +1140,196 @@
       `).join('')}
     `;
 
+    const isCustom = state.routeMode === 'custom';
+
     els.viewportContent.innerHTML = `
       <div class="dashboard-view">
         <div class="glass-card detail-card">
-          <h2 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 10px;">
-            🧭 Akıllı Rota Planlayıcı (Greedy + 2-Opt TSP Optimizer)
-          </h2>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 10px;">
+              🧭 Akıllı Rota Planlayıcı
+            </h2>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="filter-pill ${isCustom ? 'active' : ''}" id="btn-mode-custom">🎯 Özel Sefer Rotam (Ankara ➔ Edirne)</button>
+              <button class="filter-pill ${!isCustom ? 'active' : ''}" id="btn-mode-auto">⚡ Otomatik 2-Opt Planlayıcı</button>
+            </div>
+          </div>
+
           <p style="font-size: 0.85rem; color: var(--text-secondary);">
-            Seçtiğiniz başlangıç noktasından itibaren henüz ziyaret edilmemiş iller arasından en kısa karayolu mesafesini hesaplar ve 2-Opt algoritmasıyla çapraz yolları optimize eder.
+            ${isCustom
+              ? 'Aktif Batı Karadeniz & Trakya sefer rotanız (Bolu hariç; Düzce sonrası İstanbul ve Edirne). Dilediğiniz durağı ekleyip çıkarabilirsiniz.'
+              : 'Seçtiğiniz başlangıç noktasından itibaren henüz ziyaret edilmemiş iller arasından en kısa karayolu mesafesini hesaplar ve 2-Opt algoritmasıyla optimize eder.'}
           </p>
 
-          <div style="display: flex; gap: 14px; margin-top: 12px; flex-wrap: wrap; align-items: flex-end;">
-            <div style="flex: 1; min-width: 190px;">
-              <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Başlangıç Şehri</label>
-              <select id="route-start-select" class="region-select" style="margin-top: 4px;">
-                ${optionsHtml}
-              </select>
+          ${isCustom ? `
+            <div style="display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; align-items: flex-end;">
+              <div style="flex: 1; min-width: 220px;">
+                <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Rotaya Durak Ekle</label>
+                <select id="custom-add-select" class="region-select" style="margin-top: 4px;">
+                  ${addStopOptionsHtml}
+                </select>
+              </div>
+              <button class="btn btn-primary" id="btn-custom-add">➕ Durak Ekle</button>
+              <button class="btn btn-outline" id="btn-custom-reset">↺ Varsayılan Rotaya Dön</button>
             </div>
+          ` : `
+            <div style="display: flex; gap: 14px; margin-top: 12px; flex-wrap: wrap; align-items: flex-end;">
+              <div style="flex: 1; min-width: 190px;">
+                <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Başlangıç Şehri</label>
+                <select id="route-start-select" class="region-select" style="margin-top: 4px;">
+                  ${optionsHtml}
+                </select>
+              </div>
 
-            <div style="flex: 1; min-width: 190px;">
-              <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Hedef Bölge</label>
-              <select id="route-region-select" class="region-select" style="margin-top: 4px;">
-                ${regionOptionsHtml}
-              </select>
+              <div style="flex: 1; min-width: 190px;">
+                <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Hedef Bölge</label>
+                <select id="route-region-select" class="region-select" style="margin-top: 4px;">
+                  ${regionOptionsHtml}
+                </select>
+              </div>
+
+              <div style="width: 130px;">
+                <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Durak Sayısı</label>
+                <select id="route-stops-select" class="region-select" style="margin-top: 4px;">
+                  <option value="5" ${state.routeStops === 5 ? 'selected' : ''}>5 Durak</option>
+                  <option value="7" ${state.routeStops === 7 ? 'selected' : ''}>7 Durak</option>
+                  <option value="9" ${state.routeStops === 9 ? 'selected' : ''}>9 Durak</option>
+                  <option value="12" ${state.routeStops === 12 ? 'selected' : ''}>12 Durak</option>
+                  <option value="15" ${state.routeStops === 15 ? 'selected' : ''}>15 Durak</option>
+                </select>
+              </div>
+
+              <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-secondary); padding: 9px 12px; background: rgba(30,41,59,0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-md); cursor: pointer;">
+                <input type="checkbox" id="route-opt-check" ${state.routeOptimize ? 'checked' : ''} />
+                2-Opt Optimizasyon
+              </label>
+
+              <button class="btn btn-primary" id="btn-calc-route">⚡ Rotayı Hesapla</button>
             </div>
-
-            <div style="width: 130px;">
-              <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Durak Sayısı</label>
-              <select id="route-stops-select" class="region-select" style="margin-top: 4px;">
-                <option value="5" ${state.routeStops === 5 ? 'selected' : ''}>5 Durak</option>
-                <option value="7" ${state.routeStops === 7 ? 'selected' : ''}>7 Durak</option>
-                <option value="9" ${state.routeStops === 9 ? 'selected' : ''}>9 Durak</option>
-                <option value="12" ${state.routeStops === 12 ? 'selected' : ''}>12 Durak</option>
-                <option value="15" ${state.routeStops === 15 ? 'selected' : ''}>15 Durak</option>
-              </select>
-            </div>
-
-            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-secondary); padding: 9px 12px; background: rgba(30,41,59,0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-md); cursor: pointer;">
-              <input type="checkbox" id="route-opt-check" ${state.routeOptimize ? 'checked' : ''} />
-              2-Opt Optimizasyon
-            </label>
-
-            <button class="btn btn-primary" id="btn-calc-route">⚡ Rotayı Hesapla</button>
-          </div>
+          `}
         </div>
 
         <div id="route-results-container"></div>
       </div>
     `;
 
-    document.getElementById('btn-calc-route').addEventListener('click', calculateAndRenderRoute);
-    document.getElementById('route-start-select').addEventListener('change', calculateAndRenderRoute);
-    document.getElementById('route-region-select').addEventListener('change', calculateAndRenderRoute);
-    document.getElementById('route-stops-select').addEventListener('change', calculateAndRenderRoute);
-    document.getElementById('route-opt-check').addEventListener('change', calculateAndRenderRoute);
+    document.getElementById('btn-mode-custom').addEventListener('click', () => {
+      state.routeMode = 'custom';
+      renderRoutePlanner(null, false);
+    });
+    document.getElementById('btn-mode-auto').addEventListener('click', () => {
+      state.routeMode = 'auto';
+      renderRoutePlanner(null, false);
+    });
+
+    if (isCustom) {
+      document.getElementById('btn-custom-add').addEventListener('click', () => {
+        const city = document.getElementById('custom-add-select').value;
+        if (city && !state.customRouteCities.includes(city)) {
+          state.customRouteCities.push(city);
+          showToast(`➕ ${city} rotaya eklendi`);
+          calculateAndRenderRoute();
+        } else if (city) {
+          showToast(`ℹ️ ${city} zaten rotada yer alıyor`);
+        }
+      });
+      document.getElementById('btn-custom-reset').addEventListener('click', () => {
+        state.customRouteCities = Array.isArray(state.data.custom_route)
+          ? [...state.data.custom_route]
+          : ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'İstanbul', 'Edirne'];
+        showToast('↺ Varsayılan Ankara ➔ Edirne rotasına dönüldü');
+        calculateAndRenderRoute();
+      });
+    } else {
+      document.getElementById('btn-calc-route').addEventListener('click', calculateAndRenderRoute);
+      document.getElementById('route-start-select').addEventListener('change', calculateAndRenderRoute);
+      document.getElementById('route-region-select').addEventListener('change', calculateAndRenderRoute);
+      document.getElementById('route-stops-select').addEventListener('change', calculateAndRenderRoute);
+      document.getElementById('route-opt-check').addEventListener('change', calculateAndRenderRoute);
+    }
+
     calculateAndRenderRoute();
   }
 
   function calculateAndRenderRoute() {
-    const startName = document.getElementById('route-start-select').value;
-    const regionCode = document.getElementById('route-region-select').value;
-    const stopsCount = parseInt(document.getElementById('route-stops-select').value, 10);
-    const useTwoOpt = document.getElementById('route-opt-check').checked;
-
-    state.routeStartCity = startName;
-    state.routeRegion = regionCode;
-    state.routeStops = stopsCount;
-    state.routeOptimize = useTwoOpt;
-
     const allEntries = Object.entries(state.data.provinces).map(([key, p]) => ({ ...p, _key: key }));
-    const startCity = allEntries.find(p => p.name.toLowerCase() === startName.toLowerCase()) || allEntries[0];
-    const unvisited = allEntries.filter(p =>
-      !p.visited &&
-      p.name !== startCity.name &&
-      (regionCode === 'all' || p.region_code === regionCode)
-    );
-
     const container = document.getElementById('route-results-container');
-    if (unvisited.length === 0) {
-      container.innerHTML = `
-        <div class="glass-card detail-card" style="text-align: center; color: var(--accent-emerald);">
-          🎉 Tebrikler! Seçilen bölgede ziyaret edilmemiş il kalmadı!
-        </div>
-      `;
-      return;
-    }
 
-    // Greedy Nearest Neighbor
-    let current = startCity;
-    let remaining = [...unvisited];
-    let greedyRoute = [current];
+    let finalSeq = [];
+    let savedKm = 0;
 
-    while (remaining.length > 0 && greedyRoute.length <= stopsCount) {
-      let nearest = remaining[0];
-      let minDist = Infinity;
-      for (const candidate of remaining) {
-        const d = calcDistKm(current.lat, current.lng, candidate.lat, candidate.lng);
-        if (d < minDist) {
-          minDist = d;
-          nearest = candidate;
+    if (state.routeMode === 'custom') {
+      finalSeq = state.customRouteCities
+        .map(name => allEntries.find(p => normalizeTurkish(p.name) === normalizeTurkish(name)))
+        .filter(Boolean);
+
+      if (finalSeq.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card detail-card" style="text-align: center; color: var(--text-muted);">
+            Rotada hiç durak kalmadı. Yukarıdan yeni durak ekleyebilir veya varsayılan rotaya dönebilirsiniz.
+          </div>
+        `;
+        return;
+      }
+    } else {
+      const startName = document.getElementById('route-start-select').value;
+      const regionCode = document.getElementById('route-region-select').value;
+      const stopsCount = parseInt(document.getElementById('route-stops-select').value, 10);
+      const useTwoOpt = document.getElementById('route-opt-check').checked;
+
+      state.routeStartCity = startName;
+      state.routeRegion = regionCode;
+      state.routeStops = stopsCount;
+      state.routeOptimize = useTwoOpt;
+
+      const startCity = allEntries.find(p => p.name.toLowerCase() === startName.toLowerCase()) || allEntries[0];
+      const unvisited = allEntries.filter(p =>
+        !p.visited &&
+        p.name !== startCity.name &&
+        (regionCode === 'all' || p.region_code === regionCode)
+      );
+
+      if (unvisited.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card detail-card" style="text-align: center; color: var(--accent-emerald);">
+            🎉 Tebrikler! Seçilen bölgede ziyaret edilmemiş il kalmadı!
+          </div>
+        `;
+        return;
+      }
+
+      // Greedy Nearest Neighbor
+      let current = startCity;
+      let remaining = [...unvisited];
+      let greedyRoute = [current];
+
+      while (remaining.length > 0 && greedyRoute.length <= stopsCount) {
+        let nearest = remaining[0];
+        let minDist = Infinity;
+        for (const candidate of remaining) {
+          const d = calcDistKm(current.lat, current.lng, candidate.lat, candidate.lng);
+          if (d < minDist) {
+            minDist = d;
+            nearest = candidate;
+          }
         }
+        greedyRoute.push(nearest);
+        remaining = remaining.filter(c => c.name !== nearest.name);
+        current = nearest;
       }
-      greedyRoute.push(nearest);
-      remaining = remaining.filter(c => c.name !== nearest.name);
-      current = nearest;
+
+      const computeRoadKm = seq => {
+        let total = 0;
+        for (let i = 1; i < seq.length; i++) {
+          total += Math.round(calcDistKm(seq[i - 1].lat, seq[i - 1].lng, seq[i].lat, seq[i].lng) * 1.35);
+        }
+        return total;
+      };
+
+      const greedyKm = computeRoadKm(greedyRoute);
+      finalSeq = useTwoOpt ? twoOptOptimize(greedyRoute) : greedyRoute;
+      savedKm = Math.max(0, greedyKm - computeRoadKm(finalSeq));
     }
-
-    const computeRoadKm = seq => {
-      let total = 0;
-      for (let i = 1; i < seq.length; i++) {
-        total += Math.round(calcDistKm(seq[i - 1].lat, seq[i - 1].lng, seq[i].lat, seq[i].lng) * 1.35);
-      }
-      return total;
-    };
-
-    const greedyKm = computeRoadKm(greedyRoute);
-    const finalSeq = useTwoOpt ? twoOptOptimize(greedyRoute) : greedyRoute;
 
     let cumulative = 0;
     const route = finalSeq.map((stop, idx) => {
@@ -1256,9 +1341,9 @@
     });
 
     const totalKm = route[route.length - 1].cumulativeKm;
-    const savedKm = Math.max(0, greedyKm - totalKm);
     const estHours = (totalKm / 80).toFixed(1);
-    const seferDays = (route.length - 1) * 5;
+    const seferDays = Math.max(0, route.length - 1) * 5;
+    const isCustom = state.routeMode === 'custom';
 
     const svgMapHtml = buildRouteSvg(route);
 
@@ -1269,7 +1354,7 @@
             ${idx + 1}
           </div>
           <div>
-            <div style="font-family: var(--font-heading); font-weight: 700; font-size: 1rem; color: #ffffff;">
+            <div style="font-family: var(--font-heading); font-weight: 700; font-size: 1rem; color: var(--text-primary);">
               ${escapeHtml(stop.name)} <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(${escapeHtml(stop.region)})</span>
             </div>
             <div style="font-size: 0.76rem; color: var(--text-secondary);">
@@ -1277,11 +1362,14 @@
             </div>
           </div>
         </div>
-        <div style="text-align: right; flex-shrink: 0;">
-          <div style="font-family: var(--font-heading); font-weight: 700; color: var(--accent-gold); font-size: 0.9rem;">
-            ${idx === 0 ? 'BAŞLANGIÇ' : `+${stop.distFromPrev.toLocaleString('tr-TR')} km`}
+        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+          <div style="text-align: right;">
+            <div style="font-family: var(--font-heading); font-weight: 700; color: var(--accent-gold); font-size: 0.9rem;">
+              ${idx === 0 ? 'BAŞLANGIÇ' : `+${stop.distFromPrev.toLocaleString('tr-TR')} km`}
+            </div>
+            ${idx > 0 ? `<div style="font-size: 0.72rem; color: var(--text-muted);">Toplam ${stop.cumulativeKm.toLocaleString('tr-TR')} km</div>` : ''}
           </div>
-          ${idx > 0 ? `<div style="font-size: 0.72rem; color: var(--text-muted);">Toplam ${stop.cumulativeKm.toLocaleString('tr-TR')} km</div>` : ''}
+          ${isCustom ? `<button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" data-remove-stop="${escapeHtml(stop.name)}" title="Durağı Rotadan Çıkar">✕</button>` : ''}
         </div>
       </div>
     `).join('');
@@ -1291,7 +1379,7 @@
         <div class="glass-card route-svg-card">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
             <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--text-primary);">
-              🗺️ Anadolu Rota Önizlemesi (${route.length - 1} Yeni Menzil)
+              🗺️ ${isCustom ? 'Özel Sefer Rotası' : 'Anadolu Rota Önizlemesi'} (${route.length} Durak)
             </h3>
             <div class="route-summary-pills">
               <span class="route-summary-pill" style="color: var(--accent-emerald);">🛣️ ${totalKm.toLocaleString('tr-TR')} km</span>
@@ -1305,6 +1393,16 @@
         ${stopsHtml}
       </div>
     `;
+
+    container.querySelectorAll('[data-remove-stop]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const name = btn.getAttribute('data-remove-stop');
+        state.customRouteCities = state.customRouteCities.filter(c => c !== name);
+        showToast(`✕ ${name} rotadan çıkarıldı`);
+        calculateAndRenderRoute();
+      });
+    });
 
     container.querySelectorAll('.route-stop-card').forEach(card => {
       card.addEventListener('click', () => {

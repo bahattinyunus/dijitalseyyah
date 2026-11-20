@@ -271,6 +271,17 @@ const TRAVEL_DATA = {
       "author": "Kadim Doğu Özdeyişi"
     }
   ],
+  "custom_route": [
+    "Ankara",
+    "Çankırı",
+    "Kastamonu",
+    "Karabük",
+    "Bartın",
+    "Zonguldak",
+    "Düzce",
+    "İstanbul",
+    "Edirne"
+  ],
   "provinces": {
     "01_Marmara/Balikesir": {
       "plate": 10,

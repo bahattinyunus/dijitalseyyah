@@ -1197,6 +1197,45 @@ class SeyyahEngine:
 
         return route
 
+    # Özel Planlanan Sefer Rotası (Bolu hariç, Düzce sonrası İstanbul ve Edirne)
+    CUSTOM_EXPEDITION_ROUTE = [
+        "Ankara",
+        "Çankırı",
+        "Kastamonu",
+        "Karabük",
+        "Bartın",
+        "Zonguldak",
+        "Düzce",
+        "İstanbul",
+        "Edirne",
+    ]
+
+    def build_custom_route(self, city_names=None):
+        """Verilen şehir sırasına göre karayolu mesafeli özel sefer rotası oluşturur."""
+        names = city_names or self.CUSTOM_EXPEDITION_ROUTE
+        stops = []
+        for name in names:
+            prov = self.find_province(name)
+            if prov:
+                stops.append(prov)
+
+        route = []
+        cumulative_km = 0
+        for idx, stop in enumerate(stops):
+            stop_copy = stop.copy()
+            if idx == 0:
+                stop_copy["distance_from_prev_km"] = 0
+            else:
+                prev = stops[idx - 1]
+                air_dist = self.calculate_distance_km(prev["lat"], prev["lng"], stop["lat"], stop["lng"])
+                leg_km = int(round(air_dist * 1.35))
+                stop_copy["distance_from_prev_km"] = leg_km
+                cumulative_km += leg_km
+            stop_copy["cumulative_km"] = cumulative_km
+            stop_copy["est_drive_hours"] = round(stop_copy["distance_from_prev_km"] / 80.0, 1)
+            route.append(stop_copy)
+        return route
+
     def generate_web_data_json(self):
         """Frontend web uygulaması için `travel_data.json` ve `web_data.js` üretir."""
         export_data = {
@@ -1204,6 +1243,7 @@ class SeyyahEngine:
             "achievements": self.achievements,
             "regions": REGIONS_INFO,
             "quotes": TRAVEL_QUOTES,
+            "custom_route": self.CUSTOM_EXPEDITION_ROUTE,
             "provinces": self.provinces
         }
         
