@@ -6,14 +6,14 @@
      - Cache-first for static assets (CSS, SVG, images, fonts, manifest)
    ========================================================================== */
 
-const CACHE_VERSION = 'dijital-seyyah-v4';
+const CACHE_VERSION = 'dijital-seyyah-v5';
 
 const PRECACHE_ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './css/modules.css',
-  './css/modules-v2.css',
+  './style.css?v=5',
+  './css/modules.css?v=5',
+  './css/modules-v2.css?v=5',
   './manifest.json',
   './assets/banner.svg',
   './assets/banner.jpg'
@@ -21,7 +21,7 @@ const PRECACHE_ASSETS = [
 
 /**
  * Determine whether a request should use network-first strategy
- * (HTML navigations, JavaScript modules/data, JSON files).
+ * (HTML navigations, CSS stylesheets, JavaScript modules/data, JSON files).
  */
 function isNetworkFirstRequest(request, url) {
   if (request.mode === 'navigate') {
@@ -32,6 +32,7 @@ function isNetworkFirstRequest(request, url) {
     pathname.endsWith('/') ||
     pathname.endsWith('.html') ||
     pathname.endsWith('.htm') ||
+    pathname.endsWith('.css') ||
     pathname.endsWith('.js') ||
     pathname.endsWith('.mjs') ||
     pathname.endsWith('.json')
