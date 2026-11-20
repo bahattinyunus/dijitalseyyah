@@ -940,6 +940,237 @@ aside.sidebar {
   line-height: 1.55;
 }
 
+/* City Photo Gallery (2 Images) & Lightbox */
+.city-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.city-gallery-grid.single-photo {
+  grid-template-columns: 1fr;
+}
+
+.gallery-thumb-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-glass);
+  background: rgba(15, 23, 42, 0.75);
+  cursor: zoom-in;
+  aspect-ratio: 16 / 10;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.gallery-thumb-card:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 10px 28px rgba(0, 242, 254, 0.22);
+  transform: translateY(-2px);
+}
+
+.gallery-thumb-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gallery-thumb-card:hover img {
+  transform: scale(1.07);
+}
+
+.gallery-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 15, 29, 0.05) 35%, rgba(10, 15, 29, 0.88) 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 12px 14px;
+  gap: 8px;
+}
+
+.gallery-thumb-label {
+  font-family: var(--font-heading);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.gallery-zoom-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.gallery-thumb-card:hover .gallery-zoom-pill {
+  background: var(--accent-cyan);
+  color: #04121d;
+}
+
+/* Lightbox Modal */
+.lightbox-overlay {
+  background: rgba(5, 10, 20, 0.92);
+  backdrop-filter: blur(12px);
+  z-index: 1200;
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 92vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.lightbox-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 82vw;
+  max-height: 86vh;
+}
+
+.lightbox-figure img {
+  max-width: 100%;
+  max-height: 76vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85);
+}
+
+.lightbox-caption {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-glass);
+  padding: 7px 16px;
+  border-radius: var(--radius-full);
+  text-align: center;
+}
+
+.lightbox-close-btn {
+  position: fixed;
+  top: 20px;
+  right: 26px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid var(--border-glass);
+  color: #f8fafc;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1210;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(0, 242, 254, 0.2);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  transform: scale(1.06);
+}
+
+.lightbox-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid var(--border-glass);
+  color: #f8fafc;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.lightbox-nav-btn:hover {
+  background: rgba(0, 242, 254, 0.2);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.lightbox-nav-btn.hidden {
+  display: none;
+}
+
+/* Spiritual Figures & 5-Day Plan Lists */
+.spiritual-figures-list,
+.five-day-plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spiritual-figure-item {
+  font-size: 0.89rem;
+  color: var(--text-secondary);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-left: 3px solid var(--accent-emerald);
+  padding: 11px 15px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  line-height: 1.6;
+}
+
+.spiritual-figure-item strong {
+  color: #6ee7b7;
+}
+
+.five-day-plan-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.89rem;
+  color: var(--text-secondary);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-glass);
+  border-left: 3px solid var(--accent-gold);
+  padding: 11px 15px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  line-height: 1.6;
+}
+
+.five-day-plan-item strong {
+  color: #fcd34d;
+}
+
+.plan-step-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .neighbor-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
@@ -1078,6 +1309,9 @@ aside.sidebar {
   .two-col-grid {
     grid-template-columns: 1fr;
   }
+  .city-gallery-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 540px) {
@@ -1096,5 +1330,10 @@ aside.sidebar {
   }
   .city-hero-title {
     font-size: 1.65rem;
+  }
+  .lightbox-nav-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
   }
 }

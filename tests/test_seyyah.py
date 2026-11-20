@@ -88,6 +88,70 @@ def test_extracted_rich_city_content(engine):
     assert len(istanbul.get("literary_quotes", [])) >= 1
 
 
+def test_extract_spiritual_figures_and_five_day_plan(engine):
+    """Manevi Mimarlar ve 5 Günlük Keşif Planı bölümlerinin hem gezilen hem bekleyen illerden ayıklandığını doğrular."""
+    sample_md = """# 📍 Örnek Şehir
+## 📜 Şehrin Ruhu
+> "Örnek şehir alıntısı."
+
+### 🌍 Şehrin Dokusu ve Tarihsel Arka Planı
+Kadim bir Anadolu menzilidir.
+
+### 🕌 Manevi Mimarlar ve İrfan İzleri
+- **Şeyh Edebali:** Kurucu hikmetin mimarı.
+- **Yunus Emre:** Gönül dilinin şairi.
+
+### 🧭 5 Günlük Seyahatsever Keşif Planı
+- **1. Gün:** Tarihi merkez ve Ulu Cami ziyareti.
+- **2. Gün:** İl Halk Kütüphanesi mesaisi ve kale yürüyüşü.
+
+### 🕊️ Gezginin Not Defterinden (Manevi Boyut ve Tefekkür)
+Sükunet içinde derin bir tefekkür durağı.
+"""
+    dummy = {}
+    engine._extract_city_details(dummy, sample_md)
+    assert dummy["custom_quote"] == "Örnek şehir alıntısı."
+    assert "Kadim bir Anadolu menzilidir." in dummy["history"]
+    assert len(dummy["spiritual_figures"]) == 2
+    assert "Şeyh Edebali" in dummy["spiritual_figures"][0]
+    assert len(dummy["five_day_plan"]) == 2
+    assert "1. Gün" in dummy["five_day_plan"][0]
+    assert "tefekkür" in dummy["reflection"]
+
+
+def test_gallery_fields_and_photo_stats(engine):
+    """Her ilde has_gallery, gallery_rel, images alanlarının ve istatistiklerde total_photos bilgisinin doğruluğunu test eder."""
+    expected_total = 0
+    expected_two = 0
+    for key, p in engine.provinces.items():
+        assert "has_banner" in p
+        assert "has_gallery" in p
+        assert "gallery_rel" in p
+        assert isinstance(p.get("images"), list)
+        count = int(p["has_banner"]) + int(p["has_gallery"])
+        assert len(p["images"]) == count
+        if p["has_gallery"]:
+            assert p["gallery_rel"] == f"{key}/gallery.jpg"
+        else:
+            assert p["gallery_rel"] is None
+        expected_total += count
+        if p["has_banner"] and p["has_gallery"]:
+            expected_two += 1
+
+    assert engine.stats["total_photos"] == expected_total
+    assert engine.stats["provinces_with_two_photos"] == expected_two
+
+
+def test_all_81_provinces_have_banner_and_gallery(engine):
+    """81 ilin tamamında hem banner.jpg hem gallery.jpg (toplam 162 görsel) bulunduğunu doğrular."""
+    missing_banner = [k for k, p in engine.provinces.items() if not p["has_banner"]]
+    missing_gallery = [k for k, p in engine.provinces.items() if not p["has_gallery"]]
+    assert not missing_banner, f"banner.jpg eksik iller: {missing_banner}"
+    assert not missing_gallery, f"gallery.jpg eksik iller: {missing_gallery}"
+    assert engine.stats["total_photos"] == 162
+    assert engine.stats["provinces_with_two_photos"] == 81
+
+
 def test_achievements_and_rank_calculation(engine):
     """Seyyah rütbe ve başarım rozetlerinin tutarlı hesaplandığını doğrular."""
     ach = engine.achievements

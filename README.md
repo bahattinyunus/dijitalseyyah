@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/Maneviyat-Sefer_der_Vatan-emerald?style=for-the-badge&logo=mosque&logoColor=white" alt="Spiritual">
     <img src="https://img.shields.io/badge/Bölgeler-6%2F7-blue?style=for-the-badge&logo=map&logoColor=white" alt="Regions">
     <img src="https://img.shields.io/badge/Keşif-48.1%25-brightgreen?style=for-the-badge&logo=target" alt="Coverage">
-    <img src="https://img.shields.io/badge/Testler-17%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
+    <img src="https://img.shields.io/badge/Testler-20%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
     <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
     <br><br>
     <strong>🕌 "Yeryüzünde gezip dolaşın ve tefekkür edin..." (Ankebût, 20)</strong>
@@ -128,7 +128,7 @@ Seyahatlerimiz, sırt çantalı bir irfan arayışı ve sürdürülebilir yarı-
 
 ## 🖼️ Anadolu'dan Görsel Kesitler (Menzil Galerisi)
 
-Ziyaret edilen 39 ilin tamamı (`39 / 39`) kendine özgü kapak görseline sahiptir. Anadolu'nun farklı coğrafyalarından seçilmiş kareler:
+81 ilin tamamı (`81 / 81`) 2'şer yüksek çözünürlüklü görsele (**162 fotoğraf**: `banner.jpg` + `gallery.jpg`) ve zenginleştirilmiş seyahatname içeriğine sahiptir. Anadolu'nun farklı coğrafyalarından seçilmiş kareler:
 
 <table>
   <tr>

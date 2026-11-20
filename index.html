@@ -161,6 +161,19 @@
     </div>
   </div>
 
+  <!-- Photo Gallery Lightbox Modal Overlay -->
+  <div class="modal-overlay lightbox-overlay" id="lightbox-modal" role="dialog" aria-modal="true" aria-label="Fotoğraf Galerisi Önizleme">
+    <div class="lightbox-content">
+      <button class="lightbox-close-btn modal-close-btn" id="lightbox-close-btn" aria-label="Kapat">&times;</button>
+      <button class="lightbox-nav-btn lightbox-prev" id="lightbox-prev-btn" aria-label="Önceki Fotoğraf">&#10094;</button>
+      <figure class="lightbox-figure">
+        <img id="lightbox-img" src="" alt="Menzil Fotoğrafı" />
+        <figcaption class="lightbox-caption" id="lightbox-caption"></figcaption>
+      </figure>
+      <button class="lightbox-nav-btn lightbox-next" id="lightbox-next-btn" aria-label="Sonraki Fotoğraf">&#10095;</button>
+    </div>
+  </div>
+
   <!-- Data Module & SPA Application Engine -->
   <script src="web_data.js"></script>
   <script src="app.js"></script>

@@ -760,23 +760,38 @@ class SeyyahEngine:
             reg_code, city_slug = key.split("/")
             city_readme = self.repo_root / reg_code / city_slug / "README.md"
             banner_path = self.repo_root / reg_code / city_slug / "banner.jpg"
+            gallery_path = self.repo_root / reg_code / city_slug / "gallery.jpg"
+
+            has_banner = banner_path.exists()
+            has_gallery = gallery_path.exists()
+            banner_rel = f"{reg_code}/{city_slug}/banner.jpg" if has_banner else "assets/banner.jpg"
+            gallery_rel = f"{reg_code}/{city_slug}/gallery.jpg" if has_gallery else None
+
+            images = []
+            if has_banner:
+                images.append(banner_rel)
+            if has_gallery:
+                images.append(gallery_rel)
 
             p_data["visited"] = False
-            p_data["has_banner"] = banner_path.exists()
-            p_data["banner_rel"] = f"{reg_code}/{city_slug}/banner.jpg" if banner_path.exists() else "assets/banner.jpg"
+            p_data["has_banner"] = has_banner
+            p_data["banner_rel"] = banner_rel
+            p_data["has_gallery"] = has_gallery
+            p_data["gallery_rel"] = gallery_rel
+            p_data["images"] = images
             p_data["readme_rel"] = f"{reg_code}/{city_slug}/README.md"
             p_data["slug"] = city_slug
 
             if city_readme.exists():
                 try:
                     content = city_readme.read_text(encoding="utf-8")
+                    p_data["content_size"] = len(content)
+                    # Tüm illerin README dosyalarından zengin içerikleri ayıkla (gezilen + bekleyen)
+                    self._extract_city_details(p_data, content)
                     # Ziyaret edilmiş kriteri: '✅' işareti veya zengin içerik
                     is_visited = "✅" in content or (len(content) > 700 and "Henüz bu kadim şehre" not in content and "Henüz adımlanmamış" not in content)
                     if is_visited:
                         p_data["visited"] = True
-                        p_data["content_size"] = len(content)
-                        # İçerikten ek bilgileri ayıkla
-                        self._extract_city_details(p_data, content)
                         self.visited_provinces[key] = p_data
                     else:
                         self.unvisited_provinces[key] = p_data
@@ -789,8 +804,8 @@ class SeyyahEngine:
         self.achievements = self.compute_achievements()
 
     def _extract_city_details(self, p_data, content):
-        """Markdown içeriğinden alıntı, tarih, tefekkür ve kütüphane detaylarını çıkarır."""
-        quote_match = re.search(r'## 📜 Şehrin Ruhu\s*>\s*"([^"]+)"', content)
+        """Markdown içeriğinden alıntı, tarih, tefekkür, manevi mimarlar, 5 günlük plan ve kütüphane detaylarını çıkarır."""
+        quote_match = re.search(r'## 📜 Şehrin Ruhu\s*\n>\s*"?([^"\n]+)"?', content)
         if quote_match:
             p_data["custom_quote"] = quote_match.group(1).strip()
 
@@ -799,7 +814,7 @@ class SeyyahEngine:
             p_data["custom_library"] = lib_match.group(1).strip()
 
         history_match = re.search(
-            r'### 🌍 Şehrin Dokusu ve Tarihsel Arka Planı\s*\n(.*?)(?=\n### |\n---|\Z)',
+            r'### 🌍 Şehrin Dokusu ve Tarihsel Arka Planı\s*\n(.*?)(?=\n### |\n## |\n---|\Z)',
             content,
             re.DOTALL
         )
@@ -809,7 +824,7 @@ class SeyyahEngine:
                 p_data["history"] = history_text
 
         lit_match = re.search(
-            r'### 💬 Şehir Hakkında Edebi ve Tarihi Alıntılar\s*\n(.*?)(?=\n### |\n---|\Z)',
+            r'### 💬 Şehir Hakkında Edebi ve Tarihi Alıntılar\s*\n(.*?)(?=\n### |\n## |\n---|\Z)',
             content,
             re.DOTALL
         )
@@ -825,7 +840,7 @@ class SeyyahEngine:
                 p_data["literary_quotes"] = lit_quotes
 
         refl_match = re.search(
-            r'### 🕊️ Gezginin Not Defterinden[^\n]*\n(.*?)(?=\n### |\n---|\Z)',
+            r'### 🕊️ (?:Gezginin Not Defterinden|[^\n]*Tefekkür)[^\n]*\n(.*?)(?=\n### |\n## |\n---|\Z)',
             content,
             re.DOTALL
         )
@@ -833,6 +848,34 @@ class SeyyahEngine:
             refl_text = " ".join(line.strip() for line in refl_match.group(1).strip().splitlines() if line.strip())
             if refl_text:
                 p_data["reflection"] = refl_text
+
+        spiritual_match = re.search(
+            r'### 🕌 Manevi Mimarlar[^\n]*\n(.*?)(?=\n### |\n## |\n---|\Z)',
+            content,
+            re.DOTALL
+        )
+        if spiritual_match:
+            spiritual_items = []
+            for line in spiritual_match.group(1).splitlines():
+                cleaned = re.sub(r'^\s*[-*•]\s*', '', line).strip()
+                if cleaned:
+                    spiritual_items.append(cleaned)
+            if spiritual_items:
+                p_data["spiritual_figures"] = spiritual_items
+
+        plan_match = re.search(
+            r'### 🧭 5 Günlük[^\n]*\n(.*?)(?=\n### |\n## |\n---|\Z)',
+            content,
+            re.DOTALL
+        )
+        if plan_match:
+            plan_items = []
+            for line in plan_match.group(1).splitlines():
+                cleaned = re.sub(r'^\s*(?:[-*•]|\d+\.)\s*', '', line).strip()
+                if cleaned:
+                    plan_items.append(cleaned)
+            if plan_items:
+                p_data["five_day_plan"] = plan_items
 
     def _compute_stats(self):
         """Genel ve bölgesel istatistikleri hesaplar."""
@@ -862,6 +905,16 @@ class SeyyahEngine:
         # Tahmini seyahat mesafesi (Ziyaret edilen iller arası enlem-boylam üzerinden km hesabı)
         estimated_km = self._calculate_route_km()
 
+        # Fotoğraf galerisi istatistikleri (banner.jpg + gallery.jpg)
+        total_photos = sum(
+            (1 if p.get("has_banner") else 0) + (1 if p.get("has_gallery") else 0)
+            for p in self.provinces.values()
+        )
+        provinces_with_two_photos = sum(
+            1 for p in self.provinces.values()
+            if p.get("has_banner") and p.get("has_gallery")
+        )
+
         self.stats = {
             "total_cities": total,
             "visited_cities": visited,
@@ -872,6 +925,8 @@ class SeyyahEngine:
             "total_regions": len(REGIONS_INFO),
             "days_on_road": visited * 5,
             "library_hours": visited * 5 * 4,
+            "total_photos": total_photos,
+            "provinces_with_two_photos": provinces_with_two_photos,
             "regional_breakdown": reg_stats
         }
 

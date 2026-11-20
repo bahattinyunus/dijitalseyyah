@@ -33,6 +33,12 @@
       .replace(/'/g, '&#39;');
   }
 
+  function formatInlineMarkdown(str) {
+    return escapeHtml(str)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  }
+
   // Soundscape Presets
   const SOUNDSCAPES = [
     { id: 'ney', label: 'Ney & Bozkır', freq1: 146.83, freq2: 220.0, filterFreq: 380, noiseVol: 0.045 },
@@ -55,7 +61,9 @@
     soundIndex: -1, // -1 = off, 0..2 = preset
     audioCtx: null,
     audioNodes: [],
-    currentQuote: null
+    currentQuote: null,
+    lightboxImages: [],
+    lightboxIndex: 0
   };
 
   // DOM Elements
@@ -89,6 +97,12 @@
     quoteModalAuthor: document.getElementById('quote-modal-author'),
     btnNextQuote: document.getElementById('btn-next-quote'),
     btnCopyQuote: document.getElementById('btn-copy-quote'),
+    lightboxModal: document.getElementById('lightbox-modal'),
+    lightboxImg: document.getElementById('lightbox-img'),
+    lightboxCaption: document.getElementById('lightbox-caption'),
+    lightboxCloseBtn: document.getElementById('lightbox-close-btn'),
+    lightboxPrevBtn: document.getElementById('lightbox-prev-btn'),
+    lightboxNextBtn: document.getElementById('lightbox-next-btn'),
     modalCloseBtns: document.querySelectorAll('.modal-close-btn')
   };
 
@@ -488,15 +502,82 @@
       </span>
     `).join('');
 
-    // Rich extracted markdown sections (history, reflection, literary quotes)
+    // Photo Gallery (banner.jpg + gallery.jpg)
+    const rawImages = (Array.isArray(p.images) && p.images.length > 0)
+      ? p.images
+      : [bannerImg, ...(p.has_gallery && p.gallery_rel ? [p.gallery_rel] : [])];
+
+    const galleryItems = rawImages.map((src, idx) => ({
+      src,
+      caption: idx === 0
+        ? `${p.name} — Panoramik Kapak`
+        : `${p.name} — Menzil & Kültür Karesi`
+    }));
+
+    const galleryCard = galleryItems.length > 0 ? `
+      <div class="glass-card detail-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-cyan); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <span>📸 Menzil Fotoğraf Galerisi (${galleryItems.length} Görsel)</span>
+          <span style="font-size: 0.74rem; font-weight: 500; color: var(--text-muted);">Büyütmek için fotoğrafa tıklayın</span>
+        </h3>
+        <div class="city-gallery-grid ${galleryItems.length === 1 ? 'single-photo' : ''}">
+          ${galleryItems.map((img, idx) => `
+            <div class="gallery-thumb-card" data-gallery-index="${idx}" role="button" tabindex="0" aria-label="${escapeHtml(img.caption)}">
+              <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.caption)}" loading="lazy" />
+              <div class="gallery-thumb-overlay">
+                <span class="gallery-thumb-label">${escapeHtml(img.caption)}</span>
+                <span class="gallery-zoom-pill">🔍 Büyüt</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    // Rich extracted markdown sections (history, spiritual figures, 5-day plan, reflection, literary quotes)
     const historyCard = p.history ? `
       <div class="glass-card detail-card">
         <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-blue);">
           🌍 Şehrin Dokusu ve Tarihsel Arka Planı
         </h3>
         <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65;">
-          ${escapeHtml(p.history)}
+          ${formatInlineMarkdown(p.history)}
         </p>
+      </div>
+    ` : '';
+
+    const spiritualList = Array.isArray(p.spiritual_figures)
+      ? p.spiritual_figures
+      : (p.spiritual_figures ? [p.spiritual_figures] : []);
+
+    const spiritualCard = spiritualList.length > 0 ? `
+      <div class="glass-card detail-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-emerald);">
+          🕌 Manevi Mimarlar & İrfan İzleri
+        </h3>
+        <div class="spiritual-figures-list">
+          ${spiritualList.map(item => `<div class="spiritual-figure-item">${formatInlineMarkdown(item)}</div>`).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    const planList = Array.isArray(p.five_day_plan)
+      ? p.five_day_plan
+      : (p.five_day_plan ? [p.five_day_plan] : []);
+
+    const fiveDayPlanCard = planList.length > 0 ? `
+      <div class="glass-card detail-card">
+        <h3 style="font-family: var(--font-heading); font-size: 1rem; color: var(--accent-gold);">
+          🧭 5 Günlük Seyahatsever Keşif Planı
+        </h3>
+        <div class="five-day-plan-list">
+          ${planList.map((item, idx) => `
+            <div class="five-day-plan-item">
+              <span class="plan-step-badge">${idx + 1}</span>
+              <div>${formatInlineMarkdown(item)}</div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     ` : '';
 
@@ -506,7 +587,7 @@
           🕊️ Gezginin Not Defterinden (Manevi Boyut ve Tefekkür)
         </h3>
         <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65;">
-          ${escapeHtml(p.reflection)}
+          ${formatInlineMarkdown(p.reflection)}
         </p>
       </div>
     ` : '';
@@ -517,7 +598,7 @@
           💬 Şehir Hakkında Edebi ve Tarihi Alıntılar
         </h3>
         <div class="literary-quotes-list">
-          ${p.literary_quotes.map(lq => `<div class="literary-quote-item">${escapeHtml(lq)}</div>`).join('')}
+          ${p.literary_quotes.map(lq => `<div class="literary-quote-item">${formatInlineMarkdown(lq)}</div>`).join('')}
         </div>
       </div>
     ` : '';
@@ -568,7 +649,9 @@
           </p>
         </div>
 
+        ${galleryCard}
         ${historyCard}
+        ${spiritualCard}
 
         <!-- Landmarks & Specialties Grid -->
         <div class="two-col-grid">
@@ -600,6 +683,7 @@
           </div>
         </div>
 
+        ${fiveDayPlanCard}
         ${reflectionCard}
         ${literaryCard}
 
@@ -656,6 +740,20 @@
       card.addEventListener('click', () => {
         const nk = card.getAttribute('data-neighbor-key');
         if (nk) selectCity(nk);
+      });
+    });
+
+    els.viewportContent.querySelectorAll('.gallery-thumb-card').forEach(card => {
+      const openIdx = () => {
+        const idx = parseInt(card.getAttribute('data-gallery-index'), 10) || 0;
+        openLightbox(galleryItems, idx);
+      };
+      card.addEventListener('click', openIdx);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openIdx();
+        }
       });
     });
   }
@@ -1122,6 +1220,38 @@
     }
   }
 
+  function openLightbox(items, index = 0) {
+    if (!items || !items.length || !els.lightboxModal) return;
+    state.lightboxImages = items;
+    state.lightboxIndex = Math.max(0, Math.min(index, items.length - 1));
+    renderLightboxImage();
+    els.lightboxModal.classList.add('active');
+  }
+
+  function renderLightboxImage() {
+    const items = state.lightboxImages;
+    if (!items.length) return;
+    const current = items[state.lightboxIndex];
+    if (els.lightboxImg) {
+      els.lightboxImg.src = current.src;
+      els.lightboxImg.alt = current.caption || 'Menzil Fotoğrafı';
+    }
+    if (els.lightboxCaption) {
+      const counter = items.length > 1 ? ` (${state.lightboxIndex + 1}/${items.length})` : '';
+      els.lightboxCaption.textContent = `${current.caption || ''}${counter}`;
+    }
+    const hideNav = items.length <= 1;
+    if (els.lightboxPrevBtn) els.lightboxPrevBtn.classList.toggle('hidden', hideNav);
+    if (els.lightboxNextBtn) els.lightboxNextBtn.classList.toggle('hidden', hideNav);
+  }
+
+  function navigateLightbox(delta) {
+    const len = state.lightboxImages.length;
+    if (len <= 1) return;
+    state.lightboxIndex = (state.lightboxIndex + delta + len) % len;
+    renderLightboxImage();
+  }
+
   function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
   }
@@ -1139,6 +1269,8 @@
 
     if (els.btnNextQuote) els.btnNextQuote.addEventListener('click', renderRandomQuoteInModal);
     if (els.btnCopyQuote) els.btnCopyQuote.addEventListener('click', copyCurrentQuote);
+    if (els.lightboxPrevBtn) els.lightboxPrevBtn.addEventListener('click', () => navigateLightbox(-1));
+    if (els.lightboxNextBtn) els.lightboxNextBtn.addEventListener('click', () => navigateLightbox(1));
 
     if (els.btnMobileSidebar) els.btnMobileSidebar.addEventListener('click', openMobileSidebar);
     if (els.btnCloseSidebar) els.btnCloseSidebar.addEventListener('click', closeMobileSidebar);
@@ -1188,6 +1320,14 @@
       if (e.key === 'Escape') {
         closeModals();
         closeMobileSidebar();
+      } else if (els.lightboxModal && els.lightboxModal.classList.contains('active')) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          navigateLightbox(-1);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          navigateLightbox(1);
+        }
       } else if (e.key === '/' && document.activeElement !== els.searchInput && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
         e.preventDefault();
         if (window.innerWidth <= 960) openMobileSidebar();
