@@ -279,6 +279,7 @@ const TRAVEL_DATA = {
     "Bartın",
     "Zonguldak",
     "Düzce",
+    "Sakarya",
     "İstanbul",
     "Edirne"
   ],
