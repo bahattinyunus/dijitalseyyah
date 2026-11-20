@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 110" width="100%" role="img" aria-label="Anadolu Seyahatnamesi Footer">
+  <defs>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.22"/>
+      <stop offset="50%" stop-color="#10b981" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.22"/>
+    </linearGradient>
+    <linearGradient id="strokeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f2fe"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <path d="M0,48 C240,95 420,5 660,52 C880,95 1040,20 1200,48 L1200,110 L0,110 Z" fill="url(#waveGrad)"/>
+  <path d="M0,48 C240,95 420,5 660,52 C880,95 1040,20 1200,48" fill="none" stroke="url(#strokeGrad)" stroke-width="2.2"/>
+  <text x="600" y="90" text-anchor="middle" fill="#94a3b8" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="1.2">
+    "Yola çık ki yol sana görünsün; kendini yola bırak ki menzile eresin." — Ferîdüddin Attar
+  </text>
+</svg>
