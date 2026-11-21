@@ -2168,11 +2168,6 @@
       showToast('📚 ANADOLU_SEYAHATNAMESI.md indirildi!');
     });
 
-    const btnAdmin = document.getElementById('btn-admin');
-    if (btnAdmin) {
-      btnAdmin.addEventListener('click', () => openView('admin'));
-    }
-
     // Module Navigation Strip
     document.querySelectorAll('.module-nav-btn[data-view]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2253,6 +2248,11 @@
 
     // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        openView('admin');
+        return;
+      }
       if (e.key === 'Escape') {
         closeModals();
         closeMobileSidebar();

@@ -17,10 +17,44 @@
     geminiModel: 'dijital_seyyah_gemini_model'
   };
 
+  const ALLOWED_OWNER = 'bahattinyunus';
+  const TARGET_REPO = 'dijitalseyyah';
+
   let isUnlocked = false;
+  let verifiedUser = null;
   let activeTab = 'cities'; // 'cities' | 'route' | 'apis' | 'system'
   let selectedEditKey = '01_Marmara/Istanbul';
   let citySearch = '';
+
+  async function verifyGitHubOwnerToken(token) {
+    const clean = (token || '').trim();
+    if (!clean) return { ok: false, error: 'Lütfen GitHub Personal Access Token girin.' };
+    try {
+      const headers = {
+        Authorization: `Bearer ${clean}`,
+        Accept: 'application/vnd.github+json'
+      };
+      const userRes = await fetch('https://api.github.com/user', { headers });
+      if (!userRes.ok) {
+        return { ok: false, error: 'Geçersiz veya süresi dolmuş GitHub token (HTTP ' + userRes.status + ').' };
+      }
+      const user = await userRes.json();
+      if (!user || !user.login || user.login.toLowerCase() !== ALLOWED_OWNER) {
+        return { ok: false, error: `Yetkisiz hesap (@${(user && user.login) || 'bilinmiyor'}). Sadece @${ALLOWED_OWNER} girebilir.` };
+      }
+      const repoRes = await fetch(`https://api.github.com/repos/${ALLOWED_OWNER}/${TARGET_REPO}`, { headers });
+      if (!repoRes.ok) {
+        return { ok: false, error: 'Repo yetkisi doğrulanamadı.' };
+      }
+      const repo = await repoRes.json();
+      if (!repo || !repo.permissions || (!repo.permissions.push && !repo.permissions.admin)) {
+        return { ok: false, error: 'Bu token üzerinde repo yazma (push) yetkisi bulunmuyor.' };
+      }
+      return { ok: true, user };
+    } catch (err) {
+      return { ok: false, error: 'GitHub doğrulama bağlantı hatası: ' + err.message };
+    }
+  }
 
   function fallbackEscape(str) {
     if (str == null) return '';
@@ -198,72 +232,82 @@ ${footer}
     const data = safeCtx.data || {};
     const provinces = data.provinces || {};
 
-    const storedHash = localStorage.getItem(KEYS.pinHash);
-
-    // 1. Lock Screen (PIN setup or unlock)
+    // 1. Lock Screen (GitHub Owner Server-Verified Auth — zero public bypass)
     if (!isUnlocked) {
-      const isFirstSetup = !storedHash;
+      const savedSessionToken = sessionStorage.getItem('dijital_seyyah_admin_session_pat') || '';
+      const savedLocalCfg = readJson(KEYS.ghConfig, {});
+      const autoToken = savedSessionToken || (savedLocalCfg && savedLocalCfg.token) || '';
+
       container.innerHTML = `
         <div class="adm-shell">
           <div class="glass-card adm-lock-card">
-            <div class="adm-lock-icon">${isFirstSetup ? '🛡️' : '🔐'}</div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--accent-cyan);">
-              ${isFirstSetup ? 'Admin Paneli Kurulumu' : 'Dijital Seyyah Admin Girişi'}
+            <div class="adm-lock-icon">🛡️</div>
+            <h2 style="font-family: var(--font-heading); font-size: 1.38rem; color: var(--accent-cyan);">
+              Yetkili Yönetici Doğrulaması
             </h2>
-            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5;">
-              ${isFirstSetup
-                ? 'İlk girişinizde kendinize bir yönetici şifresi belirleyin. Şifre tarayıcınızda SHA-256 özeti olarak güvenle saklanır (GitHub\'a yazılmaz).'
-                : '81 il yönetimi, rota düzenleme, Gemini AI & GitHub yayını için yönetici şifrenizi girin.'}
+            <p style="font-size: 0.83rem; color: var(--text-secondary); line-height: 1.55;">
+              Bu panel herkese kapalıdır. Giriş yalnızca <strong>@${ALLOWED_OWNER}</strong> hesabına ait,
+              <code>${TARGET_REPO}</code> yazma yetkili <strong>GitHub Personal Access Token</strong> ile GitHub sunucuları üzerinden doğrulanır.
             </p>
-            <form id="adm-auth-form" style="display: flex; flex-direction: column; gap: 10px;">
-              <input type="password" id="adm-pin-input" class="adm-input" placeholder="${isFirstSetup ? 'Yeni yönetici şifresi (en az 4 karakter)' : 'Yönetici şifreniz'}" autocomplete="current-password" required />
-              <button type="submit" class="btn btn-primary" style="justify-content: center;">
-                ${isFirstSetup ? '✅ Şifreyi Kaydet ve Panele Gir' : '🔓 Kilidi Aç'}
+            <div id="adm-auth-status" style="font-size: 0.8rem; min-height: 20px; color: var(--accent-cyan);"></div>
+            <form id="adm-auth-form" style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+              <input type="password" id="adm-pat-input" class="adm-input" placeholder="ghp_... veya github_pat_..." autocomplete="off" required />
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" id="adm-remember-chk" />
+                Bu cihazda oturumu hatırla (sadece kendi bilgisayarında işaretle)
+              </label>
+              <button type="submit" id="adm-auth-submit" class="btn btn-primary" style="justify-content: center;">
+                🔐 GitHub ile Doğrula ve Gir
               </button>
             </form>
-            ${!isFirstSetup ? `<button type="button" id="adm-reset-pin" style="background:none;border:none;color:var(--text-muted);font-size:0.75rem;cursor:pointer;margin-top:4px;">Şifremi unuttum (yerel kilidi sıfırla)</button>` : ''}
+            <a href="https://github.com/settings/tokens/new?scopes=repo&description=Dijital+Seyyah+Admin" target="_blank" rel="noopener" style="font-size: 0.75rem; color: var(--text-muted); text-decoration: underline; margin-top: 2px;">
+              GitHub Token Oluştur (repo yetkili) ↗
+            </a>
           </div>
         </div>
       `;
 
+      const statusEl = document.getElementById('adm-auth-status');
       const form = document.getElementById('adm-auth-form');
-      const pinInput = document.getElementById('adm-pin-input');
-      if (pinInput) pinInput.focus();
+      const patInput = document.getElementById('adm-pat-input');
+      const submitBtn = document.getElementById('adm-auth-submit');
+      const rememberChk = document.getElementById('adm-remember-chk');
 
-      if (form) {
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const val = (pinInput.value || '').trim();
-          if (val.length < 4) {
-            toast('⚠️ Şifre en az 4 karakter olmalıdır.');
-            return;
-          }
-          const digest = await sha256Hex(val);
-          if (isFirstSetup) {
-            localStorage.setItem(KEYS.pinHash, digest);
-            isUnlocked = true;
-            toast('🛡️ Yönetici şifresi oluşturuldu, hoş geldiniz!');
-            render(container, ctx);
-          } else if (digest === storedHash) {
-            isUnlocked = true;
-            toast('🔓 Admin paneli açıldı');
-            render(container, ctx);
-          } else {
-            toast('❌ Hatalı şifre!');
-            pinInput.value = '';
-            pinInput.focus();
-          }
-        });
+      const attemptLogin = async (token, remember) => {
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ GitHub doğrulanıyor...'; }
+        if (statusEl) statusEl.innerHTML = '<span style="color: var(--accent-cyan);">⏳ GitHub kimliği kontrol ediliyor...</span>';
+        const res = await verifyGitHubOwnerToken(token);
+        if (res.ok) {
+          isUnlocked = true;
+          verifiedUser = res.user;
+          sessionStorage.setItem('dijital_seyyah_admin_session_pat', token.trim());
+          const existingCfg = readJson(KEYS.ghConfig, { owner: ALLOWED_OWNER, repo: TARGET_REPO, branch: 'main', token: '' });
+          writeJson(KEYS.ghConfig, {
+            owner: existingCfg.owner || ALLOWED_OWNER,
+            repo: existingCfg.repo || TARGET_REPO,
+            branch: existingCfg.branch || 'main',
+            token: remember ? token.trim() : ''
+          });
+          toast(`🛡️ Hoş geldin @${res.user.login}! Admin paneli açıldı.`);
+          render(container, ctx);
+        } else {
+          if (statusEl) statusEl.innerHTML = `<span style="color: #fca5a5;">❌ ${escapeHtml(res.error)}</span>`;
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🔐 GitHub ile Doğrula ve Gir'; }
+          if (patInput) { patInput.value = ''; patInput.focus(); }
+        }
+      };
+
+      // Auto-verify if owner already saved a token in this browser
+      if (autoToken) {
+        attemptLogin(autoToken, !!(savedLocalCfg && savedLocalCfg.token));
+        return;
       }
 
-      const resetBtn = document.getElementById('adm-reset-pin');
-      if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-          if (confirm('Yerel tarayıcıdaki admin şifresi sıfırlansın mı?')) {
-            localStorage.removeItem(KEYS.pinHash);
-            toast('↺ Admin şifresi sıfırlandı, yeni şifre belirleyebilirsiniz.');
-            render(container, ctx);
-          }
+      if (patInput) patInput.focus();
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          attemptLogin(patInput.value, !!(rememberChk && rememberChk.checked));
         });
       }
       return;
@@ -481,7 +525,14 @@ ${footer}
     if (lockBtn) {
       lockBtn.addEventListener('click', () => {
         isUnlocked = false;
-        toast('🔒 Admin paneli kilitlendi');
+        verifiedUser = null;
+        sessionStorage.removeItem('dijital_seyyah_admin_session_pat');
+        const cfg = readJson(KEYS.ghConfig, {});
+        if (cfg && cfg.token) {
+          cfg.token = '';
+          writeJson(KEYS.ghConfig, cfg);
+        }
+        toast('🔒 Oturum kapatıldı ve panel kilitlendi');
         render(container, ctx);
       });
     }
@@ -547,13 +598,15 @@ ${footer}
       const ghPushBtn = document.getElementById('adm-gh-push-city');
       if (ghPushBtn) {
         ghPushBtn.addEventListener('click', async () => {
-          const cfg = readJson(KEYS.ghConfig, {});
-          if (!cfg.token) {
-            toast('⚠️ Önce "API & GitHub" sekmesinden GitHub PAT token girin.');
-            activeTab = 'apis';
-            render(container, ctx);
+          const cfg = readJson(KEYS.ghConfig, { owner: ALLOWED_OWNER, repo: TARGET_REPO, branch: 'main', token: '' });
+          const activeToken = (cfg && cfg.token) || sessionStorage.getItem('dijital_seyyah_admin_session_pat') || '';
+          if (!activeToken) {
+            toast('⚠️ GitHub oturum tokenı bulunamadı.');
             return;
           }
+          cfg.token = activeToken;
+          cfg.owner = cfg.owner || ALLOWED_OWNER;
+          cfg.repo = cfg.repo || TARGET_REPO;
           const merged = { ...provinces[selectedEditKey], ...collectPatch() };
           const md = generateCityMarkdown(merged);
           const apiBase = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${merged.readme_rel}`;
