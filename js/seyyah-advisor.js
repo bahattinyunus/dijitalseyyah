@@ -105,29 +105,41 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
 
     // 1. Direct BYOK call if user configured their own key in localStorage
     if (byokKey) {
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(byokKey)}`;
+      const candidateModels = [model, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash']
+        .filter((m, idx, arr) => m && arr.indexOf(m) === idx);
       const contents = alternatingHistory.map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
       contents.push({ role: 'user', parts: [{ text: prompt }] });
 
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: `${GEMINI_SYSTEM_PROMPT}\n\nGüncel Veri:\n${contextSummary}` }] },
-          contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error((data && data.error && data.error.message) || `HTTP ${res.status}`);
+      let lastErr = null;
+      for (const tryModel of candidateModels) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(tryModel)}:generateContent?key=${encodeURIComponent(byokKey)}`;
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: `${GEMINI_SYSTEM_PROMPT}\n\nGüncel Veri:\n${contextSummary}` }] },
+            contents,
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const msg = (data && data.error && data.error.message) || `HTTP ${res.status}`;
+          lastErr = new Error(msg);
+          // If quota/billing/not-found for this specific model, try next free-tier model
+          if (res.status === 429 || res.status === 404 || /quota|billing|limit|not found/i.test(msg)) {
+            continue;
+          }
+          throw lastErr;
+        }
+        const reply =
+          data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
+            ? data.candidates[0].content.parts.map((pt) => pt.text || '').join('\n').trim()
+            : '';
+        if (reply) return { reply, source: `Gemini (${tryModel} • Canlı AI)` };
+        lastErr = new Error('Gemini boş yanıt döndü');
       }
-      const reply =
-        data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
-          ? data.candidates[0].content.parts.map((pt) => pt.text || '').join('\n').trim()
-          : '';
-      if (reply) return { reply, source: `Gemini (${model} • Canlı AI)` };
-      throw new Error('Gemini boş yanıt döndü');
+      throw lastErr || new Error('Gemini API yanıt vermedi');
     }
 
     // 2. Netlify Serverless Proxy (/.netlify/functions/seyyah-ai) on http/https
@@ -1639,8 +1651,9 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
             Canlı sitede Netlify ortam değişkeni (<code>GEMINI_API_KEY</code>) otomatik kullanılır. Kendi tarayıcınızda test etmek veya kendi Gemini Pro / AI Studio anahtarınızı kullanmak için aşağıya girebilirsiniz (anahtar yalnızca tarayıcınızda <code>localStorage</code> içinde saklanır, sunucuya/GitHub'a gönderilmez).
           </p>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <select data-sa-model-select class="region-select" style="width: 210px; padding: 7px 10px; font-size: 0.8rem;">
+            <select data-sa-model-select class="region-select" style="width: 220px; padding: 7px 10px; font-size: 0.8rem;">
               <option value="gemini-2.5-flash" ${getStoredGeminiModel() === 'gemini-2.5-flash' ? 'selected' : ''}>⚡ gemini-2.5-flash (Hızlı)</option>
+              <option value="gemini-2.5-flash-lite" ${getStoredGeminiModel() === 'gemini-2.5-flash-lite' ? 'selected' : ''}>🪶 gemini-2.5-flash-lite (Ücretsiz Kota)</option>
               <option value="gemini-2.5-pro" ${getStoredGeminiModel() === 'gemini-2.5-pro' ? 'selected' : ''}>🧠 gemini-2.5-pro (Derin)</option>
               <option value="gemini-2.0-flash" ${getStoredGeminiModel() === 'gemini-2.0-flash' ? 'selected' : ''}>🚀 gemini-2.0-flash</option>
             </select>

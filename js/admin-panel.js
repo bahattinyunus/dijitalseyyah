@@ -404,7 +404,8 @@ ${footer}
             <div class="adm-field">
               <label>Varsayılan Gemini Modeli</label>
               <select id="adm-gem-model" class="region-select">
-                <option value="gemini-2.5-flash" ${curGeminiModel === 'gemini-2.5-flash' ? 'selected' : ''}>⚡ gemini-2.5-flash (Hızlı & Ekonomik)</option>
+                <option value="gemini-2.5-flash" ${curGeminiModel === 'gemini-2.5-flash' ? 'selected' : ''}>⚡ gemini-2.5-flash (Hızlı &amp; Ekonomik)</option>
+                <option value="gemini-2.5-flash-lite" ${curGeminiModel === 'gemini-2.5-flash-lite' ? 'selected' : ''}>🪶 gemini-2.5-flash-lite (Yüksek Ücretsiz Kota)</option>
                 <option value="gemini-2.5-pro" ${curGeminiModel === 'gemini-2.5-pro' ? 'selected' : ''}>🧠 gemini-2.5-pro (Derin Muhakeme)</option>
                 <option value="gemini-2.0-flash" ${curGeminiModel === 'gemini-2.0-flash' ? 'selected' : ''}>🚀 gemini-2.0-flash</option>
               </select>
