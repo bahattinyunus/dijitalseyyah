@@ -2246,9 +2246,25 @@
       });
     });
 
+    // Secret Triple-Click on Logo opens Admin Panel (works on mobile & desktop, invisible to visitors)
+    if (els.logoSection) {
+      let logoClicks = 0;
+      let logoClickTimer = null;
+      els.logoSection.addEventListener('click', () => {
+        logoClicks += 1;
+        clearTimeout(logoClickTimer);
+        if (logoClicks >= 3) {
+          logoClicks = 0;
+          openView('admin');
+          return;
+        }
+        logoClickTimer = setTimeout(() => { logoClicks = 0; }, 650);
+      });
+    }
+
     // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+      if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'm') {
         e.preventDefault();
         openView('admin');
         return;
