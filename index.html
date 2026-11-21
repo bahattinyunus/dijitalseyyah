@@ -20,10 +20,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=8">
-  <link rel="stylesheet" href="css/modules.css?v=8">
-  <link rel="stylesheet" href="css/modules-v2.css?v=8">
-  <link rel="stylesheet" href="css/awwwards-polish.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="css/modules.css?v=9">
+  <link rel="stylesheet" href="css/modules-v2.css?v=9">
+  <link rel="stylesheet" href="css/awwwards-polish.css?v=9">
 </head>
 <body>
   <div class="app-container">
@@ -69,9 +69,43 @@
           🎲 <span class="btn-label">Keşfet</span>
         </button>
 
-        <button class="btn btn-sound" id="btn-ambient" title="Tefekkür Seslerini Aç/Değiştir">
-          🎧
-        </button>
+        <div class="ambient-menu-wrap" id="ambient-menu-wrap">
+          <button class="btn btn-sound" id="btn-ambient" title="Tefekkür & Kütüphane Sesleri" aria-haspopup="true" aria-expanded="false">
+            🎧
+          </button>
+          <div class="ambient-popover" id="ambient-popover" role="dialog" aria-label="Tefekkür Ses Kontrolü">
+            <div class="ambient-popover-header">
+              <span>🎧 Tefekkür &amp; Kütüphane Sesleri</span>
+              <button class="ambient-stop-mini" id="btn-ambient-stop" title="Sesi Kapat">🔇 Kapat</button>
+            </div>
+            <div class="ambient-presets-list" id="ambient-presets-list">
+              <button class="ambient-preset-btn" data-sound-id="ney">
+                <span>🎶 Ney &amp; Rast Nefes</span>
+                <span class="ambient-preset-tag">Sakin Dem</span>
+              </button>
+              <button class="ambient-preset-btn" data-sound-id="rain">
+                <span>🌧️ Kütüphane Yağmuru</span>
+                <span class="ambient-preset-tag">Odak</span>
+              </button>
+              <button class="ambient-preset-btn" data-sound-id="wind">
+                <span>🌬️ Anadolu Bozkır Esintisi</span>
+                <span class="ambient-preset-tag">Tefekkür</span>
+              </button>
+              <button class="ambient-preset-btn" data-sound-id="waves">
+                <span>🌊 Ege &amp; Karadeniz Dalgaları</span>
+                <span class="ambient-preset-tag">Huzur</span>
+              </button>
+            </div>
+            <div class="ambient-vol-row">
+              <span style="font-size: 0.78rem; color: var(--text-secondary);">🔈 Ses</span>
+              <input type="range" id="ambient-volume-slider" class="ambient-vol-slider" min="0" max="100" value="55" aria-label="Ses Seviyesi" />
+              <span id="ambient-volume-val" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-cyan); min-width: 34px; text-align: right;">%55</span>
+            </div>
+            <button class="btn btn-outline ambient-studio-link" id="btn-open-sound-studio">
+              🎚️ 5 Kanallı Ses Stüdyosunu Aç ➔
+            </button>
+          </div>
+        </div>
 
         <button class="btn btn-outline" id="btn-quote" title="Günün Tefekkür Hikmeti">
           📜
@@ -250,6 +284,6 @@
   <script src="js/region-dossier.js?v=8"></script>
   <script src="js/ambient-motion.js?v=8"></script>
   <script src="js/dashboard-v3.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

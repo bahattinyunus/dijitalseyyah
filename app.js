@@ -39,11 +39,12 @@
       .replace(/\*(.+?)\*/g, '<em>$1</em>');
   }
 
-  // Soundscape Presets
+  // Soundscape Presets (Warm Acoustic Synthesis)
   const SOUNDSCAPES = [
-    { id: 'ney', label: 'Ney & Bozkır', freq1: 146.83, freq2: 220.0, filterFreq: 380, noiseVol: 0.045 },
-    { id: 'rain', label: 'Kütüphane Yağmuru', freq1: 110.0, freq2: 164.81, filterFreq: 950, noiseVol: 0.075 },
-    { id: 'sukunet', label: 'Kervansaray Sükuneti', freq1: 130.81, freq2: 196.0, filterFreq: 260, noiseVol: 0.03 }
+    { id: 'ney', label: 'Ney & Rast Nefes' },
+    { id: 'rain', label: 'Kütüphane Yağmuru' },
+    { id: 'wind', label: 'Anadolu Bozkır Esintisi' },
+    { id: 'waves', label: 'Ege & Karadeniz Dalgaları' }
   ];
 
   // LocalStorage Helpers
@@ -85,8 +86,10 @@
     routeRegion: 'all',
     routeStops: 7,
     routeOptimize: true,
-    soundIndex: -1, // -1 = off, 0..2 = preset
+    soundIndex: -1, // -1 = off, 0..3 = preset
+    soundVolume: 0.55,
     audioCtx: null,
+    audioMasterGain: null,
     audioNodes: [],
     currentQuote: null,
     lightboxImages: [],
@@ -1577,16 +1580,68 @@
     });
   }
 
-  // Web Audio API Sufi Soundscape Synthesizer (Cycles 3 Presets -> Off)
+  // Web Audio API Warm Organic Sufi & Nature Soundscapes + Header Popover
+  function createLoopingPinkNoise(ctx, seconds = 4) {
+    const bufferSize = ctx.sampleRate * seconds;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
+      b6 = white * 0.115926;
+    }
+    // Crossfade loop seam to eliminate clicks
+    const fadeLen = Math.min(2048, Math.floor(bufferSize * 0.05));
+    for (let i = 0; i < fadeLen; i++) {
+      const t = i / fadeLen;
+      output[bufferSize - fadeLen + i] = output[bufferSize - fadeLen + i] * (1 - t) + output[i] * t;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+    return src;
+  }
+
+  function toggleAmbientPopover(forceOpen) {
+    const pop = document.getElementById('ambient-popover');
+    if (!pop) return;
+    const willOpen = typeof forceOpen === 'boolean' ? forceOpen : !pop.classList.contains('open');
+    pop.classList.toggle('open', willOpen);
+    if (els.btnAmbient) els.btnAmbient.setAttribute('aria-expanded', String(willOpen));
+  }
+
   function cycleAmbientSound() {
-    stopAmbientSound(false);
-    state.soundIndex += 1;
-    if (state.soundIndex >= SOUNDSCAPES.length) {
-      state.soundIndex = -1;
-      updateAmbientButton();
+    toggleAmbientPopover();
+  }
+
+  function selectAmbientById(id) {
+    const idx = SOUNDSCAPES.findIndex(s => s.id === id);
+    if (idx < 0) return;
+    if (state.soundIndex === idx) {
+      stopAmbientSound(true);
+      showToast('🔇 Tefekkür sesi kapatıldı');
       return;
     }
-    startAmbientPreset(SOUNDSCAPES[state.soundIndex]);
+    stopAmbientSound(false);
+    state.soundIndex = idx;
+    startAmbientPreset(SOUNDSCAPES[idx]);
+    showToast(`🎧 ${SOUNDSCAPES[idx].label} açıldı`);
+  }
+
+  function setAmbientVolume(val01) {
+    state.soundVolume = Math.max(0, Math.min(1, val01));
+    if (state.audioMasterGain && state.audioCtx) {
+      state.audioMasterGain.gain.setTargetAtTime(state.soundVolume * 0.22, state.audioCtx.currentTime, 0.08);
+    }
+    const lbl = document.getElementById('ambient-volume-val');
+    if (lbl) lbl.textContent = `%${Math.round(state.soundVolume * 100)}`;
   }
 
   function startAmbientPreset(preset) {
@@ -1595,58 +1650,128 @@
       if (!state.audioCtx) state.audioCtx = new AudioCtx();
       if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
 
-      const now = state.audioCtx.currentTime;
-      const masterGain = state.audioCtx.createGain();
+      const ctx = state.audioCtx;
+      const now = ctx.currentTime;
+      const masterGain = ctx.createGain();
       masterGain.gain.setValueAtTime(0.0001, now);
-      masterGain.gain.exponentialRampToValueAtTime(0.08, now + 0.6);
-      masterGain.connect(state.audioCtx.destination);
+      masterGain.gain.linearRampToValueAtTime(Math.max(0.001, state.soundVolume * 0.22), now + 0.65);
+      masterGain.connect(ctx.destination);
+      state.audioMasterGain = masterGain;
 
-      const osc1 = state.audioCtx.createOscillator();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(preset.freq1, now);
+      const nodes = [masterGain];
 
-      const osc2 = state.audioCtx.createOscillator();
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(preset.freq2, now);
+      if (preset.id === 'ney') {
+        // Warm breathy Sufi Ney drone (soft sine harmonics + organic breath LFO + bamboo air)
+        const warmFilter = ctx.createBiquadFilter();
+        warmFilter.type = 'lowpass';
+        warmFilter.frequency.setValueAtTime(520, now);
+        warmFilter.Q.setValueAtTime(1.2, now);
+        warmFilter.connect(masterGain);
 
-      const osc2Gain = state.audioCtx.createGain();
-      osc2Gain.gain.setValueAtTime(0.35, now);
+        const osc1 = ctx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(146.83, now); // D3
 
-      const bufferSize = state.audioCtx.sampleRate * 2;
-      const noiseBuffer = state.audioCtx.createBuffer(1, bufferSize, state.audioCtx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.96900 * b2 + white * 0.1538520;
-        b3 = 0.86650 * b3 + white * 0.3104856;
-        b4 = 0.55000 * b4 + white * 0.5329522;
-        b5 = -0.7616 * b5 - white * 0.0168980;
-        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * preset.noiseVol;
-        b6 = white * 0.115926;
+        const osc2 = ctx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(220.0, now); // A3
+
+        const osc3 = ctx.createOscillator();
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(293.66, now); // D4 soft overtone
+
+        const g1 = ctx.createGain(); g1.gain.setValueAtTime(0.32, now);
+        const g2 = ctx.createGain(); g2.gain.setValueAtTime(0.16, now);
+        const g3 = ctx.createGain(); g3.gain.setValueAtTime(0.06, now);
+
+        // Gentle breathing LFO
+        const lfo = ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(0.12, now);
+        const lfoGain = ctx.createGain();
+        lfoGain.gain.setValueAtTime(0.06, now);
+        lfo.connect(lfoGain);
+        lfoGain.connect(g1.gain);
+
+        // Subtle bamboo reed breath noise
+        const breathNoise = createLoopingPinkNoise(ctx, 4);
+        const breathFilter = ctx.createBiquadFilter();
+        breathFilter.type = 'bandpass';
+        breathFilter.frequency.setValueAtTime(587.33, now);
+        breathFilter.Q.setValueAtTime(4.0, now);
+        const breathGain = ctx.createGain();
+        breathGain.gain.setValueAtTime(0.22, now);
+
+        osc1.connect(g1); g1.connect(warmFilter);
+        osc2.connect(g2); g2.connect(warmFilter);
+        osc3.connect(g3); g3.connect(warmFilter);
+        breathNoise.connect(breathFilter); breathFilter.connect(breathGain); breathGain.connect(masterGain);
+
+        osc1.start(); osc2.start(); osc3.start(); lfo.start(); breathNoise.start();
+        nodes.push(osc1, osc2, osc3, lfo, breathNoise, g1, g2, g3, lfoGain, warmFilter, breathFilter, breathGain);
+      } else if (preset.id === 'rain') {
+        // Warm cozy library rainfall (dual filtered pink noise, zero harsh tone)
+        const rainSoft = createLoopingPinkNoise(ctx, 4);
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(1150, now);
+
+        const hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(180, now);
+
+        const rainGain = ctx.createGain();
+        rainGain.gain.setValueAtTime(1.4, now);
+
+        rainSoft.connect(lp); lp.connect(hp); hp.connect(rainGain); rainGain.connect(masterGain);
+        rainSoft.start();
+        nodes.push(rainSoft, lp, hp, rainGain);
+      } else if (preset.id === 'wind') {
+        // Sweeping Anatolian steppe breeze
+        const windSrc = createLoopingPinkNoise(ctx, 4);
+        const windFilter = ctx.createBiquadFilter();
+        windFilter.type = 'lowpass';
+        windFilter.frequency.setValueAtTime(340, now);
+        windFilter.Q.setValueAtTime(2.5, now);
+
+        const sweepLfo = ctx.createOscillator();
+        sweepLfo.type = 'sine';
+        sweepLfo.frequency.setValueAtTime(0.08, now);
+        const sweepGain = ctx.createGain();
+        sweepGain.gain.setValueAtTime(160, now);
+        sweepLfo.connect(sweepGain);
+        sweepGain.connect(windFilter.frequency);
+
+        const windGain = ctx.createGain();
+        windGain.gain.setValueAtTime(1.3, now);
+
+        windSrc.connect(windFilter); windFilter.connect(windGain); windGain.connect(masterGain);
+        windSrc.start(); sweepLfo.start();
+        nodes.push(windSrc, sweepLfo, sweepGain, windFilter, windGain);
+      } else if (preset.id === 'waves') {
+        // Slow rhythmic Aegean & Black Sea waves
+        const surfSrc = createLoopingPinkNoise(ctx, 4);
+        const surfFilter = ctx.createBiquadFilter();
+        surfFilter.type = 'lowpass';
+        surfFilter.frequency.setValueAtTime(480, now);
+
+        const surfGain = ctx.createGain();
+        surfGain.gain.setValueAtTime(0.9, now);
+
+        const waveLfo = ctx.createOscillator();
+        waveLfo.type = 'sine';
+        waveLfo.frequency.setValueAtTime(0.11, now);
+        const waveDepth = ctx.createGain();
+        waveDepth.gain.setValueAtTime(0.55, now);
+        waveLfo.connect(waveDepth);
+        waveDepth.connect(surfGain.gain);
+
+        surfSrc.connect(surfFilter); surfFilter.connect(surfGain); surfGain.connect(masterGain);
+        surfSrc.start(); waveLfo.start();
+        nodes.push(surfSrc, waveLfo, waveDepth, surfFilter, surfGain);
       }
 
-      const noiseSrc = state.audioCtx.createBufferSource();
-      noiseSrc.buffer = noiseBuffer;
-      noiseSrc.loop = true;
-
-      const filter = state.audioCtx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(preset.filterFreq, now);
-
-      noiseSrc.connect(filter);
-      filter.connect(masterGain);
-      osc1.connect(masterGain);
-      osc2.connect(osc2Gain);
-      osc2Gain.connect(masterGain);
-
-      osc1.start();
-      osc2.start();
-      noiseSrc.start();
-
-      state.audioNodes = [osc1, osc2, osc2Gain, noiseSrc, filter, masterGain];
+      state.audioNodes = nodes;
       updateAmbientButton();
     } catch (err) {
       console.warn('Audio Context başlatılamadı:', err);
@@ -1656,26 +1781,50 @@
   }
 
   function stopAmbientSound(resetIndex = true) {
-    if (state.audioNodes && state.audioNodes.length) {
-      state.audioNodes.forEach(n => {
+    const oldNodes = state.audioNodes || [];
+    const oldGain = state.audioMasterGain;
+    state.audioNodes = [];
+    state.audioMasterGain = null;
+
+    if (oldGain && state.audioCtx) {
+      try {
+        const now = state.audioCtx.currentTime;
+        oldGain.gain.cancelScheduledValues(now);
+        oldGain.gain.setValueAtTime(oldGain.gain.value, now);
+        oldGain.gain.linearRampToValueAtTime(0.0001, now + 0.22);
+      } catch (e) {}
+      setTimeout(() => {
+        oldNodes.forEach(n => {
+          try { if (n.stop) n.stop(); if (n.disconnect) n.disconnect(); } catch (e) {}
+        });
+      }, 240);
+    } else {
+      oldNodes.forEach(n => {
         try { if (n.stop) n.stop(); if (n.disconnect) n.disconnect(); } catch (e) {}
       });
-      state.audioNodes = [];
     }
+
     if (resetIndex) state.soundIndex = -1;
     updateAmbientButton();
   }
 
   function updateAmbientButton() {
-    if (!els.btnAmbient) return;
-    if (state.soundIndex >= 0) {
-      const preset = SOUNDSCAPES[state.soundIndex];
-      els.btnAmbient.classList.add('active');
-      els.btnAmbient.innerHTML = `🔊 <span class="btn-label">${escapeHtml(preset.label)}</span>`;
-    } else {
-      els.btnAmbient.classList.remove('active');
-      els.btnAmbient.innerHTML = '🎧 <span class="btn-label">Tefekkür Sesi</span>';
+    if (els.btnAmbient) {
+      if (state.soundIndex >= 0) {
+        const preset = SOUNDSCAPES[state.soundIndex];
+        els.btnAmbient.classList.add('active');
+        els.btnAmbient.title = `Çalıyor: ${preset.label} (Tıkla: Ses Kontrolü)`;
+        els.btnAmbient.innerHTML = '🔊 <span class="ambient-eq-bars"><span></span><span></span><span></span></span>';
+      } else {
+        els.btnAmbient.classList.remove('active');
+        els.btnAmbient.title = 'Tefekkür & Kütüphane Sesleri';
+        els.btnAmbient.innerHTML = '🎧';
+      }
     }
+    const activeId = state.soundIndex >= 0 ? SOUNDSCAPES[state.soundIndex].id : null;
+    document.querySelectorAll('.ambient-preset-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-sound-id') === activeId);
+    });
   }
 
   // Export Markdown Book
@@ -1780,6 +1929,7 @@
 
   function closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    toggleAmbientPopover(false);
   }
 
   // Event Listeners
@@ -1790,7 +1940,49 @@
     if (els.btnRoute) els.btnRoute.addEventListener('click', () => renderRoutePlanner());
     if (els.btnGallery) els.btnGallery.addEventListener('click', () => renderGalleryView());
     if (els.btnRandom) els.btnRandom.addEventListener('click', selectRandomCity);
-    if (els.btnAmbient) els.btnAmbient.addEventListener('click', cycleAmbientSound);
+    if (els.btnAmbient) els.btnAmbient.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAmbientPopover();
+    });
+
+    // Ambient Sound Popover Controls
+    document.querySelectorAll('.ambient-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sid = btn.getAttribute('data-sound-id');
+        if (sid) selectAmbientById(sid);
+      });
+    });
+
+    const btnAmbientStop = document.getElementById('btn-ambient-stop');
+    if (btnAmbientStop) {
+      btnAmbientStop.addEventListener('click', () => {
+        stopAmbientSound(true);
+        showToast('🔇 Tefekkür sesi kapatıldı');
+      });
+    }
+
+    const ambientVolSlider = document.getElementById('ambient-volume-slider');
+    if (ambientVolSlider) {
+      ambientVolSlider.addEventListener('input', (e) => {
+        setAmbientVolume(parseInt(e.target.value, 10) / 100);
+      });
+    }
+
+    const btnOpenSoundStudio = document.getElementById('btn-open-sound-studio');
+    if (btnOpenSoundStudio) {
+      btnOpenSoundStudio.addEventListener('click', () => {
+        toggleAmbientPopover(false);
+        stopAmbientSound(true);
+        openView('sound');
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('ambient-menu-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        toggleAmbientPopover(false);
+      }
+    });
     if (els.btnQuote) els.btnQuote.addEventListener('click', openQuoteModal);
     if (els.btnTheme) els.btnTheme.addEventListener('click', toggleTheme);
     if (els.btnExport) els.btnExport.addEventListener('click', () => {
