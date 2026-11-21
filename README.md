@@ -8,6 +8,10 @@
 
 <br/><br/>
 
+<img src="assets/logo_wordmark.svg" alt="Dijital Seyyah — Anadolu Seyahatnamesi Marka Logosu" width="100%" />
+
+<br/><br/>
+
 <img src="assets/hero_title.svg" alt="DİJİTAL SEYYAH: ANADOLU SEYAHATNAMESİ" width="100%" />
 
 <br/>
@@ -332,9 +336,37 @@ Coğrafi Bölge Kapsamı:     6 / 7 (%85.7)
 
 ---
 
-## ✨ İnteraktif Web Portalı ve AI-Native Kurumsal Mimari (45+ Modül)
+## 🕌 İrfan, Tefekkür ve Sefer Felsefesi Külliyatı
 
-Canlı web uygulaması ([**bahattinyunus.github.io/dijitalseyyah**](https://bahattinyunus.github.io/dijitalseyyah/)), sıfır harici framework bağımlılığıyla kurgulanmış **Obsidian + Kinetic Glassmorphism** tasarım sistemine, **6 Gruplu Mega-Navigasyon** mimarisine ve **Birleşik Gemini AI Çekirdeğine (`window.SEYYAH_AI`)** sahiptir.
+**Dijital Seyyah**, yalnızca coğrafi koordinatları işaretleyen bir gezi haritası değil; **Ferîdüddin Attâr**'ın *Mantıku't-Tayr*'ından **Muhyiddin İbnü'l-Arabî**'nin *Kitâbü'l-İsfâr* (Seferlerin Sırrı) risalesine, **İbn Haldûn**'un *Mukaddime*'deki *Umran İlmi*'nden **Ahmet Hamdi Tanpınar**'ın *Beş Şehir* estetiğine uzanan yaşayan bir **felsefe, irfan ve dijital göçebe külliyatıdır**.
+
+### 🕊️ 1. Mantıku't-Tayr: Yedi Vadi ve İçsel Sefer Merhaleleri (`js/seven-valleys-sefer.js`)
+
+| Vadi | Menzil Eşiği | Tasavvufi & Felsefi Hakikati | Dijital Seyyah Pratiği |
+| :---: | :---: | :--- | :--- |
+| **1. Talep (İstek) Vadisi** | `1 – 10 İl` | Konfor alanını ve alışkanlık kafesini kırıp yola çıkma iradesi. | Sırt çantasını kuşanıp ilk GSB kervansarayına ve kütüphaneye adım atmak. |
+| **2. Aşk Vadisi** | `11 – 22 İl` | Coğrafyaya, taşa, suya ve yaratılışa hayranlık ve muhabbetle bakmak. | Şehirleri turist gibi tüketmek yerine bir dost meclisi gibi dinlemek. |
+| **3. Marifet (İlim) Vadisi** | `23 – 34 İl` | Görünenin ardındaki hikmeti okumak; yolu medreseye dönüştürmek. | Her ilin İl Halk Kütüphanesinde kodlama, okuma ve araştırma mesaisi. |
+| **4. İstiğna (Kanaat) Vadisi** | `35 – 46 İl` | **🔥 Aktif Vadi (39/81):** Az eşya ile çok hürriyet; dünyaya esir olmamak. | Tek çanta, sıfır otel maliyeti ve sade yaşamla Anadolu'yu adımlamak. |
+| **5. Tevhid Vadisi** | `47 – 58 İl` | *Kesrette Vahdet*: 7 bölgenin binbir renginde tek bir medeniyet ruhunu görmek. | Doğu'dan Batı'ya her lehçede, türküde ve kubbede ortak irfanı sezmek. |
+| **6. Hayret Vadisi** | `59 – 70 İl` | Göbeklitepe'den Selimiye'ye zaman, fanilik ve sanat karşısında derin hayret. | 12.000 yıllık insanlık hafızası önünde tevazuya bürünmek. |
+| **7. Fakr u Fenâ & Vuslat** | `71 – 81 İl` | *"Yolun kendisi menzildir"* sırrına ermek; **Hâfız-ı Anadolu** mertebesi. | 81 ilin tamamını kalbe, koda ve külliyata nakşetmek. |
+
+### ⚖️ 2. Dijital Seyyahın 7 Fütüvvet ve Kervansaray İlkesi (`js/nomad-ethos-manifesto.js`)
+
+1. **İbret Nazarı:** Tüketmek veya gösteriş için değil, şahitlik etmek ve anlamak için gezmek.
+2. **Mekânın Ruhu ve Edep:** Kadim taşa, mabede, kütüphaneye ve belde halkına hürmetle yaklaşmak.
+3. **Yolda İlim Disiplini:** Her şehirde İl Halk Kütüphanesini birincil çalışma ve tefekkür ocağı bilmek.
+4. **Tecerrüd (Az Eşya, Çok Hikmet):** Yükü azaltarak ruhun ve zihnin hareket kabiliyetini artırmak.
+5. **Kervansaray Hukuku:** 13. yüzyıl Selçuklu Sultan Hanlarının ücretsiz misafirperverlik mirasını bugünün GSB Seyahatsever yurtlarında şükür ve temizlikle yaşatmak.
+6. **Halvet der Encümen (Halk İçinde Hak İle):** Kalabalık garlarda ve meydanlarda bile içsel sükûneti korumak.
+7. **Evliya Çelebi Sorumluluğu:** Görülen her eseri, tadılan her nimeti ve öğrenilen her hikmeti gelecek nesiller için açık kaynak olarak kayıt altına almak.
+
+---
+
+## ✨ İnteraktif Web Portalı ve AI-Native Kurumsal Mimari (50+ Modül • 7 Mega-Kategori)
+
+Canlı web uygulaması ([**bahattinyunus.github.io/dijitalseyyah**](https://bahattinyunus.github.io/dijitalseyyah/)), sıfır harici framework bağımlılığıyla kurgulanmış **Obsidian + Selçuklu Altın Varak Glassmorphism** tasarım sistemine, **7 Gruplu Mega-Navigasyon** mimarisine ve **Birleşik Gemini AI Çekirdeğine (`window.SEYYAH_AI`)** sahiptir.
 
 <table>
   <tr>
@@ -353,37 +385,110 @@ Canlı web uygulaması ([**bahattinyunus.github.io/dijitalseyyah**](https://baha
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h4>🏛️ 6 Gruplu Mega-Navigasyon, Keşif, Odak & Görsel Stüdyolar</h4>
+      <h4>🕌 İrfan, Rasathane, Kervansaray & Edebiyat Stüdyoları</h4>
       <ul>
-        <li><b>🧭 6 Kategorili Mega-Navigasyon (<code>js/modern-nav-shell.js</code>):</b> 37+ görünümü <i>🏠 Keşif</i>, <i>✨ Yapay Zekâ</i>, <i>🧭 Rota & Plan</i>, <i>🏛️ Kültür & Miras</i>, <i>🎮 Stüdyo & Odak</i> ve <i>📊 Analiz & Defter</i> açılır cam menülerinde toplayan kurumsal kabuk + <code>Ctrl+K</code> Spotlight Komut Paleti ve macOS tarzı alt Hızlı Dock.</li>
-        <li><b>📱 Anadolu Hikayeleri (<code>js/story-reels.js</code>) & Günün Menzili (<code>js/daily-hikmet-banner.js</code>):</b> Tam ekran ilerleme çubuklu görsel sefer hikayeleri ve her gün yenilenen keşif menzili.</li>
-        <li><b>🎶 Gerçek Tasavvufi Ney Taksimi & 5 Kanallı Ses Stüdyosu:</b> Üst barda gerçek kayıt <b>Türk Ney Taksimi</b> (<code>assets/ney_tasavvuf.mp3</code> — Irak Makamı), Kütüphane Yağmuru, Bozkır Esintisi, Dalga sesleri ve 5 kanallı mikser (<code>js/sound-mixer.js</code>).</li>
-        <li><b>🍅 Kütüphane Odak & Pomodoro Stüdyosu (<code>js/pomodoro-library.js</code>):</b> 81 İl Halk Kütüphanesi arka planlı dairesel SVG sayaç (25/50/5/15 dk), zil sesi ve yüzen mini zamanlayıcı.</li>
-        <li><b>🌤️ Canlı Hava Durumu (<code>js/live-weather-prayer.js</code>) & 🔊 Sesli Anlatıcı (<code>js/voice-narrator.js</code>):</b> 81 ilde gerçek zamanlı Open-Meteo sıcaklık/gün doğumu telemetrisi, Türkçe sesli okuma (<code>0.9x–1.2x</code>) ve Odak Okuma Modu.</li>
-        <li><b>🖼️ 162 Kare Mozaik Duvarı (<code>js/photo-map-wall.js</code>) & 📤 1080×1920 Hikaye Kartı (<code>js/share-card-studio.js</code>):</b> Pinterest/Masonry fotoğraf duvarı, otomatik slayt ve her il için tek tıkla yüksek çözünürlüklü PNG hikaye kartı indirme.</li>
-        <li><b>📈 İleri Analitik (<code>js/stats-deep-analytics.js</code>), 🏆 23 Rozetli Başarım Motoru & 🎯 24 Görevli Bucket List:</b> 7 bölge SVG Radar grafiği, 81/81 bitiş tarihi simülatörü, rütbe merdiveni ve <code>?</code> kısayol/güvenli JSON yedekleme merkezi.</li>
+        <li><b>🕌 Anadolu İrfan & Gönül Coğrafyası Atlası (<code>js/sufi-atlas-irfan.js</code>):</b> Mevlânâ, Yunus Emre, İbnü'l-Arabî, Hacı Bayram-ı Velî dahil 24 gönül sultanı + 81 ilden 303 manevi şahsiyet ve canlı AI tefekkür sohbeti.</li>
+        <li><b>📜 Hikmet Meclisi (<code>js/philosophy-dialogues.js</code>):</b> Evliya Çelebi, İbn Battûta, İbnü'l-Arabî, Yunus Emre ve İbn Haldûn (veya 5'li Ortak Meclis) ile kendi üsluplarında canlı felsefi diyalog.</li>
+        <li><b>🕯️ Halvet & Tefekkür Odası (<code>js/tefekkur-zen-mode.js</code>):</b> 8 köşeli Selçuklu yıldızı nefes ritmi (4-4-6), gerçek kayıt <b>Tasavvufi Ney Taksimi</b> (<code>assets/ney_tasavvuf.mp3</code>) ve 18 kadim hikmet külliyatı.</li>
+        <li><b>🌌 Anadolu Semâsı: 81 Yıldız Haritası (<code>js/constellation-sky-map.js</code>):</b> 81 ili gece göğünde Selçuklu yıldızları ve bölgesel takımyıldızları olarak çizen, aktif <code>Ankara ➔ Edirne</code> seferini kuyrukluyıldız iziyle gösteren rasathane haritası.</li>
+        <li><b>🏰 Kervansaray & İpek Yolu Atlası (<code>js/karavansaray-network.js</code>):</b> 13 tarihi Sultan Hanı ile 81 ilin modern GSB Seyahatsever + İl Halk Kütüphanesi eşleştiricisi.</li>
+        <li><b>🖋️ Şiir, Türkü & "Beş Şehir" Divanı (<code>js/anadolu-poetry-divan.js</code>):</b> Tanpınar <i>Beş Şehir</i>, Yunus Emre, Âşık Veysel, Karacaoğlan, Neşet Ertaş antolojisi ve canlı AI şiir/deneme yazarı.</li>
+        <li><b>🏛️ 7 Medeniyet Katmanı (<code>js/civilization-layers.js</code>) & 🗣️ Anadolu Sözlüğü (<code>js/anadolu-dialect-proverbs.js</code>):</b> Göbeklitepe'den Osmanlı'ya taşın hafızası ve 7 bölgeden 28 yol atasözü/duası.</li>
+        <li><b>📜 1920×1080 Sefer Beratı (<code>js/expedition-certificate.js</code>) & 💻 780+ Saat Kütüphane Heatmap (<code>js/library-work-log.js</code>):</b> Selçuklu altın mühürlü HD PNG berat üretici ve 81 plaka çalışma matrisi.</li>
       </ul>
     </td>
   </tr>
 </table>
 
+### 🧭 7 Kategorili Mega-Navigasyon & Stüdyo Rehberi (`js/modern-nav-shell.js`)
+
+| Mega-Kategori | İçerdiği Stüdyolar ve Modüller |
+| :--- | :--- |
+| **🏠 Keşif** | Genel Bakış (`dashboard`) • Vektör Atlas (`atlas`) • Anadolu Semâsı 81 Yıldız (`skyMap`) • 7 Bölge Dosyası (`regions`) • 162 Kare Mozaik (`photoWall`) • Fotoğraf Galerisi (`gallery`) • Sinematik Tur (`cinematicTour`) |
+| **✨ Yapay Zekâ (`AI`)** | Akıllı Seyyah Rehberi (`advisor`) • AI Sefer Mühendisi (`aiPlanner`) • AI Ruh Hali Kaşifi (`aiMood`) • AI Seyahatname Yazarı (`aiWriter`) • AI Şehir Düellosu (`aiBattle`) • Sonsuz AI Yarışma (`aiQuiz`) • AI Gurme Şef (`aiChef`) • AI Doğal Dil Arama (`aiSearch`) • Sağ Alt Yüzen AI Copilot (`floatingCopilot`) • 81 İl İçi AI Rehber (`aiCityConcierge`) |
+| **🕌 İrfan & Felsefe (`İRFAN`)** | İrfan & Gönül Atlası (`irfanAtlas`) • Hikmet Meclisi 5 Bilge AI (`hikmetMeclisi`) • Yedi Vadi Mantıku't-Tayr (`sevenValleys`) • Halvet & Tefekkür Odası (`halvet`) • Seyyah Ahlâkı & 24 Kavram Lügatı (`ethos`) • 7 Medeniyet & Zaman Felsefesi (`civLayers`) • Şiir & Beş Şehir Divanı (`divan`) • Anadolu Sözleri & Yol Duaları (`proverbs`) • Manifesto & Makaleler (`reader`) |
+| **🧭 Rota & Plan** | 2-Opt Rota & GPX (`route`) • Menzil Radarı (`radar`) • Kervansaray & İpek Yolu (`caravanserai`) • 24 Görevli Bucket List (`bucketList`) • GSB Bütçe Simülatörü (`budget`) • Sırt Çantası (`packing`) • Mevsim & İklim (`seasons`) |
+| **🏛️ Kültür & Miras** | UNESCO 21 Dünya Mirası (`unesco`) • 373 Tarihi Miras Ansiklopedisi (`landmarks`) • Medeniyet Kronolojisi (`timeline`) • 81 İl Gastronomi Atlası (`gastronomy`) • 81 İl Halk Kütüphanesi Rehberi (`libraries`) |
+| **🎮 Stüdyo & Odak** | Kütüphane Pomodoro (`pomodoro`) • 1920×1080 Sefer Beratı (`certificate`) • Dijital Pasaport (`passport`) • HD Kartpostal Stüdyosu (`postcard`) • 5 Kanallı Sufi Ses Stüdyosu (`sound`) • 4 Modlu Bilgi Yarışması (`quiz`) • Mesafe Düellosu (`distanceGame`) |
+| **📊 Analiz & Defter** | İleri Analitik & 81/81 Tahmin (`deepStats`) • Kütüphane Mesai Heatmap (`workLog`) • 81 Plaka Matrisi (`analytics`) • 23 Rozetli Başarım Motoru (`achievements`) • Seyir Defterim (`journal`) • Şehir Karşılaştır (`compare`) |
+
+### ⌨️ Hızlı Klavye Kısayolları
+
+| Kısayol | İşlev |
+| :---: | :--- |
+| **`Ctrl + K`** / **`Cmd + K`** | Spotlight Komut Paleti (81 il, 50+ stüdyo, miras, lezzet veya aksiyon ara) |
+| **`/`** | Sol 81 İl Keşif Çekmecesinde anlık arama kutusuna odaklan |
+| **`?`** *(Shift + /)* | Klavye Kısayolları Rehberi & Güvenli Kişisel JSON Veri Yedekleme / Geri Yükleme |
+| **`Alt + ←`** / **`Alt + →`** | Şehir detay sayfasındayken `01` Adana'dan `81` Düzce'ye plaka sırasıyla önceki/sonraki ile geç |
+| **`←`** / **`→`** / **`Esc`** | Lightbox fotoğraf galerisi ve Tam Ekran Hikayeler (Stories) içinde gezin / kapat |
+
 ---
 
-## 🏗️ Teknik Mimari ve Veri Akışı
+## 🏗️ Teknik Mimari, Dizin Yapısı ve Veri Akışı
 
 > [!IMPORTANT]
-> **Tek Doğruluk Kaynağı (Single Source of Truth):** 81 il klasöründeki herhangi bir `README.md` veya `banner.jpg` / `gallery.jpg` güncellendiğinde `python dijital_seyyah.py build` komutu tüm JSON/JS verisini, Folium haritasını, `README.md` istatistiklerini ve `ANADOLU_SEYAHATNAMESI.md` e-kitabını otomatik olarak senkronize eder.
+> **Tek Doğruluk Kaynağı (Single Source of Truth):** 81 il klasöründeki herhangi bir `README.md` veya `banner.jpg` / `gallery.jpg` güncellendiğinde `python dijital_seyyah.py build` komutu tüm JSON/JS verisini, 4 katmanlı Esri/OpenTopoMap Folium haritasını, `README.md` istatistiklerini ve `ANADOLU_SEYAHATNAMESI.md` e-kitabını otomatik olarak senkronize eder.
 
 ```mermaid
 flowchart LR
     A["81 İl Klasörleri\n(README.md + banner.jpg + gallery.jpg)"] --> B["travel_core.py\n(SeyyahEngine • 2-Opt • Rozetler)"]
     B --> C["travel_data.json & web_data.js"]
-    B --> D["map_generator.py → travel_map.html"]
+    B --> D["map_generator.py → travel_map.html\n(Esri Dark/Light Topo • Satellite • OpenTopoMap)"]
     B --> E["README.md & ANADOLU_SEYAHATNAMESI.md"]
-    C --> G["index.html + app.js + 6-Group Mega-Nav\n(45+ Modül • Obsidian Glassmorphism SPA)"]
+    C --> G["index.html + app.js + 7-Group Mega-Nav\n(50+ Modül • Obsidian & Seljuk Gold SPA)"]
     H["window.SEYYAH_AI (js/ai-core.js)\n(Gemini SSE Streaming • 4-Model Failover • LRU Cache)"] --> G
     D --> G
 ```
+
+<details>
+<summary><b>📂 Proje Dizin ve Modül Mimarisi (Açmak için tıklayın)</b></summary>
+
+```text
+dijitalseyyah/
+├── 01_Marmara/ ... 07_GuneydoguAnadolu/   # 81 İl klasörü (81 README.md + 81 banner.jpg + 81 gallery.jpg = 162 görsel)
+├── assets/
+│   ├── logo.png & logo.svg                # Selçuklu Yıldızı, Pusula & Seyahatname 3D/Vektör Marka Amblemi
+│   ├── logo_wordmark.svg & banner.jpg     # Yatay marka logosu ve 3D Anadolu topoğrafik kapak görseli
+│   └── ney_tasavvuf.mp3                   # Gerçek kayıt Türk Tasavvuf Ney Taksimi (Irak Makamı, 75 sn)
+├── css/
+│   ├── modules.css & modules-v2.css       # Temel modül ve stüdyo bileşen stilleri
+│   ├── awwwards-polish.css & nextgen-v4.css
+│   ├── wave5-masterpiece.css & wave6-architecture.css
+│   ├── wave7-irfan-aesthetic.css          # Selçuklu hendesesi, altın varak ve irfani tipografi
+│   ├── wave8-magnum-opus.css              # Magnum Opus görsel hiyerarşi sistemi
+│   └── mobile-responsive-fix.css          # 320px–960px tam mobil & tablet uyumluluk katmanı
+├── js/
+│   ├── ai-core.js                         # window.SEYYAH_AI Birleşik Gemini SSE Streaming & LRU Cache SDK
+│   ├── floating-ai-copilot.js             # Sağ alt yüzen bağlam duyarlı Gemini AI Copilot küresi
+│   ├── ai-city-concierge.js               # 81 il sayfa içi tek tık AI rehber çubuğu
+│   ├── smart-route-ai.js                  # AI Sefer Mühendisi (gün, odak, GSB bütçe planlayıcı)
+│   ├── ai-mood-discovery.js               # AI Ruh Hali & Kişilik Kaşifi (%96-99 uyumlu 3 menzil)
+│   ├── ai-journal-writer.js               # AI Evliya Çelebi Seyahatname Yazarı (canlı SSE akışlı)
+│   ├── ai-city-vs-battle.js               # AI Şehir Düellosu & 5 Kriterli Uzman Hakem
+│   ├── ai-smart-quiz.js                   # Sonsuz AI Anadolu Kültür & Tarih Yarışması
+│   ├── ai-semantic-search.js & ai-gastronomy-chef.js
+│   ├── sufi-atlas-irfan.js                # 24 Gönül Sultanı + 303 Manevi Şahsiyet İrfan Atlası
+│   ├── philosophy-dialogues.js            # Hikmet Meclisi (Evliya Çelebi, İbn Battûta, İbnü'l-Arabî, Yunus, İbn Haldûn)
+│   ├── seven-valleys-sefer.js             # Mantıku't-Tayr Yedi Vadi & Kaf Dağı SVG Yükseliş Haritası
+│   ├── tefekkur-zen-mode.js               # Halvet & Tefekkür Odası (Selçuklu nefes ritmi + Ney + 18 hikmet)
+│   ├── nomad-ethos-manifesto.js           # 7 Fütüvvet İlkesi & 24 Kavramlık İrfan Lügatı
+│   ├── civilization-layers.js             # 7 Medeniyet Katmanı & Zaman Felsefesi (Taşın Hafızası)
+│   ├── constellation-sky-map.js           # Anadolu Semâsı: 81 Yıldız Takımyıldızı & Rasathane Haritası
+│   ├── karavansaray-network.js            # 13 Tarihi Sultan Hanı & 81 GSB Kervansaray Eşleştirici
+│   ├── anadolu-poetry-divan.js            # Şiir, Türkü & Tanpınar "Beş Şehir" Edebiyat Divanı
+│   ├── library-work-log.js                # 81 İl Halk Kütüphanesi Mesai Defteri & 780+ Saat Heatmap
+│   ├── expedition-certificate.js          # 1920×1080 Selçuklu Mühürlü HD PNG Sefer Beratı Stüdyosu
+│   ├── anadolu-dialect-proverbs.js        # 7 Bölge Deyimler, Atasözleri & Kadim Yol Duaları
+│   ├── modern-nav-shell.js & dashboard-orchestrator.js
+│   ├── city-soul-inscriptions.js & city-breadcrumb-nav.js
+│   ├── pomodoro-library.js, achievement-engine.js, bucket-list.js, photo-map-wall.js, stats-deep-analytics.js
+│   └── admin-panel.js                     # SHA-256 Kilitli Yönetici Komuta Merkezi & GitHub Doğrudan Commit
+├── travel_core.py & dijital_seyyah.py     # Python çekirdek veri motoru, 2-Opt TSP çözücü ve CLI aracı
+├── map_generator.py & travel_map.html     # 4 katmanlı Esri/OpenTopoMap Folium/Leaflet harita üreteci
+└── tests/test_seyyah.py                   # 20 birim ve entegrasyon test paketi (20/20 Passing)
+```
+
+</details>
 
 ---
 
