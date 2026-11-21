@@ -91,6 +91,7 @@
     audioCtx: null,
     audioMasterGain: null,
     audioNodes: [],
+    audioTimers: [],
     currentQuote: null,
     lightboxImages: [],
     lightboxIndex: 0,
@@ -1661,54 +1662,171 @@
       const nodes = [masterGain];
 
       if (preset.id === 'ney') {
-        // Warm breathy Sufi Ney drone (soft sine harmonics + organic breath LFO + bamboo air)
-        const warmFilter = ctx.createBiquadFilter();
-        warmFilter.type = 'lowpass';
-        warmFilter.frequency.setValueAtTime(520, now);
-        warmFilter.Q.setValueAtTime(1.2, now);
-        warmFilter.connect(masterGain);
+        // Tasavvufi Hicaz Makamı Ney Taksimi + Dergâh Kubbe Akustiği (Convolution Reverb) + Kadife Dem
+        const createDomeReverb = (audioCtx, durationSec = 3.8, decay = 2.6) => {
+          const len = Math.floor(audioCtx.sampleRate * durationSec);
+          const ir = audioCtx.createBuffer(2, len, audioCtx.sampleRate);
+          for (let ch = 0; ch < 2; ch++) {
+            const data = ir.getChannelData(ch);
+            let lp = 0;
+            for (let i = 0; i < len; i++) {
+              const t = i / len;
+              const env = Math.pow(1 - t, decay);
+              const n = (Math.random() * 2 - 1) * env;
+              lp = lp * 0.72 + n * 0.28; // warm stone dome damping
+              data[i] = lp * 0.65;
+            }
+          }
+          const conv = audioCtx.createConvolver();
+          conv.buffer = ir;
+          return conv;
+        };
 
-        const osc1 = ctx.createOscillator();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(146.83, now); // D3
+        const reverb = createDomeReverb(ctx, 3.8, 2.5);
+        const wetGain = ctx.createGain();
+        wetGain.gain.setValueAtTime(0.68, now);
+        const dryGain = ctx.createGain();
+        dryGain.gain.setValueAtTime(0.55, now);
 
-        const osc2 = ctx.createOscillator();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(220.0, now); // A3
+        reverb.connect(wetGain);
+        wetGain.connect(masterGain);
+        dryGain.connect(masterGain);
 
-        const osc3 = ctx.createOscillator();
-        osc3.type = 'sine';
-        osc3.frequency.setValueAtTime(293.66, now); // D4 soft overtone
+        // 1. Kadife Derin Dem (Tanbur / Ney Dem — D2 & A2)
+        const demFilter = ctx.createBiquadFilter();
+        demFilter.type = 'lowpass';
+        demFilter.frequency.setValueAtTime(240, now);
 
-        const g1 = ctx.createGain(); g1.gain.setValueAtTime(0.32, now);
-        const g2 = ctx.createGain(); g2.gain.setValueAtTime(0.16, now);
-        const g3 = ctx.createGain(); g3.gain.setValueAtTime(0.06, now);
+        const dem1 = ctx.createOscillator();
+        dem1.type = 'sine';
+        dem1.frequency.setValueAtTime(73.42, now); // D2
+        const dem1Gain = ctx.createGain();
+        dem1Gain.gain.setValueAtTime(0.22, now);
 
-        // Gentle breathing LFO
-        const lfo = ctx.createOscillator();
-        lfo.type = 'sine';
-        lfo.frequency.setValueAtTime(0.12, now);
-        const lfoGain = ctx.createGain();
-        lfoGain.gain.setValueAtTime(0.06, now);
-        lfo.connect(lfoGain);
-        lfoGain.connect(g1.gain);
+        const dem2 = ctx.createOscillator();
+        dem2.type = 'sine';
+        dem2.frequency.setValueAtTime(146.83, now); // D3
+        const dem2Gain = ctx.createGain();
+        dem2Gain.gain.setValueAtTime(0.11, now);
 
-        // Subtle bamboo reed breath noise
-        const breathNoise = createLoopingPinkNoise(ctx, 4);
-        const breathFilter = ctx.createBiquadFilter();
-        breathFilter.type = 'bandpass';
-        breathFilter.frequency.setValueAtTime(587.33, now);
-        breathFilter.Q.setValueAtTime(4.0, now);
-        const breathGain = ctx.createGain();
-        breathGain.gain.setValueAtTime(0.22, now);
+        const demBreathLfo = ctx.createOscillator();
+        demBreathLfo.type = 'sine';
+        demBreathLfo.frequency.setValueAtTime(0.09, now);
+        const demBreathDepth = ctx.createGain();
+        demBreathDepth.gain.setValueAtTime(0.04, now);
+        demBreathLfo.connect(demBreathDepth);
+        demBreathDepth.connect(dem2Gain.gain);
 
-        osc1.connect(g1); g1.connect(warmFilter);
-        osc2.connect(g2); g2.connect(warmFilter);
-        osc3.connect(g3); g3.connect(warmFilter);
-        breathNoise.connect(breathFilter); breathFilter.connect(breathGain); breathGain.connect(masterGain);
+        dem1.connect(dem1Gain); dem1Gain.connect(demFilter);
+        dem2.connect(dem2Gain); dem2Gain.connect(demFilter);
+        demFilter.connect(dryGain);
+        demFilter.connect(reverb);
 
-        osc1.start(); osc2.start(); osc3.start(); lfo.start(); breathNoise.start();
-        nodes.push(osc1, osc2, osc3, lfo, breathNoise, g1, g2, g3, lfoGain, warmFilter, breathFilter, breathGain);
+        dem1.start(); dem2.start(); demBreathLfo.start();
+        nodes.push(reverb, wetGain, dryGain, demFilter, dem1, dem1Gain, dem2, dem2Gain, demBreathLfo, demBreathDepth);
+
+        // 2. Sürekli Nefesli Ney Sesi (Hicaz Makamı — D4 karar: D4, Eb4, F#4, G4, A4, Bb4, C5, D5)
+        const HICAZ_PHRASES = [
+          // Huzurlu açılış (D4 -> F#4 -> G4 -> A4 -> G4 -> F#4 -> Eb4 -> D4)
+          [
+            { f: 293.66, d: 3.4 }, { f: 369.99, d: 2.6 }, { f: 392.00, d: 3.2 },
+            { f: 440.00, d: 4.2 }, { f: 392.00, d: 2.4 }, { f: 369.99, d: 2.8 },
+            { f: 311.13, d: 2.5 }, { f: 293.66, d: 4.6 }
+          ],
+          // Yükseliş ve tefekkür (A4 -> Bb4 -> C5 -> D5 -> C5 -> Bb4 -> A4)
+          [
+            { f: 440.00, d: 3.0 }, { f: 466.16, d: 2.4 }, { f: 523.25, d: 2.8 },
+            { f: 587.33, d: 4.4 }, { f: 523.25, d: 2.6 }, { f: 466.16, d: 2.8 },
+            { f: 440.00, d: 4.2 }
+          ],
+          // Karara iniş (G4 -> F#4 -> Eb4 -> D4 -> C4 -> D4)
+          [
+            { f: 392.00, d: 3.2 }, { f: 369.99, d: 2.6 }, { f: 311.13, d: 3.0 },
+            { f: 293.66, d: 3.6 }, { f: 261.63, d: 2.2 }, { f: 293.66, d: 5.0 }
+          ]
+        ];
+
+        const neyBus = ctx.createGain();
+        neyBus.gain.setValueAtTime(0.0001, now);
+
+        const neyFilter = ctx.createBiquadFilter();
+        neyFilter.type = 'lowpass';
+        neyFilter.frequency.setValueAtTime(1100, now);
+        neyFilter.Q.setValueAtTime(1.5, now);
+
+        // Ana ney sinüs + 2. harmonik + kamış nefesi
+        const neyMain = ctx.createOscillator();
+        neyMain.type = 'sine';
+        neyMain.frequency.setValueAtTime(293.66, now);
+
+        const neyHarm = ctx.createOscillator();
+        neyHarm.type = 'sine';
+        neyHarm.frequency.setValueAtTime(587.33, now);
+        const neyHarmGain = ctx.createGain();
+        neyHarmGain.gain.setValueAtTime(0.14, now);
+
+        // Doğal Neyzen vibratosu (4.6 Hz hafif salınım)
+        const vibLfo = ctx.createOscillator();
+        vibLfo.type = 'sine';
+        vibLfo.frequency.setValueAtTime(4.6, now);
+        const vibGain = ctx.createGain();
+        vibGain.gain.setValueAtTime(2.4, now);
+        vibLfo.connect(vibGain);
+        vibGain.connect(neyMain.frequency);
+
+        // Kamış hava hışırtısı (melodiyi takip eden bandpass pembe gürültü)
+        const reedAir = createLoopingPinkNoise(ctx, 4);
+        const reedBand = ctx.createBiquadFilter();
+        reedBand.type = 'bandpass';
+        reedBand.frequency.setValueAtTime(587.33, now);
+        reedBand.Q.setValueAtTime(5.5, now);
+        const reedGain = ctx.createGain();
+        reedGain.gain.setValueAtTime(0.32, now);
+
+        neyMain.connect(neyFilter);
+        neyHarm.connect(neyHarmGain); neyHarmGain.connect(neyFilter);
+        reedAir.connect(reedBand); reedBand.connect(reedGain); reedGain.connect(neyFilter);
+        neyFilter.connect(neyBus);
+        neyBus.connect(dryGain);
+        neyBus.connect(reverb);
+
+        neyMain.start(); neyHarm.start(); vibLfo.start(); reedAir.start();
+        nodes.push(neyBus, neyFilter, neyMain, neyHarm, neyHarmGain, vibLfo, vibGain, reedAir, reedBand, reedGain);
+
+        // Taksim cümlelerini yavaşça ve nefesli şekilde çalan zamanlayıcı
+        let phraseIdx = 0;
+        const playNextPhrase = () => {
+          if (state.soundIndex < 0 || SOUNDSCAPES[state.soundIndex].id !== 'ney' || !state.audioCtx) return;
+          const phrase = HICAZ_PHRASES[phraseIdx % HICAZ_PHRASES.length];
+          phraseIdx += 1;
+
+          let cursor = ctx.currentTime + 0.15;
+          phrase.forEach((note, nIdx) => {
+            const dur = note.d;
+            const glide = nIdx === 0 ? 0.05 : 0.32;
+            neyMain.frequency.setTargetAtTime(note.f, cursor, glide * 0.45);
+            neyHarm.frequency.setTargetAtTime(note.f * 2, cursor, glide * 0.45);
+            reedBand.frequency.setTargetAtTime(note.f * 2.0, cursor, glide * 0.5);
+
+            // Nefesli yükseliş ve yumuşak sönüş zarfı
+            if (nIdx === 0) {
+              neyBus.gain.setValueAtTime(0.0001, cursor);
+              neyBus.gain.linearRampToValueAtTime(0.42, cursor + Math.min(1.2, dur * 0.42));
+            } else {
+              neyBus.gain.linearRampToValueAtTime(0.38 + (nIdx % 2) * 0.06, cursor + dur * 0.35);
+            }
+            if (nIdx === phrase.length - 1) {
+              neyBus.gain.linearRampToValueAtTime(0.0001, cursor + dur);
+            }
+            cursor += dur;
+          });
+
+          const totalMs = Math.round((cursor - ctx.currentTime + 2.4) * 1000);
+          const tid = setTimeout(playNextPhrase, totalMs);
+          state.audioTimers.push(tid);
+        };
+
+        playNextPhrase();
       } else if (preset.id === 'rain') {
         // Warm cozy library rainfall (dual filtered pink noise, zero harsh tone)
         const rainSoft = createLoopingPinkNoise(ctx, 4);
@@ -1781,6 +1899,10 @@
   }
 
   function stopAmbientSound(resetIndex = true) {
+    if (state.audioTimers && state.audioTimers.length) {
+      state.audioTimers.forEach(t => clearTimeout(t));
+      state.audioTimers = [];
+    }
     const oldNodes = state.audioNodes || [];
     const oldGain = state.audioMasterGain;
     state.audioNodes = [];
