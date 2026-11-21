@@ -82,22 +82,31 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
     return matched;
   }
 
-  async function askGeminiEngine(prompt, provinces, safeCtx) {
+  async function askGeminiEngine(prompt, provinces, safeCtx, currentUserMsgId) {
     const model = getStoredGeminiModel();
     const byokKey = getStoredGeminiKey();
     const contextSummary = buildSeyyahContextSummary(provinces, safeCtx);
-    const recentHistory = chatHistory
-      .filter((m) => !m.loading && (m.role === 'user' || m.role === 'assistant'))
-      .slice(-6)
-      .map((m) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        text: m.text
-      }));
+
+    // Build strictly alternating user -> model history (excluding welcome msg, loading msg, and current prompt)
+    const rawTurns = chatHistory
+      .filter((m) => !m.loading && m.id !== 0 && m.id !== currentUserMsgId && (m.role === 'user' || m.role === 'assistant'))
+      .slice(-6);
+    const alternatingHistory = [];
+    for (const m of rawTurns) {
+      const role = m.role === 'assistant' ? 'model' : 'user';
+      if (alternatingHistory.length === 0 && role !== 'user') continue;
+      if (alternatingHistory.length > 0 && alternatingHistory[alternatingHistory.length - 1].role === role) continue;
+      alternatingHistory.push({ role, text: String(m.text || '').slice(0, 700) });
+    }
+    // Ensure history ends with 'model' so appending the new 'user' turn always alternates cleanly
+    if (alternatingHistory.length > 0 && alternatingHistory[alternatingHistory.length - 1].role === 'user') {
+      alternatingHistory.pop();
+    }
 
     // 1. Direct BYOK call if user configured their own key in localStorage
     if (byokKey) {
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(byokKey)}`;
-      const contents = recentHistory.map((m) => ({ role: m.role, parts: [{ text: m.text.slice(0, 700) }] }));
+      const contents = alternatingHistory.map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
       contents.push({ role: 'user', parts: [{ text: prompt }] });
 
       const res = await fetch(apiUrl, {
@@ -106,7 +115,7 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
         body: JSON.stringify({
           system_instruction: { parts: [{ text: `${GEMINI_SYSTEM_PROMPT}\n\nGüncel Veri:\n${contextSummary}` }] },
           contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 650 }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
         })
       });
       const data = await res.json();
@@ -117,8 +126,8 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
         data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
           ? data.candidates[0].content.parts.map((pt) => pt.text || '').join('\n').trim()
           : '';
-      if (reply) return { reply, source: `Gemini (${model} • Kişisel Anahtar)` };
-      throw new Error('Boş yanıt');
+      if (reply) return { reply, source: `Gemini (${model} • Canlı AI)` };
+      throw new Error('Gemini boş yanıt döndü');
     }
 
     // 2. Netlify Serverless Proxy (/.netlify/functions/seyyah-ai) on http/https
@@ -130,7 +139,7 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
           prompt,
           model,
           context: contextSummary,
-          history: recentHistory
+          history: alternatingHistory
         })
       });
       if (res.ok) {
@@ -1760,8 +1769,9 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
       const trimmed = String(queryText || '').trim();
       if (!trimmed) return;
 
+      const userMsgId = ++messageSeq;
       chatHistory.push({
-        id: ++messageSeq,
+        id: userMsgId,
         role: 'user',
         time: nowTimeLabel(),
         text: trimmed,
@@ -1774,20 +1784,21 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
         role: 'assistant',
         loading: true,
         time: nowTimeLabel(),
-        text: '✨ Seyyah Rehberi düşünüyor...',
+        text: '✨ Gemini düşünüyor...',
         cards: []
       });
       renderMessages();
 
+      let geminiErrMsg = '';
       try {
-        const aiRes = await askGeminiEngine(trimmed, provinces, safeCtx);
+        const aiRes = await askGeminiEngine(trimmed, provinces, safeCtx, userMsgId);
         const idx = chatHistory.findIndex((m) => m.id === loadingId);
         if (aiRes && aiRes.reply) {
           const mentionedCards = extractMentionedProvinceCards(aiRes.reply, provinces, normalizeFn);
           const aiMsg = {
             id: loadingId,
             role: 'assistant',
-            time: `${nowTimeLabel()} • ${aiRes.source}`,
+            time: `${nowTimeLabel()} • 🟢 ${aiRes.source}`,
             text: aiRes.reply,
             cards: mentionedCards
           };
@@ -1798,8 +1809,9 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
           return;
         }
       } catch (err) {
+        geminiErrMsg = err.message || 'Bilinmeyen hata';
         if (typeof safeCtx.showToast === 'function') {
-          safeCtx.showToast(`⚠️ Gemini API hatası (çevrimdışı motora geçildi): ${err.message}`);
+          safeCtx.showToast(`⚠️ Gemini API hatası: ${geminiErrMsg}`);
         }
       }
 
@@ -1808,7 +1820,7 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
       const fallbackMsg = {
         id: loadingId,
         role: 'assistant',
-        time: `${nowTimeLabel()} • Çevrimdışı Motor`,
+        time: `${nowTimeLabel()} • ⚠️ Çevrimdışı Motor${geminiErrMsg ? ` (Gemini: ${geminiErrMsg})` : ''}`,
         text: reply.text,
         cards: reply.cards || []
       };
