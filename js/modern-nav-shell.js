@@ -27,7 +27,8 @@
         { view: 'photoWall', icon: '🖼️', title: '162 Mozaik', subtitle: 'Tüm illerin fotoğraf duvarı' },
         { view: 'gallery', icon: '📸', title: 'Galeri', subtitle: 'Yüksek çözünürlüklü şehir kareleri' },
         { view: 'cinematicTour', icon: '🎬', title: 'Sinematik Tur', subtitle: 'Otomatik görsel Anadolu yolculuğu' },
-        { view: 'skyMap', icon: '🌌', title: 'Anadolu Semâsı (81 Yıldız)', subtitle: '81 il takımyıldızı ve rasathane gök haritası' }
+        { view: 'skyMap', icon: '🌌', title: 'Anadolu Semâsı (81 Yıldız)', subtitle: '81 il takımyıldızı ve rasathane gök haritası' },
+        { view: 'natureWonders', icon: '🏔️', title: 'Tabiat Harikaları & Kaplıcalar', subtitle: '28 kanyon, şelale, mağara ve şifalı termal atlası' }
       ]
     },
     {
@@ -64,7 +65,9 @@
         { view: 'civLayers', icon: '🏛️', title: 'Medeniyet & Zaman Felsefesi', subtitle: 'Göbeklitepe\'den Selimiye\'ye taşın hafızası' },
         { view: 'reader', icon: '📖', title: 'Manifesto & Makaleler', subtitle: '7 bölümlük Sefer Der Vatan külliyatı' },
         { view: 'divan', icon: '🖋️', title: 'Şiir, Türkü & Edebiyat Divanı', subtitle: 'Tanpınar Beş Şehir, Yunus ve ozanlar antolojisi' },
-        { view: 'proverbs', icon: '🗣️', title: 'Anadolu Sözleri & Yol Duaları', subtitle: '7 bölge atasözleri, yöresel ağız ve dualar' }
+        { view: 'proverbs', icon: '🗣️', title: 'Anadolu Sözleri & Yol Duaları', subtitle: '7 bölge atasözleri, yöresel ağız ve dualar' },
+        { view: 'makamAtlas', icon: '🎶', title: 'Anadolu Makamları & Mûsikî Şifası', subtitle: 'Fârâbî makam şifası, canlı ney ve 7 bölge türküleri' },
+        { view: 'quoteVault', icon: '🔖', title: 'Hikmet & Alıntı Hazinesi (180+)', subtitle: '81 il iktibası, fikir kartları ve kişisel seçki' }
       ]
     },
     {
@@ -79,7 +82,9 @@
         { view: 'budget', icon: '💰', title: 'Bütçe', subtitle: 'Seyahat masraf ve harcama planı' },
         { view: 'packing', icon: '🎒', title: 'Sırt Çantası', subtitle: 'Akıllı bavul ve ekipman listesi' },
         { view: 'seasons', icon: '🌤️', title: 'Mevsimler', subtitle: 'İklim ve en iyi zamanlama' },
-        { view: 'caravanserai', icon: '🏰', title: 'Kervansaray & İpek Yolu', subtitle: '12 tarihi Sultan Hanı ve 81 GSB menzil rehberi' }
+        { view: 'caravanserai', icon: '🏰', title: 'Kervansaray & İpek Yolu', subtitle: '12 tarihi Sultan Hanı ve 81 GSB menzil rehberi' },
+        { view: 'mesopotamia', icon: '🏜️', title: 'Mezopotamya (0/9) Özel Seferi', subtitle: 'Güneydoğu 9 il 2-Opt koridoru ve 45 gün planı' },
+        { view: 'expeditionLog', icon: '🗓️', title: '39 İl Sefer Günlüğü (195 Gün)', subtitle: 'Fethedilen 39 menzilin kronolojik hatırat defteri' }
       ]
     },
     {
@@ -93,7 +98,9 @@
         { view: 'timeline', icon: '⏳', title: 'Kronoloji', subtitle: 'Çağlar boyu Anadolu tarih şeridi' },
         { view: 'gastronomy', icon: '🍽️', title: 'Lezzetler', subtitle: '81 ilin yöresel mutfak atlası' },
         { view: 'libraries', icon: '📚', title: 'Kütüphaneler', subtitle: 'Tarihi ve modern kültür kütüphaneleri' },
-        { view: 'reader', icon: '📖', title: 'Makaleler', subtitle: 'Kültür ve seyahat okuma köşesi' }
+        { view: 'reader', icon: '📖', title: 'Makaleler', subtitle: 'Kültür ve seyahat okuma köşesi' },
+        { view: 'architecture', icon: '🕌', title: 'Mimari Şaheserler & Hendese', subtitle: 'Selâtin camileri, taş köprüler ve darüşşifalar' },
+        { view: 'bazaar', icon: '🏺', title: 'Zanaatlar & Tarihi Çarşılar', subtitle: 'Ahîlik mirası, 24 geleneksel sanat ve bedestenler' }
       ]
     },
     {

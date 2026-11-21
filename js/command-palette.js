@@ -491,6 +491,76 @@
         run: () => safeCall('openView', 'proverbs')
       },
       {
+        id: 'action-nature-wonders',
+        type: 'action',
+        icon: '🏔️',
+        title: 'Anadolu Tabiat Harikaları & Şifalı Kaplıcalar Atlası',
+        subtitle: '28 kanyon, şelale, krater gölü, mağara ve şifalı termal kaynaklar',
+        category: 'Keşif',
+        keywords: 'tabiat doga kanyon selale magara kaplica termal gol',
+        run: () => safeCall('openView', 'natureWonders')
+      },
+      {
+        id: 'action-bazaar',
+        type: 'action',
+        icon: '🏺',
+        title: 'Geleneksel Sanatlar, Zanaatlar & Tarihi Çarşılar Bedesteni',
+        subtitle: 'Ahîlik ahlâkı, 24 el sanatı (çini, telkâri, oltu, lületaşı, ipek) ve hanlar',
+        category: 'Kültür & Miras',
+        keywords: 'zanaat sanat carsi bedesten ahilik cini telkari oltu ipek hali',
+        run: () => safeCall('openView', 'bazaar')
+      },
+      {
+        id: 'action-expedition-log',
+        type: 'action',
+        icon: '🗓️',
+        title: '39 Fethedilen İl Sefer Günlüğü (195 Gün • 10.898 km)',
+        subtitle: 'Gezilen 39 menzilin çift fotoğraflı kronolojik hatıratı ve anı defteri',
+        category: 'Rota & Plan',
+        keywords: 'sefer gunlugu 39 il 195 gun hatirat kronoloji ani',
+        run: () => safeCall('openView', 'expeditionLog')
+      },
+      {
+        id: 'action-mesopotamia',
+        type: 'action',
+        icon: '🏜️',
+        title: 'Mezopotamya (Güneydoğu Anadolu 0/9) Özel Sefer Merkezi',
+        subtitle: 'Gaziantep ➔ Şırnak 9 duraklı 2-Opt koridor haritası ve 45 gün master planı',
+        category: 'Rota & Plan',
+        keywords: 'mezopotamya guneydogu 9 il gaziantep mardin sanliurfa diyarbakir',
+        run: () => safeCall('openView', 'mesopotamia')
+      },
+      {
+        id: 'action-makam-atlas',
+        type: 'action',
+        icon: '🎶',
+        title: 'Anadolu Makamları, Fârâbî Mûsikî Şifası & Türkü Atlası',
+        subtitle: '8 klasik makamın ruh şifası, canlı makam dem sentezleyici ve 7 bölge türküleri',
+        category: 'İrfan & Felsefe',
+        keywords: 'makam musiki farabi sifa hicaz rast ussak ney turku bozlak',
+        run: () => safeCall('openView', 'makamAtlas')
+      },
+      {
+        id: 'action-architecture',
+        type: 'action',
+        icon: '🕌',
+        title: 'Anadolu Mimari Şaheserleri & Kubbe/Mukarnas Hendesesi',
+        subtitle: '24 selâtin camii, taş köprü, darüşşifa ve interaktif SVG mimari kesit',
+        category: 'Kültür & Miras',
+        keywords: 'mimari kubbe kemer mukarnas hendese selimiye suleymaniye darussifa kopru',
+        run: () => safeCall('openView', 'architecture')
+      },
+      {
+        id: 'action-quote-vault',
+        type: 'action',
+        icon: '🔖',
+        title: 'Hikmet & Alıntı Hazinesi (302 Edebî İktibas & Fikir Kartı)',
+        subtitle: '81 ilin ruhu, klasik beyitler, tam ekran tefekkür destesi ve kişisel seçki',
+        category: 'İrfan & Felsefe',
+        keywords: 'hikmet alinti iktibas soz hazine fikir karti',
+        run: () => safeCall('openView', 'quoteVault')
+      },
+      {
         id: 'action-pomodoro',
         type: 'action',
         icon: '🍅',

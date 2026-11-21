@@ -239,6 +239,9 @@
     if (state.currentView === 'halvet' && viewName !== 'halvet' && mods.halvet && typeof mods.halvet.stop === 'function') {
       mods.halvet.stop();
     }
+    if (state.currentView === 'makamAtlas' && viewName !== 'makamAtlas' && mods.makamAtlas && typeof mods.makamAtlas.stop === 'function') {
+      mods.makamAtlas.stop();
+    }
 
     const normalized = viewName === 'library' ? 'libraries' : viewName;
     if (normalized === 'dashboard') {
@@ -296,6 +299,13 @@
       workLog: mods.workLog,
       certificate: mods.certificate,
       proverbs: mods.proverbs,
+      natureWonders: mods.natureWonders,
+      bazaar: mods.bazaar,
+      expeditionLog: mods.expeditionLog,
+      mesopotamia: mods.mesopotamia,
+      makamAtlas: mods.makamAtlas,
+      architecture: mods.architecture,
+      quoteVault: mods.quoteVault,
       pomodoro: mods.pomodoro,
       achievements: mods.achievements,
       photoWall: mods.photoWall,
@@ -344,6 +354,7 @@
       '#aiMood', '#aiWriter', '#aiBattle', '#aiQuiz', '#aiSearch', '#aiChef',
       '#irfanAtlas', '#sevenValleys', '#halvet', '#hikmetMeclisi', '#ethos', '#civLayers',
       '#skyMap', '#caravanserai', '#divan', '#workLog', '#certificate', '#proverbs',
+      '#natureWonders', '#bazaar', '#expeditionLog', '#mesopotamia', '#makamAtlas', '#architecture', '#quoteVault',
       '#pomodoro', '#achievements', '#photoWall', '#bucketList', '#deepStats', '#admin'
     ].includes(h)) {
       openView(h.slice(1), false);
@@ -391,13 +402,13 @@
     if (mods.ambientMotion && typeof mods.ambientMotion.init === 'function') {
       mods.ambientMotion.init(ctx);
     }
-    // Wave 4, 5, 6, 7 & 8 Next-Gen AI, Modern Mega-Nav, Philosophy, Orchestrator & Luxury UX Enhancer Modules
+    // Wave 4-9 Next-Gen AI, Modern Mega-Nav, Philosophy, Quick-Peek, Orchestrator & Luxury UX Enhancer Modules
     [
       'modernNav', 'aiHud',
       'floatingCopilot', 'aiCityConcierge', 'liveWeather', 'interactive3d',
       'voiceNarrator', 'storyReels', 'quickDock', 'shareCard',
       'mobileUx', 'pomodoro', 'achievements', 'dailySpotlight', 'proTools',
-      'citySoul', 'philosophyRibbon', 'cityNavBar', 'dashboardOrchestrator'
+      'citySoul', 'philosophyRibbon', 'cityNavBar', 'quickPeek', 'dashboardOrchestrator'
     ].forEach(modKey => {
       if (mods[modKey] && typeof mods[modKey].init === 'function') {
         try { mods[modKey].init(ctx); } catch (e) { console.warn('[Seyyah] Module init error:', modKey, e); }

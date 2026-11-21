@@ -1,0 +1,1568 @@
+/* ==========================================================================
+   ANADOLU SEYAHATNAMESİ — WAVE 9 ENCYCLOPEDIA & HARMONY STYLESHEET
+   Visual Cohesion, Elevation, Mobile & Light/Dark Contrast Parity
+   --------------------------------------------------------------------------
+   1. Wave 9 Design Tokens (Obsidian Night & Alabaster/Parchment Light)
+   2. Unified Wave 9 Studio Shells, Hero Banners & Tabular Numerals
+   3. Signature Elevations for All Wave 9 Encyclopedia Modules:
+      - Nature Wonders & Thermal Atlas (.nw-* / .nature-*)
+      - Artisan Crafts & Historic Bazaars (.bz-* / .bazaar-*)
+      - 39-Province Expedition Logbook Timeline (.el-* / .explog-*)
+      - Mesopotamia 9-Province Command Center (.mezo-* / .msp-*)
+      - Anatolian Makams & Healing Music (.mkm-* / .makam-*)
+      - Architectural Masterpieces & Geometry (.arch-*)
+      - Quick-Peek City Modal (#seyyah-quick-peek-modal / .qp-*)
+      - Wisdom & Quote Vault (.qv-* / .qvault-*)
+   4. Full html body.light-theme Contrast Parity
+   5. Keyboard Accessibility (:focus-visible)
+   6. Tablet & Mobile Responsive Rules (@media (max-width: 768px))
+   7. @media (prefers-reduced-motion: reduce) & @media print Support
+   CRITICAL GUARDRAIL: NEVER overrides .cmd-overlay display property.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. WAVE 9 DESIGN TOKENS (OBSIDIAN NIGHT & ALABASTER/PARCHMENT LIGHT)
+   -------------------------------------------------------------------------- */
+:root {
+  --w9-surface: rgba(10, 16, 31, 0.9);
+  --w9-surface-card: linear-gradient(160deg, rgba(16, 24, 43, 0.88) 0%, rgba(9, 14, 27, 0.94) 100%);
+  --w9-surface-hero: linear-gradient(140deg, rgba(13, 21, 40, 0.95) 0%, rgba(9, 14, 28, 0.97) 56%, rgba(14, 27, 39, 0.93) 100%);
+  --w9-surface-parchment: linear-gradient(155deg, rgba(24, 19, 13, 0.95) 0%, rgba(14, 20, 35, 0.95) 100%);
+  --w9-surface-subtle: rgba(255, 255, 255, 0.045);
+  --w9-surface-hover: rgba(255, 255, 255, 0.085);
+  --w9-surface-input: rgba(7, 12, 24, 0.82);
+  --w9-surface-modal: linear-gradient(160deg, rgba(12, 19, 36, 0.98) 0%, rgba(8, 12, 24, 0.99) 100%);
+
+  --w9-ink-primary: #f8fafc;
+  --w9-ink-secondary: #cbd5e1;
+  --w9-ink-muted: #94a3b8;
+  --w9-ink-cyan: #67e8f9;
+  --w9-ink-gold: #fde68a;
+  --w9-ink-emerald: #6ee7b7;
+  --w9-ink-amber: #fcd34d;
+  --w9-ink-violet: #d8b4fe;
+  --w9-ink-rose: #fda4af;
+
+  --w9-cyan: #00f2fe;
+  --w9-gold: #d4af37;
+  --w9-amber: #f59e0b;
+  --w9-emerald: #10b981;
+  --w9-teal: #14b8a6;
+  --w9-violet: #a855f7;
+  --w9-terracotta: #ea580c;
+
+  --w9-hairline: rgba(255, 255, 255, 0.095);
+  --w9-hairline-strong: rgba(0, 242, 254, 0.36);
+  --w9-gold-hairline: rgba(212, 175, 55, 0.34);
+  --w9-emerald-hairline: rgba(16, 185, 129, 0.32);
+
+  --w9-shadow-card:
+    0 14px 36px -14px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --w9-shadow-elevated:
+    0 22px 48px -16px rgba(0, 0, 0, 0.78),
+    0 0 28px -10px rgba(0, 242, 254, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --w9-shadow-gold:
+    0 20px 44px -16px rgba(0, 0, 0, 0.78),
+    0 0 26px -10px rgba(212, 175, 55, 0.24),
+    inset 0 1px 0 rgba(254, 243, 199, 0.14);
+  --w9-shadow-modal:
+    0 32px 72px -18px rgba(0, 0, 0, 0.88),
+    0 0 36px -12px rgba(0, 242, 254, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+
+  --w9-radius-sm: 10px;
+  --w9-radius-md: 14px;
+  --w9-radius-lg: 18px;
+  --w9-radius-xl: 22px;
+
+  --w9-font-heading: var(--font-heading, 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif);
+  --w9-font-serif: 'Georgia', 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
+  --w9-font-mono: ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  --w9-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html body.light-theme {
+  --w9-surface: rgba(255, 255, 255, 0.96);
+  --w9-surface-card: linear-gradient(165deg, rgba(255, 255, 255, 0.99) 0%, rgba(247, 249, 252, 0.96) 100%);
+  --w9-surface-hero: linear-gradient(145deg, rgba(255, 253, 248, 0.99) 0%, rgba(246, 248, 252, 0.97) 58%, rgba(240, 249, 255, 0.96) 100%);
+  --w9-surface-parchment: linear-gradient(160deg, rgba(255, 252, 244, 0.99) 0%, rgba(248, 242, 227, 0.96) 100%);
+  --w9-surface-subtle: rgba(15, 23, 42, 0.042);
+  --w9-surface-hover: rgba(2, 132, 199, 0.08);
+  --w9-surface-input: #ffffff;
+  --w9-surface-modal: linear-gradient(165deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 250, 252, 0.98) 100%);
+
+  --w9-ink-primary: #0f172a;
+  --w9-ink-secondary: #334155;
+  --w9-ink-muted: #475569;
+  --w9-ink-cyan: #0369a1;
+  --w9-ink-gold: #92400e;
+  --w9-ink-emerald: #065f46;
+  --w9-ink-amber: #b45309;
+  --w9-ink-violet: #5b21b6;
+  --w9-ink-rose: #9f1239;
+
+  --w9-cyan: #0284c7;
+  --w9-gold: #a16207;
+  --w9-amber: #b45309;
+  --w9-emerald: #047857;
+  --w9-teal: #0f766e;
+  --w9-violet: #6d28d9;
+  --w9-terracotta: #c2410c;
+
+  --w9-hairline: rgba(15, 23, 42, 0.11);
+  --w9-hairline-strong: rgba(2, 132, 199, 0.38);
+  --w9-gold-hairline: rgba(161, 98, 7, 0.32);
+  --w9-emerald-hairline: rgba(4, 120, 87, 0.3);
+
+  --w9-shadow-card:
+    0 10px 28px -12px rgba(15, 23, 42, 0.11),
+    0 2px 6px -2px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  --w9-shadow-elevated:
+    0 18px 40px -14px rgba(15, 23, 42, 0.15),
+    0 4px 14px -6px rgba(2, 132, 199, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  --w9-shadow-gold:
+    0 16px 38px -14px rgba(41, 32, 18, 0.16),
+    0 4px 16px -6px rgba(180, 83, 9, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  --w9-shadow-modal:
+    0 28px 64px -16px rgba(15, 23, 42, 0.24),
+    0 6px 18px -6px rgba(2, 132, 199, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. UNIFIED WAVE 9 STUDIO SHELLS, HERO BANNERS & TABULAR NUMERALS
+   -------------------------------------------------------------------------- */
+.nw-studio,
+.nw-shell,
+.nw-root,
+.nature-studio,
+.nature-shell,
+.nature-root,
+.bz-studio,
+.bz-shell,
+.bz-root,
+.bazaar-studio,
+.bazaar-shell,
+.bazaar-root,
+.el-studio,
+.el-shell,
+.el-root,
+.elt-studio,
+.elt-shell,
+.elt-root,
+.explog-studio,
+.explog-shell,
+.explog-root,
+.mezo-studio,
+.mezo-shell,
+.mezo-root,
+.msp-studio,
+.msp-shell,
+.msp-root,
+.mkm-studio,
+.mkm-shell,
+.mkm-root,
+.makam-studio,
+.makam-shell,
+.makam-root,
+.arch-studio,
+.arch-shell,
+.arch-root,
+.qv-studio,
+.qv-shell,
+.qv-root,
+.qvault-studio,
+.qvault-shell,
+.qvault-root {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.nw-hero,
+.nature-hero,
+.bz-hero,
+.bazaar-hero,
+.el-hero,
+.elt-hero,
+.explog-hero,
+.mezo-hero,
+.msp-hero,
+.mkm-hero,
+.makam-hero,
+.arch-hero,
+.qv-hero,
+.qvault-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--w9-radius-xl);
+  border: 1px solid var(--w9-hairline);
+  box-shadow: var(--w9-shadow-elevated);
+}
+
+.nw-hero::before,
+.nature-hero::before,
+.bz-hero::before,
+.bazaar-hero::before,
+.el-hero::before,
+.elt-hero::before,
+.explog-hero::before,
+.mezo-hero::before,
+.msp-hero::before,
+.mkm-hero::before,
+.makam-hero::before,
+.arch-hero::before,
+.qv-hero::before,
+.qvault-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--w9-gold) 24%, var(--w9-cyan) 64%, var(--w9-emerald) 88%, transparent);
+  opacity: 0.88;
+  pointer-events: none;
+}
+
+.nw-hero h1,
+.nw-hero h2,
+.nw-title,
+.nature-hero h1,
+.nature-hero h2,
+.nature-title,
+.bz-hero h1,
+.bz-hero h2,
+.bz-title,
+.bazaar-hero h1,
+.bazaar-hero h2,
+.bazaar-title,
+.el-hero h1,
+.el-hero h2,
+.el-title,
+.elt-hero h1,
+.elt-hero h2,
+.elt-title,
+.explog-hero h1,
+.explog-hero h2,
+.explog-title,
+.mezo-hero h1,
+.mezo-hero h2,
+.mezo-title,
+.msp-hero h1,
+.msp-hero h2,
+.msp-title,
+.mkm-hero h1,
+.mkm-hero h2,
+.mkm-title,
+.makam-hero h1,
+.makam-hero h2,
+.makam-title,
+.arch-hero h1,
+.arch-hero h2,
+.arch-title,
+.qv-hero h1,
+.qv-hero h2,
+.qv-title,
+.qvault-hero h1,
+.qvault-hero h2,
+.qvault-title {
+  font-family: var(--w9-font-heading);
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+/* Crisp Tabular Numerals on All Wave 9 KPIs, Plates, Coordinates & Metrics */
+.nw-kpi-val,
+.nw-kpi-value,
+.nw-stat-val,
+.nw-plate,
+.nw-temp-badge,
+.nature-kpi-val,
+.nature-stat-val,
+.nature-plate,
+.bz-kpi-val,
+.bz-kpi-value,
+.bz-stat-val,
+.bz-plate,
+.bazaar-kpi-val,
+.bazaar-stat-val,
+.el-kpi-val,
+.el-kpi-value,
+.el-stat-val,
+.el-day-badge,
+.el-plate,
+.elt-kpi-value,
+.elt-day-badge,
+.elt-stop-index,
+.elt-plate-badge,
+.elt-pill-count,
+.explog-kpi-val,
+.explog-day-badge,
+.mezo-kpi-val,
+.mezo-kpi-value,
+.mezo-stat-val,
+.mezo-km,
+.mezo-plate,
+.msp-kpi-val,
+.msp-km,
+.mkm-kpi-val,
+.mkm-kpi-value,
+.mkm-stat-val,
+.mkm-freq-badge,
+.makam-kpi-val,
+.makam-freq,
+.arch-kpi-val,
+.arch-kpi-value,
+.arch-stat-val,
+.arch-year,
+.arch-plate,
+.qp-plate,
+.qp-kpi-val,
+.qp-stat-val,
+.qv-kpi-val,
+.qv-kpi-value,
+.qv-stat-val,
+.qv-count,
+.qvault-kpi-val,
+.qvault-count {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* --------------------------------------------------------------------------
+   3. SIGNATURE ELEVATIONS FOR WAVE 9 ENCYCLOPEDIA MODULES
+   -------------------------------------------------------------------------- */
+
+/* 3A. Unified Card, Panel & Inspector Elevation */
+.nw-kpi-card,
+.nw-card,
+.nw-panel,
+.nw-controls,
+.nw-inspector,
+.nature-kpi-card,
+.nature-card,
+.nature-panel,
+.nature-controls,
+.bz-kpi-card,
+.bz-card,
+.bz-panel,
+.bz-controls,
+.bz-inspector,
+.bazaar-kpi-card,
+.bazaar-card,
+.bazaar-panel,
+.bazaar-controls,
+.el-kpi-card,
+.el-card,
+.el-panel,
+.el-controls,
+.el-entry,
+.elt-kpi-card,
+.elt-stop-card,
+.elt-chapter-banner,
+.elt-controls,
+.elt-detail-box,
+.elt-memoir-saved,
+.elt-editor-box,
+.explog-kpi-card,
+.explog-card,
+.explog-panel,
+.explog-entry,
+.mezo-kpi-card,
+.mezo-card,
+.mezo-panel,
+.mezo-controls,
+.mezo-route-card,
+.mezo-prov-card,
+.msp-kpi-card,
+.msp-card,
+.msp-panel,
+.msp-route-card,
+.mkm-kpi-card,
+.mkm-card,
+.mkm-panel,
+.mkm-controls,
+.mkm-player,
+.makam-kpi-card,
+.makam-card,
+.makam-panel,
+.makam-player,
+.arch-kpi-card,
+.arch-card,
+.arch-panel,
+.arch-controls,
+.arch-inspector,
+.qv-kpi-card,
+.qv-card,
+.qv-panel,
+.qv-controls,
+.qv-spotlight,
+.qvault-kpi-card,
+.qvault-card,
+.qvault-panel,
+.qvault-spotlight {
+  border-radius: var(--w9-radius-lg);
+  border: 1px solid var(--w9-hairline);
+  box-shadow: var(--w9-shadow-card);
+  transition:
+    transform 210ms var(--w9-ease),
+    border-color 210ms var(--w9-ease),
+    box-shadow 210ms var(--w9-ease),
+    background-color 210ms var(--w9-ease);
+}
+
+.nw-card:hover,
+.nature-card:hover,
+.bz-card:hover,
+.bazaar-card:hover,
+.el-card:hover,
+.el-entry:hover,
+.elt-stop-card:hover,
+.explog-card:hover,
+.explog-entry:hover,
+.mezo-card:hover,
+.mezo-prov-card:hover,
+.mezo-route-card:hover,
+.msp-card:hover,
+.msp-route-card:hover,
+.mkm-card:hover,
+.makam-card:hover,
+.arch-card:hover,
+.qv-card:hover,
+.qvault-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--w9-hairline-strong);
+  box-shadow: var(--w9-shadow-elevated);
+}
+
+/* 3B. Nature Wonders & Thermal Atlas (.nw-* / .nature-*) */
+.nw-thermal-card,
+.nw-spring-card,
+.nature-thermal-card {
+  border-color: var(--w9-emerald-hairline);
+}
+
+.nw-temp-badge,
+.nature-temp-badge {
+  font-family: var(--w9-font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* 3C. Artisan Crafts & Historic Bazaars (.bz-* / .bazaar-*) */
+.bz-ahilik-box,
+.bz-guild-quote,
+.bazaar-ahilik-box,
+.bazaar-guild-quote {
+  font-family: var(--w9-font-serif);
+  line-height: 1.72;
+  border-left: 3px solid var(--w9-gold);
+}
+
+/* 3D. 39-Province Expedition Logbook Timeline (.el-* / .explog-*) */
+.el-timeline,
+.elt-timeline,
+.explog-timeline {
+  position: relative;
+}
+
+.el-entry-quote,
+.el-memoir,
+.el-reflection,
+.elt-quote-block,
+.elt-memoir-saved-body,
+.elt-reflection-box,
+.explog-memoir,
+.explog-quote {
+  font-family: var(--w9-font-serif);
+  line-height: 1.76;
+}
+
+/* 3E. Mesopotamia 9-Province Command Center (.mezo-* / .msp-*) */
+.mezo-corridor-map,
+.mezo-stage,
+.mezo-svg-wrap,
+.msp-corridor-map,
+.msp-stage,
+.msp-svg-wrap {
+  border-radius: var(--w9-radius-lg);
+  box-shadow: var(--w9-shadow-elevated);
+}
+
+.mezo-prov-card:hover,
+.msp-card:hover {
+  border-color: var(--w9-gold-hairline);
+  box-shadow: var(--w9-shadow-gold);
+}
+
+/* 3F. Anatolian Makams & Healing Music (.mkm-* / .makam-*) */
+.mkm-player,
+.mkm-synth-bar,
+.mkm-ney-deck,
+.makam-player,
+.makam-synth-bar {
+  border-color: var(--w9-gold-hairline);
+  box-shadow: var(--w9-shadow-gold);
+}
+
+.mkm-verse,
+.mkm-lyrics,
+.mkm-farabi-note,
+.makam-verse,
+.makam-lyrics {
+  font-family: var(--w9-font-serif);
+  line-height: 1.78;
+}
+
+/* 3G. Architectural Masterpieces & Geometry (.arch-*) */
+.arch-geometry-stage,
+.arch-diagram-wrap,
+.arch-svg-wrap,
+.arch-blueprint {
+  border-radius: var(--w9-radius-lg);
+  box-shadow: var(--w9-shadow-elevated);
+}
+
+.arch-inscription,
+.arch-kitabe,
+.arch-quote {
+  font-family: var(--w9-font-serif);
+  line-height: 1.75;
+}
+
+/* 3H. Quick-Peek City Modal (#seyyah-quick-peek-modal / .qp-*) */
+#seyyah-quick-peek-modal {
+  z-index: 1250;
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+
+#seyyah-quick-peek-modal .qp-dialog,
+#seyyah-quick-peek-modal .qp-modal,
+#seyyah-quick-peek-modal .qp-card,
+#seyyah-quick-peek-modal .qp-content,
+#seyyah-quick-peek-modal .modal-content {
+  position: relative;
+  overflow: hidden;
+  background: var(--w9-surface-modal);
+  border: 1px solid var(--w9-hairline-strong);
+  border-radius: var(--w9-radius-xl);
+  box-shadow: var(--w9-shadow-modal);
+  color: var(--w9-ink-primary);
+}
+
+#seyyah-quick-peek-modal .qp-dialog::before,
+#seyyah-quick-peek-modal .qp-modal::before,
+#seyyah-quick-peek-modal .qp-card::before,
+#seyyah-quick-peek-modal .qp-content::before,
+#seyyah-quick-peek-modal .modal-content::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--w9-gold) 24%, var(--w9-cyan) 68%, var(--w9-emerald) 90%, transparent);
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.qp-quote,
+.qp-epigraph,
+.qp-poem {
+  font-family: var(--w9-font-serif);
+  font-style: italic;
+  line-height: 1.72;
+}
+
+.qp-action-btn,
+.qp-chip,
+.qp-close-btn {
+  transition:
+    background-color 180ms var(--w9-ease),
+    border-color 180ms var(--w9-ease),
+    color 180ms var(--w9-ease),
+    transform 180ms var(--w9-ease);
+}
+
+/* 3I. Wisdom & Quote Vault (.qv-* / .qvault-*) */
+.qv-spotlight,
+.qvault-spotlight {
+  border-color: var(--w9-gold-hairline);
+  box-shadow: var(--w9-shadow-gold);
+}
+
+.qv-quote-text,
+.qv-spotlight-text,
+.qv-excerpt,
+.qvault-quote-text,
+.qvault-spotlight-text {
+  font-family: var(--w9-font-serif);
+  line-height: 1.78;
+}
+
+/* --------------------------------------------------------------------------
+   4. FULL html body.light-theme CONTRAST PARITY FOR ALL WAVE 9 MODULES
+   -------------------------------------------------------------------------- */
+
+/* 4A. Hero Banners in Light Theme */
+html body.light-theme .nw-hero,
+html body.light-theme .nature-hero,
+html body.light-theme .bz-hero,
+html body.light-theme .bazaar-hero,
+html body.light-theme .el-hero,
+html body.light-theme .elt-hero,
+html body.light-theme .explog-hero,
+html body.light-theme .mezo-hero,
+html body.light-theme .msp-hero,
+html body.light-theme .mkm-hero,
+html body.light-theme .makam-hero,
+html body.light-theme .arch-hero,
+html body.light-theme .qv-hero,
+html body.light-theme .qvault-hero {
+  background: var(--w9-surface-hero);
+  border-color: var(--w9-hairline);
+  color: var(--w9-ink-primary);
+  box-shadow: var(--w9-shadow-elevated);
+}
+
+/* 4B. Cards, Panels, Controls & Inspectors in Light Theme */
+html body.light-theme .nw-kpi-card,
+html body.light-theme .nw-card,
+html body.light-theme .nw-panel,
+html body.light-theme .nw-controls,
+html body.light-theme .nw-inspector,
+html body.light-theme .nature-kpi-card,
+html body.light-theme .nature-card,
+html body.light-theme .nature-panel,
+html body.light-theme .nature-controls,
+html body.light-theme .bz-kpi-card,
+html body.light-theme .bz-card,
+html body.light-theme .bz-panel,
+html body.light-theme .bz-controls,
+html body.light-theme .bz-inspector,
+html body.light-theme .bazaar-kpi-card,
+html body.light-theme .bazaar-card,
+html body.light-theme .bazaar-panel,
+html body.light-theme .bazaar-controls,
+html body.light-theme .el-kpi-card,
+html body.light-theme .el-card,
+html body.light-theme .el-panel,
+html body.light-theme .el-controls,
+html body.light-theme .el-entry,
+html body.light-theme .elt-kpi-card,
+html body.light-theme .elt-stop-card,
+html body.light-theme .elt-chapter-banner,
+html body.light-theme .elt-controls,
+html body.light-theme .elt-detail-box,
+html body.light-theme .elt-memoir-saved,
+html body.light-theme .elt-editor-box,
+html body.light-theme .explog-kpi-card,
+html body.light-theme .explog-card,
+html body.light-theme .explog-panel,
+html body.light-theme .explog-entry,
+html body.light-theme .mezo-kpi-card,
+html body.light-theme .mezo-card,
+html body.light-theme .mezo-panel,
+html body.light-theme .mezo-controls,
+html body.light-theme .mezo-route-card,
+html body.light-theme .mezo-prov-card,
+html body.light-theme .mezo-corridor-map,
+html body.light-theme .mezo-stage,
+html body.light-theme .msp-kpi-card,
+html body.light-theme .msp-card,
+html body.light-theme .msp-panel,
+html body.light-theme .msp-route-card,
+html body.light-theme .mkm-kpi-card,
+html body.light-theme .mkm-card,
+html body.light-theme .mkm-panel,
+html body.light-theme .mkm-controls,
+html body.light-theme .mkm-player,
+html body.light-theme .makam-kpi-card,
+html body.light-theme .makam-card,
+html body.light-theme .makam-panel,
+html body.light-theme .makam-player,
+html body.light-theme .arch-kpi-card,
+html body.light-theme .arch-card,
+html body.light-theme .arch-panel,
+html body.light-theme .arch-controls,
+html body.light-theme .arch-inspector,
+html body.light-theme .arch-geometry-stage,
+html body.light-theme .arch-blueprint,
+html body.light-theme .qv-kpi-card,
+html body.light-theme .qv-card,
+html body.light-theme .qv-panel,
+html body.light-theme .qv-controls,
+html body.light-theme .qvault-kpi-card,
+html body.light-theme .qvault-card,
+html body.light-theme .qvault-panel {
+  background: var(--w9-surface-card);
+  border-color: var(--w9-hairline);
+  color: var(--w9-ink-primary);
+  box-shadow: var(--w9-shadow-card);
+}
+
+/* 4C. Warm Parchment Surfaces (Quotes, Ahilik Lore, Farabi Notes, Vault Spotlight) */
+html body.light-theme .bz-ahilik-box,
+html body.light-theme .bz-guild-quote,
+html body.light-theme .bazaar-ahilik-box,
+html body.light-theme .el-entry-quote,
+html body.light-theme .el-reflection,
+html body.light-theme .elt-quote-block,
+html body.light-theme .elt-reflection-box,
+html body.light-theme .explog-quote,
+html body.light-theme .mkm-farabi-note,
+html body.light-theme .mkm-verse,
+html body.light-theme .makam-verse,
+html body.light-theme .arch-inscription,
+html body.light-theme .arch-kitabe,
+html body.light-theme .qv-spotlight,
+html body.light-theme .qv-quote-box,
+html body.light-theme .qvault-spotlight,
+html body.light-theme .qp-quote,
+html body.light-theme .qp-epigraph {
+  background: var(--w9-surface-parchment);
+  border-color: var(--w9-gold-hairline);
+  color: var(--w9-ink-primary);
+}
+
+/* 4D. Headings, Titles & High-Contrast Primary Ink */
+html body.light-theme [class^="nw-"] h1,
+html body.light-theme [class^="nw-"] h2,
+html body.light-theme [class^="nw-"] h3,
+html body.light-theme [class^="nw-"] h4,
+html body.light-theme [class^="nature-"] h1,
+html body.light-theme [class^="nature-"] h2,
+html body.light-theme [class^="nature-"] h3,
+html body.light-theme [class^="bz-"] h1,
+html body.light-theme [class^="bz-"] h2,
+html body.light-theme [class^="bz-"] h3,
+html body.light-theme [class^="bz-"] h4,
+html body.light-theme [class^="bazaar-"] h1,
+html body.light-theme [class^="bazaar-"] h2,
+html body.light-theme [class^="bazaar-"] h3,
+html body.light-theme [class^="el-"] h1,
+html body.light-theme [class^="el-"] h2,
+html body.light-theme [class^="el-"] h3,
+html body.light-theme [class^="el-"] h4,
+html body.light-theme [class^="elt-"] h1,
+html body.light-theme [class^="elt-"] h2,
+html body.light-theme [class^="elt-"] h3,
+html body.light-theme [class^="elt-"] h4,
+html body.light-theme .elt-city-name,
+html body.light-theme .elt-chapter-title,
+html body.light-theme .elt-kpi-value,
+html body.light-theme [class^="explog-"] h1,
+html body.light-theme [class^="explog-"] h2,
+html body.light-theme [class^="explog-"] h3,
+html body.light-theme [class^="mezo-"] h1,
+html body.light-theme [class^="mezo-"] h2,
+html body.light-theme [class^="mezo-"] h3,
+html body.light-theme [class^="mezo-"] h4,
+html body.light-theme [class^="msp-"] h1,
+html body.light-theme [class^="msp-"] h2,
+html body.light-theme [class^="msp-"] h3,
+html body.light-theme [class^="mkm-"] h1,
+html body.light-theme [class^="mkm-"] h2,
+html body.light-theme [class^="mkm-"] h3,
+html body.light-theme [class^="mkm-"] h4,
+html body.light-theme [class^="makam-"] h1,
+html body.light-theme [class^="makam-"] h2,
+html body.light-theme [class^="makam-"] h3,
+html body.light-theme [class^="arch-"] h1,
+html body.light-theme [class^="arch-"] h2,
+html body.light-theme [class^="arch-"] h3,
+html body.light-theme [class^="arch-"] h4,
+html body.light-theme [class^="qv-"] h1,
+html body.light-theme [class^="qv-"] h2,
+html body.light-theme [class^="qv-"] h3,
+html body.light-theme [class^="qv-"] h4,
+html body.light-theme [class^="qvault-"] h1,
+html body.light-theme [class^="qvault-"] h2,
+html body.light-theme [class^="qvault-"] h3,
+html body.light-theme #seyyah-quick-peek-modal h1,
+html body.light-theme #seyyah-quick-peek-modal h2,
+html body.light-theme #seyyah-quick-peek-modal h3,
+html body.light-theme #seyyah-quick-peek-modal h4,
+html body.light-theme .nw-kpi-val,
+html body.light-theme .nw-kpi-value,
+html body.light-theme .nature-kpi-val,
+html body.light-theme .bz-kpi-val,
+html body.light-theme .bz-kpi-value,
+html body.light-theme .bazaar-kpi-val,
+html body.light-theme .el-kpi-val,
+html body.light-theme .el-kpi-value,
+html body.light-theme .explog-kpi-val,
+html body.light-theme .mezo-kpi-val,
+html body.light-theme .mezo-kpi-value,
+html body.light-theme .msp-kpi-val,
+html body.light-theme .mkm-kpi-val,
+html body.light-theme .mkm-kpi-value,
+html body.light-theme .makam-kpi-val,
+html body.light-theme .arch-kpi-val,
+html body.light-theme .arch-kpi-value,
+html body.light-theme .qv-kpi-val,
+html body.light-theme .qv-kpi-value,
+html body.light-theme .qv-quote-text,
+html body.light-theme .qv-spotlight-text,
+html body.light-theme .qvault-kpi-val,
+html body.light-theme .qvault-quote-text,
+html body.light-theme .qp-title,
+html body.light-theme .qp-city-name {
+  color: var(--w9-ink-primary);
+}
+
+/* 4E. Subtitles, Descriptions, Muted & Secondary Text in Light Theme */
+html body.light-theme .nw-hero-sub,
+html body.light-theme .nw-desc,
+html body.light-theme .nw-meta,
+html body.light-theme .nw-kpi-sub,
+html body.light-theme .nw-kpi-label,
+html body.light-theme .nature-desc,
+html body.light-theme .nature-meta,
+html body.light-theme .bz-hero-sub,
+html body.light-theme .bz-desc,
+html body.light-theme .bz-meta,
+html body.light-theme .bz-kpi-sub,
+html body.light-theme .bz-kpi-label,
+html body.light-theme .bazaar-desc,
+html body.light-theme .bazaar-meta,
+html body.light-theme .el-hero-sub,
+html body.light-theme .el-desc,
+html body.light-theme .el-meta,
+html body.light-theme .el-kpi-sub,
+html body.light-theme .el-kpi-label,
+html body.light-theme .elt-subtitle,
+html body.light-theme .elt-chapter-meta,
+html body.light-theme .elt-detail-text,
+html body.light-theme .elt-detail-label,
+html body.light-theme .elt-kpi-sub,
+html body.light-theme .elt-kpi-label,
+html body.light-theme .elt-result-meta,
+html body.light-theme .explog-desc,
+html body.light-theme .explog-meta,
+html body.light-theme .mezo-hero-sub,
+html body.light-theme .mezo-desc,
+html body.light-theme .mezo-meta,
+html body.light-theme .mezo-kpi-sub,
+html body.light-theme .mezo-kpi-label,
+html body.light-theme .msp-desc,
+html body.light-theme .msp-meta,
+html body.light-theme .mkm-hero-sub,
+html body.light-theme .mkm-desc,
+html body.light-theme .mkm-meta,
+html body.light-theme .mkm-kpi-sub,
+html body.light-theme .mkm-kpi-label,
+html body.light-theme .makam-desc,
+html body.light-theme .makam-meta,
+html body.light-theme .arch-hero-sub,
+html body.light-theme .arch-desc,
+html body.light-theme .arch-meta,
+html body.light-theme .arch-kpi-sub,
+html body.light-theme .arch-kpi-label,
+html body.light-theme .qv-hero-sub,
+html body.light-theme .qv-desc,
+html body.light-theme .qv-meta,
+html body.light-theme .qv-note,
+html body.light-theme .qv-kpi-sub,
+html body.light-theme .qv-kpi-label,
+html body.light-theme .qvault-desc,
+html body.light-theme .qvault-meta,
+html body.light-theme #seyyah-quick-peek-modal .qp-subtitle,
+html body.light-theme #seyyah-quick-peek-modal .qp-meta,
+html body.light-theme #seyyah-quick-peek-modal .qp-summary,
+html body.light-theme #seyyah-quick-peek-modal .qp-desc {
+  color: var(--w9-ink-secondary);
+}
+
+/* 4F. Accent Badges, Eyebrows & Pills in Light Theme */
+html body.light-theme .nw-eyebrow,
+html body.light-theme .nw-badge,
+html body.light-theme .nature-badge,
+html body.light-theme .el-eyebrow,
+html body.light-theme .el-plate,
+html body.light-theme .elt-eyebrow,
+html body.light-theme .elt-plate-badge,
+html body.light-theme .elt-day-badge,
+html body.light-theme .explog-badge,
+html body.light-theme .arch-eyebrow,
+html body.light-theme .arch-badge,
+html body.light-theme .qp-plate,
+html body.light-theme .qp-region-badge {
+  color: var(--w9-ink-cyan);
+  background: rgba(2, 132, 199, 0.11);
+  border-color: rgba(2, 132, 199, 0.28);
+}
+
+html body.light-theme .bz-eyebrow,
+html body.light-theme .bz-badge,
+html body.light-theme .bazaar-badge,
+html body.light-theme .mezo-eyebrow,
+html body.light-theme .mezo-badge,
+html body.light-theme .msp-badge,
+html body.light-theme .mkm-eyebrow,
+html body.light-theme .mkm-badge,
+html body.light-theme .makam-badge,
+html body.light-theme .qv-eyebrow,
+html body.light-theme .qv-badge,
+html body.light-theme .qv-author,
+html body.light-theme .qvault-badge {
+  color: var(--w9-ink-gold);
+  background: rgba(180, 83, 9, 0.11);
+  border-color: rgba(180, 83, 9, 0.28);
+}
+
+html body.light-theme .nw-thermal-badge,
+html body.light-theme .nw-temp-badge,
+html body.light-theme .nature-thermal-badge {
+  color: var(--w9-ink-emerald);
+  background: rgba(4, 120, 87, 0.11);
+  border-color: rgba(4, 120, 87, 0.28);
+}
+
+/* 4G. Filter Chips, Tabs & Secondary Buttons in Light Theme */
+html body.light-theme .nw-tab,
+html body.light-theme .nw-chip,
+html body.light-theme .nw-pill,
+html body.light-theme .nature-tab,
+html body.light-theme .nature-chip,
+html body.light-theme .bz-tab,
+html body.light-theme .bz-chip,
+html body.light-theme .bz-pill,
+html body.light-theme .bazaar-tab,
+html body.light-theme .bazaar-chip,
+html body.light-theme .el-tab,
+html body.light-theme .el-chip,
+html body.light-theme .el-pill,
+html body.light-theme .elt-region-pill,
+html body.light-theme .elt-filter-toggle,
+html body.light-theme .elt-mood-chip,
+html body.light-theme .elt-landmark-chip,
+html body.light-theme .explog-tab,
+html body.light-theme .explog-chip,
+html body.light-theme .mezo-tab,
+html body.light-theme .mezo-chip,
+html body.light-theme .mezo-pill,
+html body.light-theme .msp-tab,
+html body.light-theme .msp-chip,
+html body.light-theme .mkm-tab,
+html body.light-theme .mkm-chip,
+html body.light-theme .mkm-pill,
+html body.light-theme .makam-tab,
+html body.light-theme .makam-chip,
+html body.light-theme .arch-tab,
+html body.light-theme .arch-chip,
+html body.light-theme .arch-pill,
+html body.light-theme .qv-tab,
+html body.light-theme .qv-chip,
+html body.light-theme .qv-pill,
+html body.light-theme .qvault-tab,
+html body.light-theme .qvault-chip,
+html body.light-theme #seyyah-quick-peek-modal .qp-chip,
+html body.light-theme #seyyah-quick-peek-modal .qp-close-btn {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.13);
+  color: var(--w9-ink-secondary);
+}
+
+html body.light-theme .nw-tab:hover,
+html body.light-theme .nw-chip:hover,
+html body.light-theme .bz-tab:hover,
+html body.light-theme .bz-chip:hover,
+html body.light-theme .el-tab:hover,
+html body.light-theme .el-chip:hover,
+html body.light-theme .elt-region-pill:hover,
+html body.light-theme .elt-filter-toggle:hover,
+html body.light-theme .elt-mood-chip:hover,
+html body.light-theme .mezo-tab:hover,
+html body.light-theme .mezo-chip:hover,
+html body.light-theme .mkm-tab:hover,
+html body.light-theme .mkm-chip:hover,
+html body.light-theme .arch-tab:hover,
+html body.light-theme .arch-chip:hover,
+html body.light-theme .qv-tab:hover,
+html body.light-theme .qv-chip:hover,
+html body.light-theme #seyyah-quick-peek-modal .qp-chip:hover,
+html body.light-theme #seyyah-quick-peek-modal .qp-close-btn:hover {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: var(--w9-hairline-strong);
+  color: var(--w9-ink-primary);
+}
+
+html body.light-theme .nw-tab.is-active,
+html body.light-theme .nw-chip.is-active,
+html body.light-theme .nw-pill.is-active,
+html body.light-theme .nature-tab.is-active,
+html body.light-theme .bz-tab.is-active,
+html body.light-theme .bz-chip.is-active,
+html body.light-theme .bazaar-tab.is-active,
+html body.light-theme .el-tab.is-active,
+html body.light-theme .el-chip.is-active,
+html body.light-theme .elt-region-pill.active,
+html body.light-theme .elt-filter-toggle.active,
+html body.light-theme .elt-mood-chip.active,
+html body.light-theme .explog-tab.is-active,
+html body.light-theme .mezo-tab.is-active,
+html body.light-theme .mezo-chip.is-active,
+html body.light-theme .msp-tab.is-active,
+html body.light-theme .mkm-tab.is-active,
+html body.light-theme .mkm-chip.is-active,
+html body.light-theme .makam-tab.is-active,
+html body.light-theme .arch-tab.is-active,
+html body.light-theme .arch-chip.is-active,
+html body.light-theme .qv-tab.is-active,
+html body.light-theme .qv-chip.is-active,
+html body.light-theme .qvault-tab.is-active,
+html body.light-theme .nw-tab.active,
+html body.light-theme .bz-tab.active,
+html body.light-theme .el-tab.active,
+html body.light-theme .mezo-tab.active,
+html body.light-theme .mkm-tab.active,
+html body.light-theme .arch-tab.active,
+html body.light-theme .qv-tab.active {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-color: rgba(3, 105, 161, 0.48);
+  color: #ffffff;
+}
+
+/* 4H. Inputs, Selects & Textareas in Light Theme */
+html body.light-theme [class^="nw-"] input,
+html body.light-theme [class^="nw-"] select,
+html body.light-theme [class^="nw-"] textarea,
+html body.light-theme [class^="nature-"] input,
+html body.light-theme [class^="nature-"] select,
+html body.light-theme [class^="bz-"] input,
+html body.light-theme [class^="bz-"] select,
+html body.light-theme [class^="bz-"] textarea,
+html body.light-theme [class^="bazaar-"] input,
+html body.light-theme [class^="bazaar-"] select,
+html body.light-theme [class^="el-"] input,
+html body.light-theme [class^="el-"] select,
+html body.light-theme [class^="el-"] textarea,
+html body.light-theme [class^="elt-"] input,
+html body.light-theme [class^="elt-"] select,
+html body.light-theme [class^="elt-"] textarea,
+html body.light-theme [class^="explog-"] input,
+html body.light-theme [class^="explog-"] select,
+html body.light-theme [class^="mezo-"] input,
+html body.light-theme [class^="mezo-"] select,
+html body.light-theme [class^="mezo-"] textarea,
+html body.light-theme [class^="msp-"] input,
+html body.light-theme [class^="msp-"] select,
+html body.light-theme [class^="mkm-"] input,
+html body.light-theme [class^="mkm-"] select,
+html body.light-theme [class^="mkm-"] textarea,
+html body.light-theme [class^="makam-"] input,
+html body.light-theme [class^="makam-"] select,
+html body.light-theme [class^="arch-"] input,
+html body.light-theme [class^="arch-"] select,
+html body.light-theme [class^="arch-"] textarea,
+html body.light-theme [class^="qv-"] input,
+html body.light-theme [class^="qv-"] select,
+html body.light-theme [class^="qv-"] textarea,
+html body.light-theme [class^="qvault-"] input,
+html body.light-theme [class^="qvault-"] select,
+html body.light-theme #seyyah-quick-peek-modal input,
+html body.light-theme #seyyah-quick-peek-modal select {
+  background: var(--w9-surface-input);
+  border-color: rgba(15, 23, 42, 0.16);
+  color: var(--w9-ink-primary);
+}
+
+html body.light-theme [class^="nw-"] input::placeholder,
+html body.light-theme [class^="bz-"] input::placeholder,
+html body.light-theme [class^="el-"] input::placeholder,
+html body.light-theme [class^="elt-"] input::placeholder,
+html body.light-theme [class^="elt-"] textarea::placeholder,
+html body.light-theme [class^="mezo-"] input::placeholder,
+html body.light-theme [class^="mkm-"] input::placeholder,
+html body.light-theme [class^="arch-"] input::placeholder,
+html body.light-theme [class^="qv-"] input::placeholder,
+html body.light-theme [class^="qvault-"] input::placeholder {
+  color: var(--w9-ink-muted);
+}
+
+/* 4I. Quick-Peek City Modal in Light Theme */
+html body.light-theme #seyyah-quick-peek-modal {
+  background: rgba(15, 23, 42, 0.42);
+}
+
+html body.light-theme #seyyah-quick-peek-modal .qp-dialog,
+html body.light-theme #seyyah-quick-peek-modal .qp-modal,
+html body.light-theme #seyyah-quick-peek-modal .qp-card,
+html body.light-theme #seyyah-quick-peek-modal .qp-content,
+html body.light-theme #seyyah-quick-peek-modal .modal-content {
+  background: var(--w9-surface-modal);
+  border-color: rgba(2, 132, 199, 0.32);
+  color: var(--w9-ink-primary);
+  box-shadow: var(--w9-shadow-modal);
+}
+
+html body.light-theme #seyyah-quick-peek-modal .qp-stat-box,
+html body.light-theme #seyyah-quick-peek-modal .qp-fact-card,
+html body.light-theme #seyyah-quick-peek-modal .qp-panel {
+  background: rgba(248, 250, 252, 0.94);
+  border-color: var(--w9-hairline);
+  color: var(--w9-ink-primary);
+}
+
+/* --------------------------------------------------------------------------
+   5. KEYBOARD ACCESSIBILITY (:focus-visible)
+   -------------------------------------------------------------------------- */
+html body .nw-studio button:focus-visible,
+html body .nature-studio button:focus-visible,
+html body .bz-studio button:focus-visible,
+html body .bazaar-studio button:focus-visible,
+html body .el-studio button:focus-visible,
+html body .elt-studio button:focus-visible,
+html body .explog-studio button:focus-visible,
+html body .mezo-studio button:focus-visible,
+html body .msp-studio button:focus-visible,
+html body .mkm-studio button:focus-visible,
+html body .makam-studio button:focus-visible,
+html body .arch-studio button:focus-visible,
+html body .qv-studio button:focus-visible,
+html body .qvault-studio button:focus-visible,
+html body [class^="nw-"] button:focus-visible,
+html body [class^="nature-"] button:focus-visible,
+html body [class^="bz-"] button:focus-visible,
+html body [class^="bazaar-"] button:focus-visible,
+html body [class^="el-"] button:focus-visible,
+html body [class^="elt-"] button:focus-visible,
+html body [class^="explog-"] button:focus-visible,
+html body [class^="mezo-"] button:focus-visible,
+html body [class^="msp-"] button:focus-visible,
+html body [class^="mkm-"] button:focus-visible,
+html body [class^="makam-"] button:focus-visible,
+html body [class^="arch-"] button:focus-visible,
+html body [class^="qv-"] button:focus-visible,
+html body [class^="qvault-"] button:focus-visible,
+html body #seyyah-quick-peek-modal button:focus-visible,
+html body #seyyah-quick-peek-modal a:focus-visible {
+  outline: 2px solid var(--w9-cyan);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   6. TABLET & MOBILE RESPONSIVE RULES (@media (max-width: 960px) / 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .nw-hero,
+  .nature-hero,
+  .bz-hero,
+  .bazaar-hero,
+  .el-hero,
+  .elt-hero,
+  .explog-hero,
+  .mezo-hero,
+  .msp-hero,
+  .mkm-hero,
+  .makam-hero,
+  .arch-hero,
+  .qv-hero,
+  .qvault-hero {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .nw-workspace,
+  .nature-workspace,
+  .bz-workspace,
+  .bazaar-workspace,
+  .el-workspace,
+  .explog-workspace,
+  .mezo-workspace,
+  .msp-workspace,
+  .mkm-workspace,
+  .makam-workspace,
+  .arch-workspace,
+  .qv-workspace,
+  .qvault-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .nw-studio,
+  .nw-shell,
+  .nw-root,
+  .nature-studio,
+  .nature-shell,
+  .bz-studio,
+  .bz-shell,
+  .bz-root,
+  .bazaar-studio,
+  .bazaar-shell,
+  .el-studio,
+  .el-shell,
+  .el-root,
+  .elt-studio,
+  .explog-studio,
+  .explog-shell,
+  .mezo-studio,
+  .mezo-shell,
+  .mezo-root,
+  .msp-studio,
+  .msp-shell,
+  .mkm-studio,
+  .mkm-shell,
+  .mkm-root,
+  .makam-studio,
+  .makam-shell,
+  .arch-studio,
+  .arch-shell,
+  .arch-root,
+  .qv-studio,
+  .qv-shell,
+  .qv-root,
+  .qvault-studio,
+  .qvault-shell {
+    gap: 14px;
+    padding-inline: 2px;
+  }
+
+  .nw-hero,
+  .nature-hero,
+  .bz-hero,
+  .bazaar-hero,
+  .el-hero,
+  .elt-hero,
+  .explog-hero,
+  .mezo-hero,
+  .msp-hero,
+  .mkm-hero,
+  .makam-hero,
+  .arch-hero,
+  .qv-hero,
+  .qvault-hero {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+
+  /* Enforce Single-Column Grids & Clean Card Padding Across All Wave 9 Studios */
+  .nw-kpi-grid,
+  .nw-grid,
+  .nw-cards,
+  .nw-layout,
+  .nature-kpi-grid,
+  .nature-grid,
+  .nature-cards,
+  .bz-kpi-grid,
+  .bz-grid,
+  .bz-cards,
+  .bz-layout,
+  .bazaar-kpi-grid,
+  .bazaar-grid,
+  .bazaar-cards,
+  .el-kpi-grid,
+  .el-grid,
+  .el-cards,
+  .el-layout,
+  .elt-kpi-grid,
+  .elt-details-grid,
+  .elt-photo-grid,
+  .explog-kpi-grid,
+  .explog-grid,
+  .explog-cards,
+  .mezo-kpi-grid,
+  .mezo-grid,
+  .mezo-cards,
+  .mezo-layout,
+  .mezo-prov-grid,
+  .mezo-route-grid,
+  .msp-kpi-grid,
+  .msp-grid,
+  .msp-cards,
+  .mkm-kpi-grid,
+  .mkm-grid,
+  .mkm-cards,
+  .mkm-layout,
+  .makam-kpi-grid,
+  .makam-grid,
+  .makam-cards,
+  .arch-kpi-grid,
+  .arch-grid,
+  .arch-cards,
+  .arch-layout,
+  .qv-kpi-grid,
+  .qv-grid,
+  .qv-cards,
+  .qv-layout,
+  .qvault-kpi-grid,
+  .qvault-grid,
+  .qvault-cards {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .nw-card,
+  .nw-panel,
+  .nw-controls,
+  .nature-card,
+  .nature-panel,
+  .bz-card,
+  .bz-panel,
+  .bz-controls,
+  .bazaar-card,
+  .bazaar-panel,
+  .el-card,
+  .el-panel,
+  .el-entry,
+  .el-controls,
+  .elt-stop-card,
+  .elt-chapter-banner,
+  .elt-controls,
+  .explog-card,
+  .explog-panel,
+  .explog-entry,
+  .mezo-card,
+  .mezo-panel,
+  .mezo-prov-card,
+  .mezo-route-card,
+  .mezo-controls,
+  .msp-card,
+  .msp-panel,
+  .mkm-card,
+  .mkm-panel,
+  .mkm-player,
+  .mkm-controls,
+  .makam-card,
+  .makam-panel,
+  .arch-card,
+  .arch-panel,
+  .arch-controls,
+  .qv-card,
+  .qv-panel,
+  .qv-spotlight,
+  .qv-controls,
+  .qvault-card,
+  .qvault-panel,
+  .qvault-spotlight {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  /* Horizontal Scrollable Filter Strips on Mobile */
+  .nw-tabs,
+  .nw-chips,
+  .nature-tabs,
+  .bz-tabs,
+  .bz-chips,
+  .bazaar-tabs,
+  .el-tabs,
+  .el-chips,
+  .elt-region-pills,
+  .explog-tabs,
+  .mezo-tabs,
+  .mezo-chips,
+  .msp-tabs,
+  .mkm-tabs,
+  .mkm-chips,
+  .makam-tabs,
+  .arch-tabs,
+  .arch-chips,
+  .qv-tabs,
+  .qv-chips,
+  .qvault-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .nw-tabs::-webkit-scrollbar,
+  .nw-chips::-webkit-scrollbar,
+  .bz-tabs::-webkit-scrollbar,
+  .bz-chips::-webkit-scrollbar,
+  .el-tabs::-webkit-scrollbar,
+  .el-chips::-webkit-scrollbar,
+  .elt-region-pills::-webkit-scrollbar,
+  .mezo-tabs::-webkit-scrollbar,
+  .mezo-chips::-webkit-scrollbar,
+  .mkm-tabs::-webkit-scrollbar,
+  .mkm-chips::-webkit-scrollbar,
+  .arch-tabs::-webkit-scrollbar,
+  .arch-chips::-webkit-scrollbar,
+  .qv-tabs::-webkit-scrollbar,
+  .qv-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Quick-Peek City Modal Mobile Fit */
+  #seyyah-quick-peek-modal {
+    padding: 10px;
+  }
+
+  #seyyah-quick-peek-modal .qp-dialog,
+  #seyyah-quick-peek-modal .qp-modal,
+  #seyyah-quick-peek-modal .qp-card,
+  #seyyah-quick-peek-modal .qp-content,
+  #seyyah-quick-peek-modal .modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: 16px;
+    padding: 16px 14px;
+  }
+
+  #seyyah-quick-peek-modal .qp-stats-grid,
+  #seyyah-quick-peek-modal .qp-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. ACCESSIBILITY — REDUCED MOTION & PRINT EDITORIAL RULES
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  [class^="nw-"],
+  [class*=" nw-"],
+  [class^="nature-"],
+  [class*=" nature-"],
+  [class^="bz-"],
+  [class*=" bz-"],
+  [class^="bazaar-"],
+  [class*=" bazaar-"],
+  [class^="el-"],
+  [class*=" el-"],
+  [class^="elt-"],
+  [class*=" elt-"],
+  [class^="explog-"],
+  [class*=" explog-"],
+  [class^="mezo-"],
+  [class*=" mezo-"],
+  [class^="msp-"],
+  [class*=" msp-"],
+  [class^="mkm-"],
+  [class*=" mkm-"],
+  [class^="makam-"],
+  [class*=" makam-"],
+  [class^="arch-"],
+  [class*=" arch-"],
+  [class^="qp-"],
+  [class*=" qp-"],
+  [class^="qv-"],
+  [class*=" qv-"],
+  [class^="qvault-"],
+  [class*=" qvault-"],
+  #seyyah-quick-peek-modal,
+  #seyyah-quick-peek-modal * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .nw-card:hover,
+  .nature-card:hover,
+  .bz-card:hover,
+  .bazaar-card:hover,
+  .el-card:hover,
+  .el-entry:hover,
+  .elt-stop-card:hover,
+  .explog-card:hover,
+  .explog-entry:hover,
+  .mezo-card:hover,
+  .mezo-prov-card:hover,
+  .mezo-route-card:hover,
+  .msp-card:hover,
+  .msp-route-card:hover,
+  .mkm-card:hover,
+  .makam-card:hover,
+  .arch-card:hover,
+  .qv-card:hover,
+  .qvault-card:hover {
+    transform: none !important;
+  }
+}
+
+@media print {
+  /* Hide interactive audio decks, filter controls & Quick-Peek modal on paper */
+  #seyyah-quick-peek-modal,
+  .nw-controls,
+  .nature-controls,
+  .bz-controls,
+  .bazaar-controls,
+  .el-controls,
+  .elt-controls,
+  .elt-editor-box,
+  .explog-controls,
+  .mezo-controls,
+  .msp-controls,
+  .mkm-player,
+  .mkm-synth-bar,
+  .mkm-controls,
+  .makam-player,
+  .makam-controls,
+  .arch-controls,
+  .qv-controls,
+  .qvault-controls {
+    display: none !important;
+  }
+
+  .nw-hero,
+  .nw-kpi-card,
+  .nw-card,
+  .nw-panel,
+  .nature-hero,
+  .nature-card,
+  .bz-hero,
+  .bz-kpi-card,
+  .bz-card,
+  .bz-panel,
+  .bz-ahilik-box,
+  .bazaar-hero,
+  .bazaar-card,
+  .el-hero,
+  .el-kpi-card,
+  .el-card,
+  .el-entry,
+  .el-panel,
+  .elt-hero,
+  .elt-kpi-card,
+  .elt-stop-card,
+  .elt-chapter-banner,
+  .elt-detail-box,
+  .elt-memoir-saved,
+  .explog-hero,
+  .explog-card,
+  .explog-entry,
+  .mezo-hero,
+  .mezo-kpi-card,
+  .mezo-card,
+  .mezo-prov-card,
+  .mezo-route-card,
+  .mezo-panel,
+  .msp-hero,
+  .msp-card,
+  .mkm-hero,
+  .mkm-kpi-card,
+  .mkm-card,
+  .mkm-panel,
+  .makam-hero,
+  .makam-card,
+  .arch-hero,
+  .arch-kpi-card,
+  .arch-card,
+  .arch-panel,
+  .arch-blueprint,
+  .qv-hero,
+  .qv-kpi-card,
+  .qv-spotlight,
+  .qv-card,
+  .qv-panel,
+  .qvault-hero,
+  .qvault-spotlight,
+  .qvault-card {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
