@@ -1,0 +1,1377 @@
+/* ==========================================================================
+   ANADOLU SEYAHATNAMESİ — WAVE 6 ENTERPRISE AI-NATIVE DESIGN SYSTEM
+   1. Executive Categorized Mega-Navigation Bar (.mnav-* & #mnav-dropdown-portal)
+   2. Unified Header Rhythm across ALL Wave 6 AI Studios
+      (.sa-*, .sap-*, .aicc-*, .sc-*, .amd-*, .vsbattle-*, .aiw-*, .aiq-*, .aiss-*, .agc-*)
+   3. Gradient AI Accent Badges & Subtle Aurora Border Glow on Primary AI CTAs
+   4. Streaming Typing Cursor (@keyframes seyyahStreamBlink)
+   5. Smooth Card Entrance Animations & Responsive Grid Polish (<=960px, <=640px)
+   6. Full body.light-theme Contrast Parity & prefers-reduced-motion Respect
+   CRITICAL GUARDRAIL: NEVER overrides .cmd-overlay display property.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. WAVE 6 ENTERPRISE DESIGN TOKENS (OBSIDIAN DARK & ALABASTER LIGHT)
+   -------------------------------------------------------------------------- */
+:root {
+  --w6-surface: rgba(8, 13, 26, 0.84);
+  --w6-surface-elevated: rgba(11, 17, 33, 0.94);
+  --w6-surface-card: rgba(15, 23, 42, 0.78);
+  --w6-surface-subtle: rgba(255, 255, 255, 0.045);
+  --w6-surface-hover: rgba(255, 255, 255, 0.085);
+
+  --w6-hairline: rgba(255, 255, 255, 0.085);
+  --w6-hairline-strong: rgba(0, 242, 254, 0.38);
+  --w6-specular: rgba(255, 255, 255, 0.12);
+
+  --w6-shadow-nav:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 30px -16px rgba(0, 0, 0, 0.72);
+  --w6-shadow-popover:
+    0 26px 64px -14px rgba(0, 0, 0, 0.82),
+    0 8px 24px -8px rgba(0, 0, 0, 0.54),
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --w6-shadow-card:
+    0 14px 36px -14px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --w6-shadow-aurora:
+    0 10px 28px -8px rgba(0, 242, 254, 0.34),
+    0 0 22px -4px rgba(168, 85, 247, 0.28);
+
+  --w6-ai-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 48%, #a855f7 100%);
+  --w6-ai-gradient-wide: linear-gradient(115deg, #00f2fe, #4facfe, #a855f7, #10b981, #00f2fe);
+  --w6-ai-badge-bg: linear-gradient(135deg, rgba(0, 242, 254, 0.14), rgba(168, 85, 247, 0.15));
+  --w6-ai-badge-border: rgba(0, 242, 254, 0.32);
+  --w6-ai-badge-text: #a5f3fc;
+
+  --w6-stream-cursor: linear-gradient(180deg, #00f2fe 0%, #a855f7 100%);
+  --w6-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --w6-studio-radius: 20px;
+}
+
+html body.light-theme {
+  --w6-surface: rgba(255, 255, 255, 0.92);
+  --w6-surface-elevated: rgba(255, 255, 255, 0.98);
+  --w6-surface-card: rgba(255, 255, 255, 0.96);
+  --w6-surface-subtle: rgba(15, 23, 42, 0.038);
+  --w6-surface-hover: rgba(2, 132, 199, 0.08);
+
+  --w6-hairline: rgba(15, 23, 42, 0.095);
+  --w6-hairline-strong: rgba(2, 132, 199, 0.42);
+  --w6-specular: rgba(255, 255, 255, 0.98);
+
+  --w6-shadow-nav:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 8px 24px -14px rgba(15, 23, 42, 0.12);
+  --w6-shadow-popover:
+    0 24px 56px -14px rgba(15, 23, 42, 0.18),
+    0 8px 20px -8px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  --w6-shadow-card:
+    0 12px 30px -12px rgba(15, 23, 42, 0.1),
+    0 2px 6px -2px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  --w6-shadow-aurora:
+    0 10px 26px -8px rgba(2, 132, 199, 0.34),
+    0 4px 16px -4px rgba(124, 58, 237, 0.22);
+
+  --w6-ai-gradient: linear-gradient(135deg, #0284c7 0%, #2563eb 52%, #7c3aed 100%);
+  --w6-ai-gradient-wide: linear-gradient(115deg, #0284c7, #2563eb, #7c3aed, #059669, #0284c7);
+  --w6-ai-badge-bg: linear-gradient(135deg, rgba(2, 132, 199, 0.1), rgba(124, 58, 237, 0.1));
+  --w6-ai-badge-border: rgba(2, 132, 199, 0.3);
+  --w6-ai-badge-text: #0369a1;
+
+  --w6-stream-cursor: linear-gradient(180deg, #0284c7 0%, #7c3aed 100%);
+}
+
+/* --------------------------------------------------------------------------
+   2. KEYFRAMES — STREAMING CURSOR, AURORA GLOW & CARD ENTRANCES
+   -------------------------------------------------------------------------- */
+@keyframes seyyahStreamBlink {
+  0%, 45% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50%, 100% {
+    opacity: 0.14;
+    transform: scaleY(0.92);
+  }
+}
+
+@keyframes w6AuroraBorderShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes w6CardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes w6PopoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. STREAMING TYPING CURSOR (WAVE 6 LIVE AI GENERATION)
+   -------------------------------------------------------------------------- */
+.seyyah-stream-cursor,
+.ai-stream-cursor,
+.w6-stream-cursor,
+.aiw-stream-cursor,
+.vsbattle-stream-cursor,
+.agc-stream-cursor,
+.sa-stream-cursor,
+.sap-stream-cursor,
+.aicc-stream-cursor,
+.sc-stream-cursor {
+  display: inline-block;
+  width: 2.5px;
+  height: 1.08em;
+  margin-left: 4px;
+  vertical-align: -0.16em;
+  border-radius: 999px;
+  background: var(--w6-stream-cursor);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.55);
+  animation: seyyahStreamBlink 0.92s steps(2, start) infinite;
+  pointer-events: none;
+}
+
+.is-streaming > :last-child::after,
+[data-streaming="true"] > :last-child::after,
+.seyyah-streaming-text.is-active::after {
+  content: "";
+  display: inline-block;
+  width: 2.5px;
+  height: 1.05em;
+  margin-left: 4px;
+  vertical-align: -0.15em;
+  border-radius: 999px;
+  background: var(--w6-stream-cursor);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+  animation: seyyahStreamBlink 0.92s steps(2, start) infinite;
+}
+
+html body.light-theme .seyyah-stream-cursor,
+html body.light-theme .ai-stream-cursor,
+html body.light-theme .w6-stream-cursor,
+html body.light-theme .aiw-stream-cursor,
+html body.light-theme .vsbattle-stream-cursor,
+html body.light-theme .agc-stream-cursor,
+html body.light-theme .sa-stream-cursor,
+html body.light-theme .sap-stream-cursor,
+html body.light-theme .aicc-stream-cursor,
+html body.light-theme .sc-stream-cursor,
+html body.light-theme .is-streaming > :last-child::after,
+html body.light-theme [data-streaming="true"] > :last-child::after,
+html body.light-theme .seyyah-streaming-text.is-active::after {
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   4. CATEGORIZED MEGA-NAVIGATION BAR (.mnav-* & #mnav-dropdown-portal)
+   Executive-grade Linear / Vercel / Apple workspace elevation & spacing
+   -------------------------------------------------------------------------- */
+nav.module-nav-strip.mnav-strip,
+.mnav-bar {
+  position: relative;
+  z-index: 120;
+  flex-shrink: 0;
+  width: 100%;
+  padding: 10px 24px;
+  background: var(--w6-surface);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  border-bottom: 1px solid var(--w6-hairline);
+  box-shadow: var(--w6-shadow-nav);
+}
+
+.mnav-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  margin-inline: auto;
+  padding: 2px 0;
+}
+
+.mnav-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 35px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  background: var(--w6-surface-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  color: var(--text-secondary, #94a3b8);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    background 180ms var(--w6-ease-spring),
+    border-color 180ms var(--w6-ease-spring),
+    color 180ms var(--w6-ease-spring),
+    transform 180ms var(--w6-ease-spring),
+    box-shadow 220ms var(--w6-ease-spring);
+}
+
+.mnav-trigger:hover {
+  background: var(--w6-surface-hover);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--text-primary, #f8fafc);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 6px 18px -6px rgba(0, 0, 0, 0.5);
+}
+
+.mnav-trigger.is-open,
+.mnav-trigger[aria-expanded="true"] {
+  background: rgba(24, 35, 58, 0.94);
+  border-color: rgba(0, 242, 254, 0.48);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 8px 22px -6px rgba(0, 242, 254, 0.24);
+}
+
+.mnav-trigger.is-active,
+.mnav-trigger.active {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.18) 0%, rgba(79, 172, 254, 0.18) 100%);
+  border-color: rgba(0, 242, 254, 0.56);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 4px 18px -4px rgba(0, 242, 254, 0.26);
+}
+
+.mnav-trigger.is-ai {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.1) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border-color: rgba(168, 85, 247, 0.36);
+  color: #e2e8f0;
+}
+
+.mnav-trigger.is-ai:hover,
+.mnav-trigger.is-ai.is-open {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.18) 0%, rgba(168, 85, 247, 0.24) 100%);
+  border-color: rgba(0, 242, 254, 0.58);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 6px 22px -6px rgba(168, 85, 247, 0.32);
+}
+
+.mnav-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  color: #ffffff;
+  background: var(--w6-ai-gradient);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.42);
+}
+
+.mnav-chevron {
+  width: 13px;
+  height: 13px;
+  opacity: 0.68;
+  transition: transform 200ms var(--w6-ease-spring), opacity 180ms ease;
+}
+
+.mnav-trigger.is-open .mnav-chevron,
+.mnav-trigger[aria-expanded="true"] .mnav-chevron {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Floating Glassmorphic Mega-Menu Portal */
+#mnav-dropdown-portal,
+.mnav-panel,
+.mnav-dropdown {
+  border-radius: 18px;
+  background: var(--w6-surface-elevated);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow: var(--w6-shadow-popover);
+}
+
+#mnav-dropdown-portal.is-open {
+  animation: w6PopoverIn 190ms var(--w6-ease-spring) both;
+}
+
+#mnav-dropdown-portal.is-ai-panel {
+  border-color: rgba(168, 85, 247, 0.34);
+  box-shadow:
+    var(--w6-shadow-popover),
+    0 0 32px -8px rgba(139, 92, 246, 0.28);
+}
+
+.mnav-portal-head {
+  padding: 4px 8px 11px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--w6-hairline);
+}
+
+.mnav-portal-title-wrap {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f8fafc;
+}
+
+.mnav-portal-count {
+  font-variant-numeric: tabular-nums;
+  background: var(--w6-surface-subtle);
+  border-color: var(--w6-hairline);
+}
+
+.mnav-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.mnav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 11px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.024);
+  border: 1px solid transparent;
+  transition:
+    background 160ms var(--w6-ease-spring),
+    border-color 160ms var(--w6-ease-spring),
+    transform 160ms var(--w6-ease-spring),
+    box-shadow 180ms var(--w6-ease-spring);
+}
+
+.mnav-item:hover,
+.mnav-item:focus-visible {
+  background: rgba(255, 255, 255, 0.068);
+  border-color: rgba(0, 242, 254, 0.34);
+  transform: translateY(-1px);
+}
+
+.mnav-item.is-active {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.14) 0%, rgba(79, 172, 254, 0.12) 100%);
+  border-color: rgba(0, 242, 254, 0.5);
+}
+
+.mnav-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid var(--w6-hairline);
+  transition: transform 180ms var(--w6-ease-spring), border-color 180ms ease;
+}
+
+.mnav-item:hover .mnav-item-icon,
+.mnav-item.is-active .mnav-item-icon {
+  border-color: rgba(0, 242, 254, 0.42);
+}
+
+.mnav-item-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mnav-item-sub {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.mnav-item-active-pill {
+  background: var(--w6-ai-badge-bg);
+  border-color: var(--w6-ai-badge-border);
+  color: var(--w6-ai-badge-text);
+}
+
+/* --------------------------------------------------------------------------
+   5. WAVE 6 AI STUDIOS — UNIFIED HEADER RHYTHM
+   Covers all 10 AI touchpoints & studios across the workspace
+   -------------------------------------------------------------------------- */
+.sa-shell,
+.sap-shell,
+.amd-shell,
+.vsbattle-studio,
+.aiw-studio,
+.aiq-shell,
+.aiss-studio,
+.agc-shell,
+.w6-studio {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sa-shell .sa-header,
+.sap-shell .sap-hero,
+.amd-shell .amd-hero,
+.vsbattle-studio .vsbattle-header,
+.aiw-studio .aiw-hero,
+.aiq-shell .aiq-hero,
+.aiss-studio .aiss-hero,
+.agc-shell .agc-hero,
+.w6-studio-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 22px 24px;
+  border-radius: var(--w6-studio-radius);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.88) 0%, rgba(10, 16, 30, 0.84) 100%);
+  border: 1px solid var(--w6-hairline);
+  box-shadow: var(--w6-shadow-card);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.sa-shell .sa-header::before,
+.sap-shell .sap-hero::before,
+.amd-shell .amd-hero::before,
+.vsbattle-studio .vsbattle-header::before,
+.aiw-studio .aiw-hero::before,
+.aiq-shell .aiq-hero::before,
+.aiss-studio .aiss-hero::before,
+.agc-shell .agc-hero::before,
+.w6-studio-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(500px circle at 6% -12%, rgba(0, 242, 254, 0.1), transparent 60%),
+    radial-gradient(440px circle at 95% 112%, rgba(168, 85, 247, 0.09), transparent 62%);
+}
+
+.sa-shell .sa-header > *,
+.sap-shell .sap-hero > *,
+.amd-shell .amd-hero > *,
+.vsbattle-studio .vsbattle-header > *,
+.aiw-studio .aiw-hero > *,
+.aiq-shell .aiq-hero > *,
+.aiss-studio .aiss-hero > *,
+.agc-shell .agc-hero > *,
+.w6-studio-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sa-shell .sa-title,
+.sap-shell .sap-title,
+.amd-shell .amd-title,
+.vsbattle-studio .vsbattle-title,
+.aiw-studio .aiw-hero-title,
+.aiq-shell .aiq-hero-title,
+.aiss-studio .aiss-hero h2,
+.agc-shell .agc-title,
+.w6-studio-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.sa-shell .sa-subtitle,
+.sap-shell .sap-subtitle,
+.amd-shell .amd-subtitle,
+.vsbattle-studio .vsbattle-subtitle,
+.aiw-studio .aiw-hero-sub,
+.aiq-shell .aiq-hero-sub,
+.aiss-studio .aiss-subtitle,
+.agc-shell .agc-subtitle,
+.w6-studio-subtitle {
+  line-height: 1.5;
+  color: var(--text-secondary, #cbd5e1);
+}
+
+.sa-shell .sa-avatar-hero,
+.sap-shell .sap-hero-orb,
+.agc-shell .agc-hero-icon,
+.ai-city-concierge-box .aicc-orb,
+.w6-studio-orb {
+  border-radius: 14px;
+  border: 1px solid rgba(0, 242, 254, 0.36);
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.18), rgba(168, 85, 247, 0.22));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 20px -6px rgba(0, 242, 254, 0.24);
+}
+
+/* Harmonize In-Page AI City Concierge & Copilot Drawer Headers */
+.ai-city-concierge-box {
+  border-radius: var(--w6-studio-radius);
+  padding: 20px 24px;
+  border-color: var(--w6-hairline);
+  box-shadow: var(--w6-shadow-card);
+}
+
+.sc-drawer .sc-header {
+  padding: 14px 16px 12px;
+  border-bottom-color: var(--w6-hairline);
+}
+
+/* --------------------------------------------------------------------------
+   6. GRADIENT AI ACCENT BADGES
+   -------------------------------------------------------------------------- */
+.w6-ai-badge,
+.ai-accent-badge,
+.sa-shell .sa-stat-pill,
+.sap-shell .sap-status-pill:not(.is-offline),
+.sap-shell .sap-model-pill,
+.sap-shell .sap-meta-badge.live,
+.ai-city-concierge-box .aicc-badge:not(.is-missing),
+.sc-drawer .sc-model-badge,
+.amd-shell .amd-eyebrow,
+.amd-shell .amd-engine-pill,
+.amd-shell .amd-source-badge,
+.amd-shell .amd-match-pill,
+.vsbattle-studio .vsbattle-engine-pill:not(.is-fallback),
+.vsbattle-studio .vsbattle-verdict-status:not(.is-fallback),
+.aiw-studio .aiw-hero-kicker,
+.aiw-studio .aiw-engine-pill:not(.is-offline),
+.aiw-studio .aiw-live-tag,
+.aiq-shell .aiq-status-pill,
+.aiss-studio .aiss-status-pill,
+.aiss-studio .aiss-engine-badge,
+.agc-shell .agc-badge,
+.agc-shell .agc-source-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.012em;
+  line-height: 1.2;
+  background: var(--w6-ai-badge-bg);
+  border: 1px solid var(--w6-ai-badge-border);
+  color: var(--w6-ai-badge-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.w6-ai-badge--emerald,
+.sa-shell .sa-stat-pill,
+.sap-shell .sap-status-pill:not(.is-offline),
+.sap-shell .sap-meta-badge.live {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(0, 242, 254, 0.12));
+  border-color: rgba(16, 185, 129, 0.38);
+  color: #6ee7b7;
+}
+
+.w6-ai-badge--violet,
+.aiw-studio .aiw-hero-kicker,
+.amd-shell .amd-eyebrow {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(0, 242, 254, 0.12));
+  border-color: rgba(168, 85, 247, 0.38);
+  color: #e9d5ff;
+}
+
+/* Telemetry HUD Header Pill Polish */
+#seyyah-ai-status-pill {
+  border-color: var(--w6-ai-badge-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+#seyyah-ai-hud-popover {
+  border-radius: 16px;
+  border-color: var(--w6-hairline-strong);
+  box-shadow: var(--w6-shadow-popover);
+}
+
+/* --------------------------------------------------------------------------
+   7. SUBTLE AURORA BORDER GLOW ON PRIMARY AI ACTION BUTTONS
+   -------------------------------------------------------------------------- */
+.w6-ai-btn-primary,
+.ai-primary-btn,
+.sa-shell .sa-send-btn,
+.sap-shell .sap-generate-btn,
+.sc-drawer .sc-send-btn,
+.sc-drawer .sc-btn-primary,
+.amd-shell .amd-cta-btn,
+.vsbattle-studio .vsbattle-judge-btn,
+.aiw-studio .aiw-generate-btn,
+.aiq-shell .aiq-generate-btn,
+.aiss-studio .aiss-submit-btn,
+.agc-shell .agc-btn-generate {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(135deg, #00f2fe 0%, #38bdf8 52%, #a855f7 100%) padding-box,
+    var(--w6-ai-gradient-wide) border-box;
+  background-size: 100% 100%, 220% 220%;
+  color: #04101d;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    var(--w6-shadow-aurora);
+  transition:
+    transform 200ms var(--w6-ease-spring),
+    box-shadow 240ms var(--w6-ease-spring),
+    filter 200ms ease;
+}
+
+.w6-ai-btn-primary::before,
+.ai-primary-btn::before,
+.sa-shell .sa-send-btn::before,
+.sap-shell .sap-generate-btn::before,
+.amd-shell .amd-cta-btn::before,
+.vsbattle-studio .vsbattle-judge-btn::before,
+.aiw-studio .aiw-generate-btn::before,
+.aiq-shell .aiq-generate-btn::before,
+.aiss-studio .aiss-submit-btn::before,
+.agc-shell .agc-btn-generate::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--w6-ai-gradient-wide);
+  background-size: 240% 240%;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.62;
+  pointer-events: none;
+  z-index: -1;
+  animation: w6AuroraBorderShift 6s ease infinite;
+  transition: opacity 220ms ease;
+}
+
+.w6-ai-btn-primary:hover:not(:disabled),
+.ai-primary-btn:hover:not(:disabled),
+.sa-shell .sa-send-btn:hover:not(:disabled),
+.sap-shell .sap-generate-btn:hover:not(:disabled),
+.sc-drawer .sc-send-btn:hover:not(:disabled),
+.sc-drawer .sc-btn-primary:hover:not(:disabled),
+.amd-shell .amd-cta-btn:hover:not(:disabled),
+.vsbattle-studio .vsbattle-judge-btn:hover:not(:disabled),
+.aiw-studio .aiw-generate-btn:hover:not(:disabled),
+.aiq-shell .aiq-generate-btn:hover:not(:disabled),
+.aiss-studio .aiss-submit-btn:hover:not(:disabled),
+.agc-shell .agc-btn-generate:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 14px 32px -8px rgba(0, 242, 254, 0.46),
+    0 0 26px -4px rgba(168, 85, 247, 0.36);
+  filter: brightness(1.04);
+}
+
+.w6-ai-btn-primary:hover:not(:disabled)::before,
+.ai-primary-btn:hover:not(:disabled)::before,
+.sa-shell .sa-send-btn:hover:not(:disabled)::before,
+.sap-shell .sap-generate-btn:hover:not(:disabled)::before,
+.amd-shell .amd-cta-btn:hover:not(:disabled)::before,
+.vsbattle-studio .vsbattle-judge-btn:hover:not(:disabled)::before,
+.aiw-studio .aiw-generate-btn:hover:not(:disabled)::before,
+.aiq-shell .aiq-generate-btn:hover:not(:disabled)::before,
+.aiss-studio .aiss-submit-btn:hover:not(:disabled)::before,
+.agc-shell .agc-btn-generate:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.w6-ai-btn-primary:active:not(:disabled),
+.ai-primary-btn:active:not(:disabled),
+.sa-shell .sa-send-btn:active:not(:disabled),
+.sap-shell .sap-generate-btn:active:not(:disabled),
+.amd-shell .amd-cta-btn:active:not(:disabled),
+.vsbattle-studio .vsbattle-judge-btn:active:not(:disabled),
+.aiw-studio .aiw-generate-btn:active:not(:disabled),
+.aiq-shell .aiq-generate-btn:active:not(:disabled),
+.aiss-studio .aiss-submit-btn:active:not(:disabled),
+.agc-shell .agc-btn-generate:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.w6-ai-btn-primary:disabled,
+.ai-primary-btn:disabled,
+.sap-shell .sap-generate-btn:disabled,
+.sc-drawer .sc-send-btn:disabled,
+.amd-shell .amd-cta-btn:disabled,
+.vsbattle-studio .vsbattle-judge-btn:disabled,
+.aiw-studio .aiw-generate-btn:disabled,
+.aiq-shell .aiq-generate-btn:disabled,
+.aiss-studio .aiss-submit-btn:disabled,
+.agc-shell .agc-btn-generate:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Aurora Glow Ring on Floating AI Copilot Orb */
+#seyyah-copilot-root .sc-orb-btn {
+  border: 1px solid rgba(0, 242, 254, 0.44);
+  box-shadow:
+    0 14px 34px -8px rgba(0, 0, 0, 0.65),
+    0 0 24px -4px rgba(0, 242, 254, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transition: transform 220ms var(--w6-ease-spring), box-shadow 220ms var(--w6-ease-spring);
+}
+
+#seyyah-copilot-root .sc-orb-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow:
+    0 18px 40px -8px rgba(0, 0, 0, 0.7),
+    0 0 32px rgba(0, 242, 254, 0.45),
+    0 0 22px rgba(168, 85, 247, 0.32);
+}
+
+/* --------------------------------------------------------------------------
+   8. SMOOTH CARD ENTRANCE ANIMATIONS & EXECUTIVE GRID POLISH
+   -------------------------------------------------------------------------- */
+.w6-card,
+.w6-studio-card,
+.sa-shell .sa-city-card,
+.sap-shell .sap-city-card,
+.sap-shell .sap-result-card,
+.sap-shell .sap-form-card,
+.ai-city-concierge-box,
+.amd-shell .amd-mood-card,
+.amd-shell .amd-city-card,
+.amd-shell .amd-manifesto,
+.vsbattle-studio .vsbattle-fighter,
+.vsbattle-studio .vsbattle-bars-card,
+.vsbattle-studio .vsbattle-ai-card,
+.aiw-studio .aiw-card,
+.aiw-studio .aiw-paper-card,
+.aiq-shell .aiq-stat-card,
+.aiq-shell .aiq-controls-card,
+.aiq-shell .aiq-stage-card,
+.aiq-shell .aiq-option-card,
+.aiss-studio .aiss-card,
+.aiss-studio .aiss-summary-banner,
+.agc-shell .agc-card,
+.agc-shell .agc-output-card {
+  animation: w6CardEntrance 320ms var(--w6-ease-spring) both;
+  animation-delay: calc(var(--w6-stagger, 0) * 32ms);
+}
+
+.sa-cards-grid > :nth-child(1),
+.sap-cards-grid > :nth-child(1),
+.amd-mood-grid > :nth-child(1),
+.amd-cards-grid > :nth-child(1),
+.aiss-results-grid > :nth-child(1),
+.aiq-stats-grid > :nth-child(1),
+.aiq-options-grid > :nth-child(1),
+.w6-grid > :nth-child(1) { --w6-stagger: 0; }
+
+.sa-cards-grid > :nth-child(2),
+.sap-cards-grid > :nth-child(2),
+.amd-mood-grid > :nth-child(2),
+.amd-cards-grid > :nth-child(2),
+.aiss-results-grid > :nth-child(2),
+.aiq-stats-grid > :nth-child(2),
+.aiq-options-grid > :nth-child(2),
+.w6-grid > :nth-child(2) { --w6-stagger: 1; }
+
+.sa-cards-grid > :nth-child(3),
+.sap-cards-grid > :nth-child(3),
+.amd-mood-grid > :nth-child(3),
+.amd-cards-grid > :nth-child(3),
+.aiss-results-grid > :nth-child(3),
+.aiq-stats-grid > :nth-child(3),
+.aiq-options-grid > :nth-child(3),
+.w6-grid > :nth-child(3) { --w6-stagger: 2; }
+
+.sa-cards-grid > :nth-child(4),
+.sap-cards-grid > :nth-child(4),
+.amd-mood-grid > :nth-child(4),
+.amd-cards-grid > :nth-child(4),
+.aiss-results-grid > :nth-child(4),
+.aiq-stats-grid > :nth-child(4),
+.aiq-options-grid > :nth-child(4),
+.w6-grid > :nth-child(4) { --w6-stagger: 3; }
+
+.sa-cards-grid > :nth-child(5),
+.sap-cards-grid > :nth-child(5),
+.amd-mood-grid > :nth-child(5),
+.amd-cards-grid > :nth-child(5),
+.aiss-results-grid > :nth-child(5),
+.w6-grid > :nth-child(5) { --w6-stagger: 4; }
+
+.sa-cards-grid > :nth-child(n+6),
+.sap-cards-grid > :nth-child(n+6),
+.amd-mood-grid > :nth-child(n+6),
+.amd-cards-grid > :nth-child(n+6),
+.aiss-results-grid > :nth-child(n+6),
+.w6-grid > :nth-child(n+6) { --w6-stagger: 5; }
+
+.w6-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.w6-card,
+.w6-studio-card {
+  border-radius: 18px;
+  padding: 20px;
+  background: var(--w6-surface-card);
+  border: 1px solid var(--w6-hairline);
+  box-shadow: var(--w6-shadow-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition:
+    transform 220ms var(--w6-ease-spring),
+    border-color 220ms var(--w6-ease-spring),
+    box-shadow 220ms var(--w6-ease-spring);
+}
+
+.w6-card:hover,
+.w6-studio-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--w6-hairline-strong);
+  box-shadow:
+    0 20px 44px -14px rgba(0, 0, 0, 0.65),
+    0 0 22px -6px rgba(0, 242, 254, 0.22);
+}
+
+/* --------------------------------------------------------------------------
+   9. FULL body.light-theme CONTRAST PARITY
+   -------------------------------------------------------------------------- */
+html body.light-theme nav.module-nav-strip.mnav-strip,
+html body.light-theme .mnav-bar {
+  background: var(--w6-surface);
+  border-bottom-color: var(--w6-hairline);
+  box-shadow: var(--w6-shadow-nav);
+}
+
+html body.light-theme .mnav-trigger {
+  background: rgba(15, 23, 42, 0.042);
+  border-color: rgba(15, 23, 42, 0.09);
+  color: #334155;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+html body.light-theme .mnav-trigger:hover {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.38);
+  color: #0f172a;
+  box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.12);
+}
+
+html body.light-theme .mnav-trigger.is-open,
+html body.light-theme .mnav-trigger[aria-expanded="true"] {
+  background: #ffffff;
+  border-color: #0284c7;
+  color: #0369a1;
+  box-shadow: 0 6px 18px -4px rgba(2, 132, 199, 0.2);
+}
+
+html body.light-theme .mnav-trigger.is-active,
+html body.light-theme .mnav-trigger.active {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 6px 16px -4px rgba(2, 132, 199, 0.34);
+}
+
+html body.light-theme .mnav-trigger.is-ai {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+  border-color: rgba(124, 58, 237, 0.28);
+  color: #1e293b;
+}
+
+html body.light-theme .mnav-trigger.is-ai:hover,
+html body.light-theme .mnav-trigger.is-ai.is-open {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.16) 0%, rgba(124, 58, 237, 0.18) 100%);
+  border-color: rgba(124, 58, 237, 0.48);
+  color: #0f172a;
+}
+
+html body.light-theme .mnav-trigger.is-ai.is-active {
+  background: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%);
+  border-color: #6d28d9;
+  color: #ffffff;
+}
+
+html body.light-theme #mnav-dropdown-portal,
+html body.light-theme .mnav-panel,
+html body.light-theme .mnav-dropdown {
+  background: var(--w6-surface-elevated);
+  border-color: rgba(15, 23, 42, 0.11);
+  box-shadow: var(--w6-shadow-popover);
+}
+
+html body.light-theme #mnav-dropdown-portal.is-ai-panel {
+  border-color: rgba(124, 58, 237, 0.28);
+  box-shadow:
+    var(--w6-shadow-popover),
+    0 0 24px -8px rgba(124, 58, 237, 0.2);
+}
+
+html body.light-theme .mnav-portal-head {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+html body.light-theme .mnav-portal-title-wrap,
+html body.light-theme .mnav-item-title {
+  color: #0f172a;
+}
+
+html body.light-theme .mnav-portal-count,
+html body.light-theme .mnav-item-sub {
+  color: #475569;
+}
+
+html body.light-theme .mnav-portal-count {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.09);
+}
+
+html body.light-theme .mnav-item {
+  background: rgba(248, 250, 252, 0.72);
+}
+
+html body.light-theme .mnav-item:hover,
+html body.light-theme .mnav-item:focus-visible {
+  background: #f1f5f9;
+  border-color: rgba(2, 132, 199, 0.38);
+}
+
+html body.light-theme .mnav-item.is-active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%);
+  border-color: rgba(2, 132, 199, 0.46);
+}
+
+html body.light-theme .mnav-item-icon {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.09);
+  box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.08);
+}
+
+html body.light-theme .mnav-item-active-pill {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: rgba(2, 132, 199, 0.32);
+  color: #0369a1;
+}
+
+/* Light-Theme Wave 6 AI Studio Headers, Cards, Badges & Primary CTAs */
+html body.light-theme .sa-shell .sa-header,
+html body.light-theme .sap-shell .sap-hero,
+html body.light-theme .amd-shell .amd-hero,
+html body.light-theme .vsbattle-studio .vsbattle-header,
+html body.light-theme .aiw-studio .aiw-hero,
+html body.light-theme .aiq-shell .aiq-hero,
+html body.light-theme .aiss-studio .aiss-hero,
+html body.light-theme .agc-shell .agc-hero,
+html body.light-theme .w6-studio-header {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.94) 100%);
+  border-color: rgba(15, 23, 42, 0.11);
+  box-shadow: var(--w6-shadow-card);
+}
+
+html body.light-theme .sa-shell .sa-header::before,
+html body.light-theme .sap-shell .sap-hero::before,
+html body.light-theme .amd-shell .amd-hero::before,
+html body.light-theme .vsbattle-studio .vsbattle-header::before,
+html body.light-theme .aiw-studio .aiw-hero::before,
+html body.light-theme .aiq-shell .aiq-hero::before,
+html body.light-theme .aiss-studio .aiss-hero::before,
+html body.light-theme .agc-shell .agc-hero::before,
+html body.light-theme .w6-studio-header::before {
+  background:
+    radial-gradient(500px circle at 6% -12%, rgba(2, 132, 199, 0.08), transparent 60%),
+    radial-gradient(440px circle at 95% 112%, rgba(124, 58, 237, 0.07), transparent 62%);
+}
+
+html body.light-theme .sa-shell .sa-title,
+html body.light-theme .sap-shell .sap-title,
+html body.light-theme .amd-shell .amd-title,
+html body.light-theme .vsbattle-studio .vsbattle-title,
+html body.light-theme .aiw-studio .aiw-hero-title,
+html body.light-theme .aiq-shell .aiq-hero-title,
+html body.light-theme .aiss-studio .aiss-hero h2,
+html body.light-theme .agc-shell .agc-title,
+html body.light-theme .w6-studio-title {
+  color: #0f172a;
+}
+
+html body.light-theme .sa-shell .sa-subtitle,
+html body.light-theme .sap-shell .sap-subtitle,
+html body.light-theme .amd-shell .amd-subtitle,
+html body.light-theme .vsbattle-studio .vsbattle-subtitle,
+html body.light-theme .aiw-studio .aiw-hero-sub,
+html body.light-theme .aiq-shell .aiq-hero-sub,
+html body.light-theme .aiss-studio .aiss-subtitle,
+html body.light-theme .agc-shell .agc-subtitle,
+html body.light-theme .w6-studio-subtitle {
+  color: #334155;
+}
+
+html body.light-theme .sa-shell .sa-avatar-hero,
+html body.light-theme .sap-shell .sap-hero-orb,
+html body.light-theme .agc-shell .agc-hero-icon,
+html body.light-theme .w6-studio-orb {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(124, 58, 237, 0.14));
+  border-color: rgba(2, 132, 199, 0.34);
+  box-shadow: 0 6px 16px -4px rgba(2, 132, 199, 0.18);
+}
+
+html body.light-theme .w6-card,
+html body.light-theme .w6-studio-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+  box-shadow: var(--w6-shadow-card);
+}
+
+html body.light-theme .w6-ai-badge,
+html body.light-theme .ai-accent-badge,
+html body.light-theme .amd-shell .amd-engine-pill,
+html body.light-theme .amd-shell .amd-source-badge,
+html body.light-theme .amd-shell .amd-match-pill,
+html body.light-theme .vsbattle-studio .vsbattle-engine-pill:not(.is-fallback),
+html body.light-theme .vsbattle-studio .vsbattle-verdict-status:not(.is-fallback),
+html body.light-theme .aiw-studio .aiw-engine-pill:not(.is-offline),
+html body.light-theme .aiw-studio .aiw-live-tag,
+html body.light-theme .aiq-shell .aiq-status-pill,
+html body.light-theme .aiss-studio .aiss-status-pill,
+html body.light-theme .aiss-studio .aiss-engine-badge,
+html body.light-theme .agc-shell .agc-badge,
+html body.light-theme .agc-shell .agc-source-pill {
+  background: var(--w6-ai-badge-bg);
+  border-color: var(--w6-ai-badge-border);
+  color: #0369a1;
+}
+
+html body.light-theme .w6-ai-badge--emerald,
+html body.light-theme .sa-shell .sa-stat-pill,
+html body.light-theme .sap-shell .sap-status-pill:not(.is-offline),
+html body.light-theme .sap-shell .sap-meta-badge.live {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.12), rgba(2, 132, 199, 0.08));
+  border-color: rgba(5, 150, 105, 0.34);
+  color: #065f46;
+}
+
+html body.light-theme .w6-ai-badge--violet,
+html body.light-theme .aiw-studio .aiw-hero-kicker,
+html body.light-theme .amd-shell .amd-eyebrow {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(37, 99, 235, 0.08));
+  border-color: rgba(124, 58, 237, 0.32);
+  color: #5b21b6;
+}
+
+html body.light-theme .w6-ai-btn-primary,
+html body.light-theme .ai-primary-btn,
+html body.light-theme .sa-shell .sa-send-btn,
+html body.light-theme .sap-shell .sap-generate-btn,
+html body.light-theme .sc-drawer .sc-send-btn,
+html body.light-theme .sc-drawer .sc-btn-primary,
+html body.light-theme .amd-shell .amd-cta-btn,
+html body.light-theme .vsbattle-studio .vsbattle-judge-btn,
+html body.light-theme .aiw-studio .aiw-generate-btn,
+html body.light-theme .aiq-shell .aiq-generate-btn,
+html body.light-theme .aiss-studio .aiss-submit-btn,
+html body.light-theme .agc-shell .agc-btn-generate {
+  background:
+    linear-gradient(135deg, #0284c7 0%, #2563eb 54%, #7c3aed 100%) padding-box,
+    var(--w6-ai-gradient-wide) border-box;
+  background-size: 100% 100%, 220% 220%;
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    var(--w6-shadow-aurora);
+}
+
+html body.light-theme #seyyah-copilot-root .sc-orb-btn {
+  border-color: rgba(2, 132, 199, 0.44);
+  box-shadow:
+    0 12px 28px -6px rgba(15, 23, 42, 0.18),
+    0 0 22px -4px rgba(2, 132, 199, 0.24);
+}
+
+/* --------------------------------------------------------------------------
+   10. KEYBOARD ACCESSIBILITY (:focus-visible) FOR WAVE 6 & MEGA-NAV
+   -------------------------------------------------------------------------- */
+html body .mnav-trigger:focus-visible,
+html body .mnav-item:focus-visible,
+html body .w6-ai-btn-primary:focus-visible,
+html body .ai-primary-btn:focus-visible,
+html body .sa-send-btn:focus-visible,
+html body .sap-generate-btn:focus-visible,
+html body .amd-cta-btn:focus-visible,
+html body .vsbattle-judge-btn:focus-visible,
+html body .aiw-generate-btn:focus-visible,
+html body .aiq-generate-btn:focus-visible,
+html body .aiss-submit-btn:focus-visible,
+html body .agc-btn-generate:focus-visible {
+  outline: 2px solid var(--accent-cyan, #00f2fe);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   11. RESPONSIVE POLISH — TABLET (<= 960px) & MOBILE (<= 640px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  nav.module-nav-strip.mnav-strip,
+  .mnav-bar {
+    padding: 8px 14px;
+  }
+
+  .mnav-track {
+    gap: 6px;
+  }
+
+  .sa-shell .sa-header,
+  .sap-shell .sap-hero,
+  .amd-shell .amd-hero,
+  .vsbattle-studio .vsbattle-header,
+  .aiw-studio .aiw-hero,
+  .aiq-shell .aiq-hero,
+  .aiss-studio .aiss-hero,
+  .agc-shell .agc-hero,
+  .w6-studio-header,
+  .ai-city-concierge-box {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .aiw-studio .aiw-grid,
+  .agc-shell .agc-studio-grid,
+  .vsbattle-studio .vsbattle-arena {
+    grid-template-columns: 1fr;
+  }
+
+  .aiss-studio .aiss-results-grid,
+  .amd-shell .amd-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  nav.module-nav-strip.mnav-strip,
+  .mnav-bar {
+    padding: 8px 12px;
+  }
+
+  .mnav-trigger {
+    height: 34px;
+    padding: 0 11px;
+    font-size: 0.78rem;
+    gap: 6px;
+  }
+
+  #mnav-dropdown-portal {
+    width: calc(100vw - 20px);
+    padding: 10px;
+    border-radius: 16px;
+    max-height: min(68vh, 480px);
+  }
+
+  .mnav-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sa-shell,
+  .sap-shell,
+  .amd-shell,
+  .vsbattle-studio,
+  .aiw-studio,
+  .aiq-shell,
+  .aiss-studio,
+  .agc-shell,
+  .w6-studio {
+    gap: 14px;
+  }
+
+  .sa-shell .sa-header,
+  .sap-shell .sap-hero,
+  .amd-shell .amd-hero,
+  .vsbattle-studio .vsbattle-header,
+  .aiw-studio .aiw-hero,
+  .aiq-shell .aiq-hero,
+  .aiss-studio .aiss-hero,
+  .agc-shell .agc-hero,
+  .w6-studio-header,
+  .ai-city-concierge-box {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .w6-grid,
+  .aiss-studio .aiss-results-grid,
+  .amd-shell .amd-cards-grid,
+  .amd-shell .amd-mood-grid,
+  .amd-shell .amd-params-grid,
+  .aiq-shell .aiq-stats-grid,
+  .aiq-shell .aiq-options-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .w6-ai-btn-primary,
+  .ai-primary-btn,
+  .sa-shell .sa-send-btn,
+  .sap-shell .sap-generate-btn,
+  .amd-shell .amd-cta-btn,
+  .vsbattle-studio .vsbattle-judge-btn,
+  .aiw-studio .aiw-generate-btn,
+  .aiq-shell .aiq-generate-btn,
+  .aiss-studio .aiss-submit-btn,
+  .agc-shell .agc-btn-generate {
+    width: 100%;
+    justify-content: center;
+    min-height: 42px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   12. ACCESSIBILITY — REDUCED MOTION & PRINT SAFETY
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .seyyah-stream-cursor,
+  .ai-stream-cursor,
+  .w6-stream-cursor,
+  .aiw-stream-cursor,
+  .vsbattle-stream-cursor,
+  .agc-stream-cursor,
+  .sa-stream-cursor,
+  .sap-stream-cursor,
+  .aicc-stream-cursor,
+  .sc-stream-cursor,
+  .is-streaming > :last-child::after,
+  [data-streaming="true"] > :last-child::after,
+  .seyyah-streaming-text.is-active::after {
+    animation: none !important;
+    opacity: 0.85;
+  }
+
+  .w6-ai-btn-primary::before,
+  .ai-primary-btn::before,
+  .sa-shell .sa-send-btn::before,
+  .sap-shell .sap-generate-btn::before,
+  .amd-shell .amd-cta-btn::before,
+  .vsbattle-studio .vsbattle-judge-btn::before,
+  .aiw-studio .aiw-generate-btn::before,
+  .aiq-shell .aiq-generate-btn::before,
+  .aiss-studio .aiss-submit-btn::before,
+  .agc-shell .agc-btn-generate::before,
+  .w6-card,
+  .w6-studio-card,
+  .sa-shell .sa-city-card,
+  .sap-shell .sap-city-card,
+  .sap-shell .sap-result-card,
+  .sap-shell .sap-form-card,
+  .ai-city-concierge-box,
+  .amd-shell .amd-mood-card,
+  .amd-shell .amd-city-card,
+  .amd-shell .amd-manifesto,
+  .vsbattle-studio .vsbattle-fighter,
+  .vsbattle-studio .vsbattle-bars-card,
+  .vsbattle-studio .vsbattle-ai-card,
+  .aiw-studio .aiw-card,
+  .aiw-studio .aiw-paper-card,
+  .aiq-shell .aiq-stat-card,
+  .aiq-shell .aiq-controls-card,
+  .aiq-shell .aiq-stage-card,
+  .aiq-shell .aiq-option-card,
+  .aiss-studio .aiss-card,
+  .aiss-studio .aiss-summary-banner,
+  .agc-shell .agc-card,
+  .agc-shell .agc-output-card,
+  #mnav-dropdown-portal.is-open {
+    animation: none !important;
+  }
+
+  .mnav-trigger,
+  .mnav-chevron,
+  .mnav-item,
+  .mnav-item-icon,
+  #mnav-dropdown-portal,
+  .w6-card,
+  .w6-studio-card,
+  .w6-ai-btn-primary,
+  .ai-primary-btn,
+  .sa-shell .sa-send-btn,
+  .sap-shell .sap-generate-btn,
+  .amd-shell .amd-cta-btn,
+  .vsbattle-studio .vsbattle-judge-btn,
+  .aiw-studio .aiw-generate-btn,
+  .aiq-shell .aiq-generate-btn,
+  .aiss-studio .aiss-submit-btn,
+  .agc-shell .agc-btn-generate,
+  #seyyah-copilot-root .sc-orb-btn {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  nav.module-nav-strip.mnav-strip,
+  .mnav-bar,
+  #mnav-dropdown-portal,
+  .mnav-panel,
+  .mnav-dropdown,
+  #seyyah-ai-hud-wrap,
+  .seyyah-stream-cursor,
+  .aiw-stream-cursor,
+  .vsbattle-stream-cursor,
+  .agc-stream-cursor,
+  .ai-stream-cursor,
+  .w6-stream-cursor {
+    display: none !important;
+  }
+}

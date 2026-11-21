@@ -274,6 +274,12 @@
       distanceGame: mods.distanceGame,
       regions: mods.regions,
       aiPlanner: mods.aiPlanner,
+      aiMood: mods.aiMood,
+      aiWriter: mods.aiWriter,
+      aiBattle: mods.aiBattle,
+      aiQuiz: mods.aiQuiz,
+      aiSearch: mods.aiSearch,
+      aiChef: mods.aiChef,
       pomodoro: mods.pomodoro,
       achievements: mods.achievements,
       photoWall: mods.photoWall,
@@ -319,6 +325,7 @@
       '#compare', '#gastronomy', '#libraries', '#library', '#quiz', '#analytics', '#journal',
       '#atlas', '#packing', '#postcard', '#timeline', '#sound', '#seasons', '#landmarks', '#reader', '#budget',
       '#cinematicTour', '#passport', '#radar', '#advisor', '#unesco', '#distanceGame', '#regions', '#aiPlanner',
+      '#aiMood', '#aiWriter', '#aiBattle', '#aiQuiz', '#aiSearch', '#aiChef',
       '#pomodoro', '#achievements', '#photoWall', '#bucketList', '#deepStats', '#admin'
     ].includes(h)) {
       openView(h.slice(1), false);
@@ -366,8 +373,9 @@
     if (mods.ambientMotion && typeof mods.ambientMotion.init === 'function') {
       mods.ambientMotion.init(ctx);
     }
-    // Wave 4 & Wave 5 Next-Gen AI, Studios & Luxury UX Enhancer Modules
+    // Wave 4, 5 & 6 Next-Gen AI, Modern Mega-Nav, Studios & Luxury UX Enhancer Modules
     [
+      'modernNav', 'aiHud',
       'floatingCopilot', 'aiCityConcierge', 'liveWeather', 'interactive3d',
       'voiceNarrator', 'storyReels', 'quickDock', 'shareCard',
       'mobileUx', 'pomodoro', 'achievements', 'dailySpotlight', 'proTools'

@@ -306,9 +306,69 @@
         icon: '🧠',
         title: 'AI Sefer Mühendisi (Planlayıcı)',
         subtitle: 'Gemini AI ile gün, bütçe ve odağa göre kişiselleştirilmiş sefer planı üret',
-        category: 'Asistan',
+        category: 'Yapay Zekâ',
         keywords: 'ai planlayici sefer muhendisi gemini 5 gun rota butce kyk',
         run: () => safeCall('openView', 'aiPlanner')
+      },
+      {
+        id: 'action-ai-mood',
+        type: 'action',
+        icon: '🎭',
+        title: 'AI Ruh Hali & Kişilik Kaşifi',
+        subtitle: 'O anki ruh haline, mevsime ve yol arkadaşına göre %99 uyumlu 3 menzil',
+        category: 'Yapay Zekâ',
+        keywords: 'ai ruh hali mood kisilik kesif tefekkur macera melankoli',
+        run: () => safeCall('openView', 'aiMood')
+      },
+      {
+        id: 'action-ai-writer',
+        type: 'action',
+        icon: '✍️',
+        title: 'AI Evliya Çelebi Seyahatname Yazarı',
+        subtitle: 'Kısa notlarından canlı akan (streaming) edebi seyahatname ve blog üret',
+        category: 'Yapay Zekâ',
+        keywords: 'ai yazar evliya celebi seyahatname blog makale deneme',
+        run: () => safeCall('openView', 'aiWriter')
+      },
+      {
+        id: 'action-ai-battle',
+        type: 'action',
+        icon: '⚔️',
+        title: 'AI Şehir Düellosu & Uzman Hakem',
+        subtitle: 'İki ili 5 kriterde yan yana yarıştırıp Gemini AI hakem kararı al',
+        category: 'Yapay Zekâ',
+        keywords: 'ai duello vs karsilastir hakem iki sehir',
+        run: () => safeCall('openView', 'aiBattle')
+      },
+      {
+        id: 'action-ai-quiz',
+        type: 'action',
+        icon: '🧩',
+        title: 'Sonsuz AI Anadolu Kültür Yarışması',
+        subtitle: 'Gemini tarafından anlık üretilen 4 şıklı tarih, mutfak ve tasavvuf soruları',
+        category: 'Yapay Zekâ',
+        keywords: 'ai quiz bilgi yarismasi soru tarih kultur',
+        run: () => safeCall('openView', 'aiQuiz')
+      },
+      {
+        id: 'action-ai-chef',
+        type: 'action',
+        icon: '🍽️',
+        title: 'AI Anadolu Gurme Şefi & Sofra Rehberi',
+        subtitle: '81 ilde öğün ve bütçeye göre canlı akan yöresel lezzet ve sofra rotası',
+        category: 'Yapay Zekâ',
+        keywords: 'ai gurme sef yemek lezzet mutfak sofra',
+        run: () => safeCall('openView', 'aiChef')
+      },
+      {
+        id: 'action-ai-search',
+        type: 'action',
+        icon: '🔎',
+        title: 'AI Doğal Dil Akıllı Arama',
+        subtitle: 'Çok kriterli doğal Türkçe cümlelerle 81 il içinde semantik keşif',
+        category: 'Yapay Zekâ',
+        keywords: 'ai arama dogal dil semantik filtre',
+        run: () => safeCall('openView', 'aiSearch')
       },
       {
         id: 'action-pomodoro',
