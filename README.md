@@ -9,13 +9,15 @@
 <br/>
 
 <p align="center">
-  <a href="https://resilient-semifreddo-6651ec.netlify.app/" target="_blank"><img src="https://img.shields.io/badge/🌐_Canlı_Web_Portal-Dijital_Seyyah-00f2fe?style=for-the-badge&logo=netlify&logoColor=04121d" alt="Live Demo"></a>
+  <a href="https://bahattinyunus.github.io/dijitalseyyah/" target="_blank"><img src="https://img.shields.io/badge/🌐_Canlı_Web_Portal-Dijital_Seyyah-00f2fe?style=for-the-badge&logo=githubpages&logoColor=04121d" alt="Live Demo"></a>
+  <img src="https://img.shields.io/badge/Yapay_Zekâ-Gemini_AI_Streaming-a855f7?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini AI">
   <img src="https://img.shields.io/badge/Keşif-48.1%25-brightgreen?style=for-the-badge&logo=target&logoColor=white" alt="Coverage">
   <img src="https://img.shields.io/badge/Bölgeler-6%2F7-blue?style=for-the-badge&logo=map&logoColor=white" alt="Regions">
   <img src="https://img.shields.io/badge/Görsel_Arşivi-162_Fotoğraf_(81×2)-f59e0b?style=for-the-badge&logo=unsplash&logoColor=04121d" alt="Photos">
+  <img src="https://img.shields.io/badge/Stüdyolar-45+_İnteraktif_Modül-10b981?style=for-the-badge" alt="Modules">
   <img src="https://img.shields.io/badge/Testler-20%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-MIT-a855f7?style=for-the-badge" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-MIT-6366f1?style=for-the-badge" alt="License"></a>
 </p>
 
 <p align="center">
@@ -59,9 +61,9 @@
   </tr>
 </table>
 
-| 🌐 Canlı Web Uygulaması | 🗺️ İnteraktif Folium Haritası | 📚 Derlenmiş E-Kitap Külliyatı | 💻 Python CLI Motoru |
+| 🌐 Canlı Web Uygulaması (GitHub Pages) | 🗺️ İnteraktif Folium Haritası | 📚 Derlenmiş E-Kitap Külliyatı | 💻 Python CLI Motoru |
 | :---: | :---: | :---: | :---: |
-| [**Dijital Seyyah Portalı ➔**](https://resilient-semifreddo-6651ec.netlify.app/) | [**travel_map.html ➔**](travel_map.html) | [**ANADOLU_SEYAHATNAMESI.md ➔**](ANADOLU_SEYAHATNAMESI.md) | `python dijital_seyyah.py status` |
+| [**bahattinyunus.github.io/dijitalseyyah ➔**](https://bahattinyunus.github.io/dijitalseyyah/) | [**travel_map.html ➔**](travel_map.html) | [**ANADOLU_SEYAHATNAMESI.md ➔**](ANADOLU_SEYAHATNAMESI.md) | `python dijital_seyyah.py status` |
 
 ---
 
@@ -203,6 +205,9 @@ Coğrafi Bölge Kapsamı:     6 / 7 (%85.7)
 | **🏜️ Güneydoğu Anadolu** | `%0.0` (0/9) | *Sıradaki Keşif Seferi* | ⬜⬜⬜⬜⬜ |
 
 > [!TIP]
+> **🧭 Aktif Sefer Koridoru (Batı Karadeniz ➔ Trakya Hattı — 10 Durak):**
+> `Ankara` ➔ `Çankırı` ➔ `Kastamonu` ➔ `Karabük` ➔ `Bartın` ➔ `Zonguldak` ➔ `Düzce` ➔ `Sakarya` ➔ `İstanbul` ➔ `Edirne`
+>
 > **🏜️ Sıradaki Büyük Sefer — Mezopotamya Hattı:** Sadece **2 il** sonra **📜 Evliya Çelebi İzinde (41+ İl)** mertebesine, Güneydoğu Anadolu seferi ile de **🌍 Yedi İklim Fatihi (7/7 Bölge)** rozetine ulaşılacak!
 > **Önerilen 2-Opt Rota:** `Gaziantep` ➔ `Kilis` ➔ `Adıyaman` ➔ `Şanlıurfa` ➔ `Diyarbakır` ➔ `Mardin` ➔ `Batman` ➔ `Siirt` ➔ `Şırnak`
 
@@ -323,24 +328,36 @@ Coğrafi Bölge Kapsamı:     6 / 7 (%85.7)
 
 ---
 
-## ✨ İnteraktif Web Portalı ve Öne Çıkan Özellikler
+## ✨ İnteraktif Web Portalı ve AI-Native Kurumsal Mimari (45+ Modül)
+
+Canlı web uygulaması ([**bahattinyunus.github.io/dijitalseyyah**](https://bahattinyunus.github.io/dijitalseyyah/)), sıfır harici framework bağımlılığıyla kurgulanmış **Obsidian + Kinetic Glassmorphism** tasarım sistemine, **6 Gruplu Mega-Navigasyon** mimarisine ve **Birleşik Gemini AI Çekirdeğine (`window.SEYYAH_AI`)** sahiptir.
 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <h4>🗺️ Çoklu Katmanlı Harita & 2-Opt Rota Motoru</h4>
+      <h4>🧠 Birleşik Gemini AI Çekirdeği & 10 Yapay Zekâ Stüdyosu</h4>
       <ul>
-        <li><b>3 Harita Teması:</b> Gece (Dark Matter), Gündüz (Positron) ve OpenStreetMap katmanları.</li>
-        <li><b>2-Opt TSP Optimizasyonu:</b> Çapraz yolları ortadan kaldıran akıllı rota planlayıcı, tasarruf göstergesi ve canlı <b>SVG Türkiye Rota Haritası</b>.</li>
-        <li><b>Bölge Filtresi:</b> Tek bir bölgeye (örn. sadece Güneydoğu Anadolu) özel keşif rotası üretme.</li>
+        <li><b><code>window.SEYYAH_AI</code> (<code>js/ai-core.js</code>):</b> Gerçek zamanlı kelime kelime <b>SSE Streaming</b> (<code>:streamGenerateContent?alt=sse</code>), 4'lü otomatik model yedekleme (<code>gemini-flash-lite-latest</code> ➔ <code>gemini-3.5-flash-lite</code> ➔ <code>gemini-3.8-flash</code>), 30 dk LRU önbellek, canlı telemetri HUD rozeti (<code>🟢 AI</code>) ve sıfır DOM anahtar sızıntısı.</li>
+        <li><b>✨ Sağ Alt Yüzen AI Copilot (<code>js/floating-ai-copilot.js</code>):</b> O an incelenen ili/sayfayı bilen, bağlama özel tek tık sorular sunan ve bahsedilen illeri tıklanabilir kartlara dönüştüren yüzen asistan küresi.</li>
+        <li><b>🧠 81 İl İçi AI Rehber Çubuğu (<code>js/ai-city-concierge.js</code>):</b> Her il sayfasında tek tıkla <i>5 Günlük Plan</i>, <i>Tefekkür Notu</i>, <i>Kütüphane Stratejisi</i> ve <i>Gurme Rota</i> üretimi.</li>
+        <li><b>🧭 AI Sefer Mühendisi (<code>js/smart-route-ai.js</code>):</b> Başlangıç ili, gün (3/5/7/14), odak ve GSB KYK bütçesine göre tam sefer planlayıcı.</li>
+        <li><b>🎭 AI Ruh Hali Kaşifi (<code>js/ai-mood-discovery.js</code>):</b> Ruh hali, mevsim ve yol arkadaşına göre %96–99 uyumlu 3 menzil eşleştirici.</li>
+        <li><b>✍️ AI Evliya Çelebi Seyahatname Yazarı (<code>js/ai-journal-writer.js</code>):</b> Kısa notlardan 4 edebi üslupta canlı akan (streaming) seyahatname ve blog yazarı.</li>
+        <li><b>⚔️ AI Şehir Düellosu & Uzman Hakem (<code>js/ai-city-vs-battle.js</code>):</b> İki ili 5 kriterde yan yana yarıştırıp canlı Gemini hakem kararı alan arena.</li>
+        <li><b>🧩 Sonsuz AI Kültür Yarışması (<code>js/ai-smart-quiz.js</code>):</b> Zorluk ve kategoriye göre anlık üretilen 4 şıklı dinamik bilgi yarışması.</li>
+        <li><b>🔎 AI Doğal Dil Akıllı Arama (<code>js/ai-semantic-search.js</code>) & 🍽️ AI Gurme Şef (<code>js/ai-gastronomy-chef.js</code>):</b> Çok kriterli doğal Türkçe semantik arama ve öğün bazlı yöresel sofra rehberi.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h4>📸 Lightbox Galeri, Tefekkür Sesi & Mobil UX</h4>
+      <h4>🏛️ 6 Gruplu Mega-Navigasyon, Keşif, Odak & Görsel Stüdyolar</h4>
       <ul>
-        <li><b>81×2 Fotoğraf Galerisi:</b> Her ilde <code>banner.jpg</code> + <code>gallery.jpg</code> vitrini ve klavye destekli tam ekran <b>Lightbox Modal</b>.</li>
-        <li><b>Web Audio API Tefekkür Sesleri:</b> Harici dosya olmadan üretilen 3 huzur modu (<i>Ney & Bozkır, Kütüphane Yağmuru, Kervansaray Sükuneti</i>).</li>
-        <li><b>Mobil Çekmece & Türkçe Arama:</b> <code>/</code> kısayolu ile Türkçe karakter duyarsız anlık arama ve mobil uyumlu 81 il gezgini.</li>
+        <li><b>🧭 6 Kategorili Mega-Navigasyon (<code>js/modern-nav-shell.js</code>):</b> 37+ görünümü <i>🏠 Keşif</i>, <i>✨ Yapay Zekâ</i>, <i>🧭 Rota & Plan</i>, <i>🏛️ Kültür & Miras</i>, <i>🎮 Stüdyo & Odak</i> ve <i>📊 Analiz & Defter</i> açılır cam menülerinde toplayan kurumsal kabuk + <code>Ctrl+K</code> Spotlight Komut Paleti ve macOS tarzı alt Hızlı Dock.</li>
+        <li><b>📱 Anadolu Hikayeleri (<code>js/story-reels.js</code>) & Günün Menzili (<code>js/daily-hikmet-banner.js</code>):</b> Tam ekran ilerleme çubuklu görsel sefer hikayeleri ve her gün yenilenen keşif menzili.</li>
+        <li><b>🎶 Gerçek Tasavvufi Ney Taksimi & 5 Kanallı Ses Stüdyosu:</b> Üst barda gerçek kayıt <b>Türk Ney Taksimi</b> (<code>assets/ney_tasavvuf.mp3</code> — Irak Makamı), Kütüphane Yağmuru, Bozkır Esintisi, Dalga sesleri ve 5 kanallı mikser (<code>js/sound-mixer.js</code>).</li>
+        <li><b>🍅 Kütüphane Odak & Pomodoro Stüdyosu (<code>js/pomodoro-library.js</code>):</b> 81 İl Halk Kütüphanesi arka planlı dairesel SVG sayaç (25/50/5/15 dk), zil sesi ve yüzen mini zamanlayıcı.</li>
+        <li><b>🌤️ Canlı Hava Durumu (<code>js/live-weather-prayer.js</code>) & 🔊 Sesli Anlatıcı (<code>js/voice-narrator.js</code>):</b> 81 ilde gerçek zamanlı Open-Meteo sıcaklık/gün doğumu telemetrisi, Türkçe sesli okuma (<code>0.9x–1.2x</code>) ve Odak Okuma Modu.</li>
+        <li><b>🖼️ 162 Kare Mozaik Duvarı (<code>js/photo-map-wall.js</code>) & 📤 1080×1920 Hikaye Kartı (<code>js/share-card-studio.js</code>):</b> Pinterest/Masonry fotoğraf duvarı, otomatik slayt ve her il için tek tıkla yüksek çözünürlüklü PNG hikaye kartı indirme.</li>
+        <li><b>📈 İleri Analitik (<code>js/stats-deep-analytics.js</code>), 🏆 23 Rozetli Başarım Motoru & 🎯 24 Görevli Bucket List:</b> 7 bölge SVG Radar grafiği, 81/81 bitiş tarihi simülatörü, rütbe merdiveni ve <code>?</code> kısayol/güvenli JSON yedekleme merkezi.</li>
       </ul>
     </td>
   </tr>
@@ -358,9 +375,9 @@ flowchart LR
     A["81 İl Klasörleri\n(README.md + banner.jpg + gallery.jpg)"] --> B["travel_core.py\n(SeyyahEngine • 2-Opt • Rozetler)"]
     B --> C["travel_data.json & web_data.js"]
     B --> D["map_generator.py → travel_map.html"]
-    B --> E["README.md (Dinamik Senkronizasyon)"]
-    B --> F["ANADOLU_SEYAHATNAMESI.md (E-Kitap)"]
-    C --> G["index.html + app.js + style.css\n(Glassmorphism SPA + Lightbox)"]
+    B --> E["README.md & ANADOLU_SEYAHATNAMESI.md"]
+    C --> G["index.html + app.js + 6-Group Mega-Nav\n(45+ Modül • Obsidian Glassmorphism SPA)"]
+    H["window.SEYYAH_AI (js/ai-core.js)\n(Gemini SSE Streaming • 4-Model Failover • LRU Cache)"] --> G
     D --> G
 ```
 
