@@ -1,0 +1,375 @@
+/* ==========================================================================
+   DİJİTAL SEYYAH — MASTER MOBILE & TABLET RESPONSIVE GUARDRAIL (v29)
+   Guarantees zero horizontal overflow, zero header crushing, and clean
+   side-by-side bottom dock + AI Copilot alignment on 320px–960px screens.
+   ========================================================================== */
+
+/* 1. Dynamic Viewport Height (100dvh) & Strict Horizontal Overflow Lock */
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app-container {
+  height: 100vh;
+  height: 100dvh;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+.main-layout,
+.content-viewport,
+#viewport-content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Prevent any child card, SVG, canvas, or code block from blowing out width */
+.content-viewport *,
+#viewport-content * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.content-viewport svg,
+.content-viewport canvas,
+.content-viewport img,
+.content-viewport video,
+.content-viewport iframe {
+  max-width: 100% !important;
+  height: auto;
+}
+
+/* Preserve fixed aspect heights where explicitly styled on hero/card thumbnails */
+.city-hero img,
+.aiss-media img,
+.mega-gallery-img-wrap img,
+.sa-card-media img,
+.adm-banner-prev,
+.city-thumb,
+.brand-logo-img {
+  height: 100% !important;
+}
+
+/* ==========================================================================
+   TABLET & MOBILE BREAKPOINT (<= 960px)
+   ========================================================================== */
+@media (max-width: 960px) {
+  header.glass,
+  header {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 7px 10px !important;
+    font-size: 0.8rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .logo-section {
+    gap: 9px !important;
+    min-width: 0 !important;
+  }
+
+  .logo-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .logo-text {
+    min-width: 0 !important;
+  }
+
+  .logo-text h1 {
+    font-size: 1rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .logo-text p {
+    display: none !important;
+  }
+
+  .header-actions {
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .header-actions .btn {
+    padding: 7px 10px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Mega-Navigation Strip */
+  nav.module-nav-strip,
+  nav.module-nav-strip.mnav-strip {
+    padding: 7px 12px !important;
+    gap: 6px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mnav-trigger,
+  .module-nav-btn {
+    padding: 6px 11px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .content-viewport,
+  #viewport-content {
+    padding: 14px 12px 96px 12px !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* ==========================================================================
+   PHONE BREAKPOINT (<= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Declutter top header on phones so it NEVER overflows 360px-430px screens */
+  #btn-export,
+  #btn-quote,
+  #btn-random,
+  .header-spotlight-btn {
+    display: none !important;
+  }
+
+  .seyyah-ai-hud-label {
+    display: none !important;
+  }
+
+  #seyyah-ai-status-pill {
+    padding: 6px 9px !important;
+    font-size: 0.76rem !important;
+  }
+
+  /* 2x2 Compact KPI Grid on Phones (fits all 4 KPIs above the fold!) */
+  .dashboard-view .stats-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    padding: 12px 13px !important;
+    gap: 5px !important;
+  }
+
+  .stat-card-header {
+    font-size: 0.74rem !important;
+  }
+
+  .stat-card-value {
+    font-size: 1.3rem !important;
+  }
+
+  .stat-card-desc {
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Hero Banner Compact Mobile Polish */
+  .hero-banner,
+  .hero-banner-visual {
+    padding: 18px 15px !important;
+    border-radius: 16px !important;
+  }
+
+  .hero-banner h2,
+  .hero-banner-visual h2 {
+    font-size: 1.32rem !important;
+    line-height: 1.28 !important;
+  }
+
+  .hero-quote {
+    font-size: 0.82rem !important;
+    padding-left: 10px !important;
+  }
+
+  /* Collapse all multi-column studio grids cleanly to 1 column on phones */
+  .adm-layout,
+  .adm-cms-grid,
+  .adm-grid-2,
+  .two-col-grid,
+  .city-gallery-grid,
+  .regions-grid,
+  .feature-hub-grid,
+  .mega-gallery-grid,
+  .aiss-grid,
+  .mnav-grid,
+  .seyyah-city-bottom-nav,
+  .vsbattle-arena,
+  .vsbattle-grid,
+  .aiw-layout,
+  .sap-grid,
+  .pomo-grid,
+  .pomo-layout,
+  .dsa-grid,
+  .dsa-two-col,
+  .skn-grid,
+  .divan-grid,
+  .lwl-grid,
+  .ec-layout,
+  .svs-grid,
+  .irfan-grid,
+  .hm-layout,
+  .scl-grid,
+  .ethos-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Override inline multi-column grids inside studio cards on phones */
+  .content-viewport [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Keep 2x2 stats-grid even if matched above */
+  .dashboard-view .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Mega-Nav Floating Portal -> Full-Width Mobile Sheet */
+  #mnav-dropdown-portal {
+    left: 8px !important;
+    right: 8px !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: 72dvh !important;
+    overflow-y: auto !important;
+    border-radius: 16px !important;
+    padding: 12px !important;
+  }
+
+  /* Side-by-Side Bottom Bar: Quick Dock (Left) + AI Copilot Orb (Right) — ZERO Collision */
+  #seyyah-quick-dock {
+    bottom: 10px !important;
+    left: 10px !important;
+    right: 66px !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: calc(100vw - 76px) !important;
+    justify-content: space-around !important;
+    padding: 5px 8px !important;
+    border-radius: 16px !important;
+  }
+
+  .sc-orb-btn {
+    bottom: 10px !important;
+    right: 10px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .sc-drawer {
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 66px !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    height: min(72dvh, 490px) !important;
+    border-radius: 18px !important;
+  }
+
+  #seyyah-back-to-top,
+  #seyyah-mobile-scroll-top,
+  .seyyah-back-to-top {
+    bottom: 66px !important;
+    right: 12px !important;
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  /* Prevent iOS Safari auto-zoom on form focus */
+  input[type="text"],
+  input[type="password"],
+  input[type="search"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Modals on Phones */
+  .modal-content {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    max-height: 88dvh !important;
+    margin: 0 auto !important;
+  }
+
+  /* Ambient Sound Popover on Phones */
+  .ambient-popover {
+    position: fixed !important;
+    top: 58px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: calc(100vw - 20px) !important;
+    max-width: 360px !important;
+    margin-left: auto !important;
+  }
+
+  /* Dashboard Mode Bar & Story Rings on Phones */
+  .anadolu-stories-bar {
+    padding: 10px 12px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .seyyah-dash-mode-bar,
+  .sdo-bar-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  /* City Breadcrumb & Neighbor Strip on Phones */
+  .seyyah-city-breadcrumb-bar {
+    padding: 10px 12px !important;
+    overflow-x: auto !important;
+  }
+}
+
+/* ==========================================================================
+   COMPACT PHONE BREAKPOINT (<= 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+  .mobile-menu-label {
+    display: none !important;
+  }
+
+  .logo-icon {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .logo-text h1 {
+    font-size: 0.9rem !important;
+    letter-spacing: 0.2px !important;
+  }
+
+  .header-actions .btn {
+    padding: 6px 8px !important;
+  }
+
+  .detail-card,
+  .adm-panel-card {
+    padding: 14px 12px !important;
+  }
+}

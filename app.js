@@ -231,6 +231,7 @@
 
   // Unified View Switcher (Core + 22 Modular Studio Views)
   function openView(viewName, updateHash = true) {
+    closeMobileSidebar();
     const mods = window.SEYYAH_MODULES || {};
     if (state.currentView === 'cinematicTour' && viewName !== 'cinematicTour' && mods.cinematicTour && typeof mods.cinematicTour.stop === 'function') {
       mods.cinematicTour.stop();
@@ -535,6 +536,7 @@
 
   // Select City & Render Detail
   function selectCity(key, updateHash = true) {
+    closeMobileSidebar();
     state.selectedCityKey = key;
     state.currentView = 'city';
     if (updateHash) setHash(`#city/${encodeURIComponent(key)}`);
