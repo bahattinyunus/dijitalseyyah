@@ -371,6 +371,66 @@
         run: () => safeCall('openView', 'aiSearch')
       },
       {
+        id: 'action-irfan-atlas',
+        type: 'action',
+        icon: '🕌',
+        title: 'Anadolu İrfan & Gönül Coğrafyası Atlası',
+        subtitle: '24 gönül sultanı, 303 manevi şahsiyet ve Gemini AI tefekkür sohbeti',
+        category: 'İrfan & Felsefe',
+        keywords: 'irfan gonul atlasi mevlana yunus emre haci bayram tasavvuf',
+        run: () => safeCall('openView', 'irfanAtlas')
+      },
+      {
+        id: 'action-hikmet-meclisi',
+        type: 'action',
+        icon: '📜',
+        title: 'Hikmet Meclisi (5 Kadim Bilge ile AI Sohbet)',
+        subtitle: 'Evliya Çelebi, İbn Battûta, İbnü\'l-Arabî, Yunus Emre ve İbn Haldûn ile diyalog',
+        category: 'İrfan & Felsefe',
+        keywords: 'hikmet meclisi evliya celebi ibn arabi ibn haldun felsefe diyalog',
+        run: () => safeCall('openView', 'hikmetMeclisi')
+      },
+      {
+        id: 'action-seven-valleys',
+        type: 'action',
+        icon: '🕊️',
+        title: 'Mantıku\'t-Tayr: Yedi Vadi & Sefer Merhaleleri',
+        subtitle: 'Ferîdüddin Attâr\'ın 7 vadisinde 81 il içsel yolculuk haritası',
+        category: 'İrfan & Felsefe',
+        keywords: 'yedi vadi mantikut tayr attar simurg sefer merhaleleri istigna',
+        run: () => safeCall('openView', 'sevenValleys')
+      },
+      {
+        id: 'action-halvet',
+        type: 'action',
+        icon: '🕯️',
+        title: 'Halvet & Tefekkür Odası (Sükûnet Stüdyosu)',
+        subtitle: 'Selçuklu yıldızı nefes ritmi, Tasavvufi Ney Taksimi ve 18 kadim hikmet',
+        category: 'İrfan & Felsefe',
+        keywords: 'halvet tefekkur nefes ney sukunet zen zikir',
+        run: () => safeCall('openView', 'halvet')
+      },
+      {
+        id: 'action-ethos',
+        type: 'action',
+        icon: '⚖️',
+        title: 'Seyyah Ahlâkı & 24 Kavramlık İrfan Lügatı',
+        subtitle: '7 Fütüvvet ilkesi ve Sefer der Vatan, Halvet der Encümen, Umran sözlüğü',
+        category: 'İrfan & Felsefe',
+        keywords: 'ahlak futuvvet lugat sozluk sefer der vatan umran tecerrud',
+        run: () => safeCall('openView', 'ethos')
+      },
+      {
+        id: 'action-civ-layers',
+        type: 'action',
+        icon: '🏛️',
+        title: 'Anadolu Medeniyet Katmanları & Zaman Felsefesi',
+        subtitle: 'Göbeklitepe\'den Selçuklu ve Osmanlı\'ya 7 katmanda taşın hafızası',
+        category: 'İrfan & Felsefe',
+        keywords: 'medeniyet katmanlari zaman felsefesi gobeklitepe selcuklu osmanli',
+        run: () => safeCall('openView', 'civLayers')
+      },
+      {
         id: 'action-pomodoro',
         type: 'action',
         icon: '🍅',

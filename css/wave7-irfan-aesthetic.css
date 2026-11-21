@@ -1,0 +1,1105 @@
+/* ==========================================================================
+   ANADOLU SEYAHATNAMESİ — WAVE 7 İRFAN & FELSEFE ESTETİK KATMANI
+   "Selçuklu Hendesesi, Altın Varak & İrfani Tipografi"
+   --------------------------------------------------------------------------
+   1. Wave 7 Tokens (Obsidian Night & Warm Parchment/Alabaster Light)
+   2. Selçuklu Hendesesi (Geometric Star Lattice) & Gold-Leaf Specular Accents
+   3. Philosophical Cards (.seyyah-philosophy-ribbon, .seyyah-soul-inscription,
+      #quote-modal .modal-content) with Antique Gold & Dervish Turquoise Borders
+   4. Ornate Editorial Blockquotes (blockquote) with Seljuk Star (۞) & Serif Cadence
+   5. Wave 7 Studios Unified Elevation (.irfan-*, .sv-*, .halvet-*, .hm-*,
+      .ethos-*, .civ-*)
+   6. Full html body.light-theme Parchment/Alabaster Contrast Parity
+   7. @media (prefers-reduced-motion: reduce) & @media print Support
+   CRITICAL GUARDRAIL: NEVER overrides .cmd-overlay display property.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. WAVE 7 DESIGN TOKENS (OBSIDIAN DARK & PARCHMENT/ALABASTER LIGHT)
+   -------------------------------------------------------------------------- */
+:root {
+  --w7-gold: #d4af37;
+  --w7-gold-bright: #fbbf24;
+  --w7-gold-soft: rgba(245, 158, 11, 0.28);
+  --w7-gold-hairline: rgba(212, 175, 55, 0.34);
+  --w7-gold-glow: rgba(212, 175, 55, 0.16);
+
+  --w7-turquoise: #14b8a6;
+  --w7-turquoise-bright: #00f2fe;
+  --w7-turquoise-soft: rgba(20, 184, 166, 0.26);
+  --w7-turquoise-glow: rgba(0, 242, 254, 0.14);
+
+  --w7-surface-hero: linear-gradient(145deg, rgba(13, 19, 36, 0.92) 0%, rgba(10, 15, 29, 0.96) 58%, rgba(14, 26, 36, 0.92) 100%);
+  --w7-surface-card: linear-gradient(160deg, rgba(17, 24, 39, 0.84) 0%, rgba(10, 15, 28, 0.9) 100%);
+  --w7-surface-subtle: rgba(255, 255, 255, 0.035);
+  --w7-surface-quote: linear-gradient(135deg, rgba(212, 175, 55, 0.075) 0%, rgba(15, 23, 42, 0.62) 55%, rgba(20, 184, 166, 0.055) 100%);
+
+  --w7-ink-primary: #f8fafc;
+  --w7-ink-secondary: #cbd5e1;
+  --w7-ink-muted: #94a3b8;
+  --w7-ink-gold: #fde68a;
+  --w7-ink-turquoise: #5eead4;
+
+  --w7-hairline: rgba(255, 255, 255, 0.09);
+  --w7-shadow-card:
+    0 16px 38px -16px rgba(0, 0, 0, 0.68),
+    0 0 0 1px rgba(212, 175, 55, 0.1),
+    inset 0 1px 0 rgba(254, 243, 199, 0.08);
+  --w7-shadow-sacred:
+    0 20px 48px -16px rgba(0, 0, 0, 0.76),
+    0 0 28px -10px rgba(212, 175, 55, 0.22),
+    0 0 22px -10px rgba(20, 184, 166, 0.18),
+    inset 0 1px 0 rgba(254, 243, 199, 0.14);
+
+  --w7-font-serif: 'Georgia', 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
+  --w7-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Subtle 8-pointed Seljuk star geometric lattice (SVG data URI) */
+  --w7-seljuk-lattice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23d4af37' stroke-opacity='0.075' stroke-width='0.8'%3E%3Cpolygon points='32,6 39,25 58,32 39,39 32,58 25,39 6,32 25,25'/%3E%3Crect x='14' y='14' width='36' height='36' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html body.light-theme {
+  --w7-gold: #a16207;
+  --w7-gold-bright: #b45309;
+  --w7-gold-soft: rgba(180, 83, 9, 0.26);
+  --w7-gold-hairline: rgba(161, 98, 7, 0.32);
+  --w7-gold-glow: rgba(180, 83, 9, 0.11);
+
+  --w7-turquoise: #0f766e;
+  --w7-turquoise-bright: #0d9488;
+  --w7-turquoise-soft: rgba(13, 148, 136, 0.26);
+  --w7-turquoise-glow: rgba(13, 148, 136, 0.1);
+
+  --w7-surface-hero: linear-gradient(150deg, rgba(255, 252, 245, 0.98) 0%, rgba(249, 244, 232, 0.96) 56%, rgba(242, 249, 248, 0.95) 100%);
+  --w7-surface-card: linear-gradient(165deg, rgba(255, 254, 250, 0.98) 0%, rgba(247, 242, 231, 0.94) 100%);
+  --w7-surface-subtle: rgba(120, 92, 46, 0.045);
+  --w7-surface-quote: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 252, 245, 0.96) 55%, rgba(20, 184, 166, 0.07) 100%);
+
+  --w7-ink-primary: #1c1917;
+  --w7-ink-secondary: #3f3a34;
+  --w7-ink-muted: #6b635b;
+  --w7-ink-gold: #92400e;
+  --w7-ink-turquoise: #0f766e;
+
+  --w7-hairline: rgba(120, 92, 46, 0.14);
+  --w7-shadow-card:
+    0 12px 30px -14px rgba(41, 32, 18, 0.14),
+    0 2px 6px -2px rgba(41, 32, 18, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  --w7-shadow-sacred:
+    0 18px 42px -14px rgba(41, 32, 18, 0.16),
+    0 4px 16px -6px rgba(161, 98, 7, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+
+  --w7-seljuk-lattice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%2392400e' stroke-opacity='0.065' stroke-width='0.8'%3E%3Cpolygon points='32,6 39,25 58,32 39,39 32,58 25,39 6,32 25,25'/%3E%3Crect x='14' y='14' width='36' height='36' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   2. KEYFRAMES — SUBTLE GOLD-LEAF BREATHING SHIMMER
+   -------------------------------------------------------------------------- */
+@keyframes w7GoldThreadGlow {
+  0%, 100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. PHILOSOPHICAL CARDS & QUOTE MODAL
+      (.seyyah-philosophy-ribbon, .seyyah-soul-inscription, #quote-modal .modal-content)
+   -------------------------------------------------------------------------- */
+.seyyah-philosophy-ribbon,
+.seyyah-soul-inscription {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background-color: rgba(12, 18, 34, 0.88);
+  background-image:
+    var(--w7-seljuk-lattice),
+    linear-gradient(128deg, rgba(212, 175, 55, 0.1) 0%, rgba(15, 23, 42, 0.84) 48%, rgba(20, 184, 166, 0.09) 100%);
+  background-size: 64px 64px, 100% 100%;
+  border: 1px solid var(--w7-gold-soft);
+  box-shadow:
+    var(--w7-shadow-sacred),
+    inset 0 0 0 1px rgba(20, 184, 166, 0.14);
+  color: var(--w7-ink-primary);
+  transition: border-color 0.28s var(--w7-ease), box-shadow 0.28s var(--w7-ease), transform 0.28s var(--w7-ease);
+}
+
+.seyyah-philosophy-ribbon::before,
+.seyyah-soul-inscription::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #d4af37 22%,
+    rgba(245, 158, 11, 0.85) 48%,
+    #14b8a6 76%,
+    #00f2fe 90%,
+    transparent 100%
+  );
+  opacity: 0.88;
+  pointer-events: none;
+  animation: w7GoldThreadGlow 6s ease-in-out infinite;
+}
+
+.seyyah-philosophy-ribbon::after,
+.seyyah-soul-inscription::after {
+  content: '۞';
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: rgba(212, 175, 55, 0.42);
+  pointer-events: none;
+  user-select: none;
+}
+
+.seyyah-philosophy-ribbon:hover,
+.seyyah-soul-inscription:hover {
+  border-color: rgba(212, 175, 55, 0.52);
+  box-shadow:
+    0 20px 46px -14px rgba(0, 0, 0, 0.78),
+    0 0 28px -8px rgba(212, 175, 55, 0.26),
+    0 0 22px -8px rgba(0, 242, 254, 0.18),
+    inset 0 0 0 1px rgba(20, 184, 166, 0.28);
+}
+
+.seyyah-philosophy-ribbon {
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.seyyah-soul-inscription {
+  padding: 20px 24px;
+}
+
+.seyyah-philosophy-ribbon .ribbon-title,
+.seyyah-philosophy-ribbon strong,
+.seyyah-soul-inscription .inscription-title,
+.seyyah-soul-inscription h3,
+.seyyah-soul-inscription h4 {
+  color: var(--w7-ink-gold);
+  letter-spacing: 0.015em;
+}
+
+.seyyah-philosophy-ribbon .ribbon-text,
+.seyyah-soul-inscription .inscription-text,
+.seyyah-soul-inscription p {
+  font-family: var(--w7-font-serif);
+  font-style: italic;
+  line-height: 1.75;
+  color: var(--w7-ink-secondary);
+}
+
+.seyyah-philosophy-ribbon .ribbon-badge,
+.seyyah-soul-inscription .inscription-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.16), rgba(20, 184, 166, 0.14));
+  border: 1px solid rgba(212, 175, 55, 0.36);
+  color: var(--w7-ink-gold);
+}
+
+/* #quote-modal .modal-content — Sacred Illumination Frame */
+#quote-modal .modal-content {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(11, 17, 32, 0.95);
+  background-image:
+    var(--w7-seljuk-lattice),
+    radial-gradient(circle at 12% 10%, rgba(212, 175, 55, 0.12), transparent 52%),
+    radial-gradient(circle at 88% 92%, rgba(20, 184, 166, 0.12), transparent 52%);
+  background-size: 64px 64px, 100% 100%, 100% 100%;
+  border: 1px solid rgba(212, 175, 55, 0.44);
+  box-shadow:
+    0 30px 70px -16px rgba(0, 0, 0, 0.85),
+    0 0 38px -10px rgba(212, 175, 55, 0.24),
+    0 0 26px -10px rgba(0, 242, 254, 0.18),
+    inset 0 1px 0 rgba(254, 243, 199, 0.18),
+    inset 0 0 0 1px rgba(20, 184, 166, 0.16);
+}
+
+#quote-modal .modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4af37 25%, #14b8a6 65%, #00f2fe 82%, transparent);
+  pointer-events: none;
+}
+
+#quote-modal .modal-header {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.08), transparent);
+}
+
+#quote-modal .quote-modal-author {
+  font-family: var(--w7-font-serif);
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  color: var(--w7-gold);
+}
+
+/* --------------------------------------------------------------------------
+   4. ORNATE EDITORIAL BLOCKQUOTES (blockquote)
+      Seljuk Star (۞), Antique Gold Bar, Line-Height 1.75 & Serif Cadence
+   -------------------------------------------------------------------------- */
+.content-viewport blockquote,
+#quote-modal blockquote,
+.reader-article blockquote,
+.seyyah-soul-inscription blockquote,
+.irfan-quote,
+.sv-quote,
+.halvet-quote,
+.hm-quote,
+.ethos-quote,
+.civ-quote,
+.literary-quote-item {
+  position: relative;
+  font-family: var(--w7-font-serif);
+  font-style: italic;
+  line-height: 1.75;
+  letter-spacing: 0.012em;
+  padding: 16px 22px 16px 44px;
+  margin: 1.25em 0;
+  background: var(--w7-surface-quote);
+  border-left: 3px solid #d4af37;
+  border-top: 1px solid rgba(245, 158, 11, 0.18);
+  border-right: 1px solid rgba(20, 184, 166, 0.14);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.14);
+  border-radius: 0 14px 14px 0;
+  color: var(--w7-ink-secondary);
+  box-shadow:
+    inset 3px 0 14px -8px rgba(212, 175, 55, 0.38),
+    0 8px 22px -14px rgba(0, 0, 0, 0.48);
+}
+
+.content-viewport blockquote::before,
+#quote-modal blockquote::before,
+.reader-article blockquote::before,
+.seyyah-soul-inscription blockquote::before,
+.irfan-quote::before,
+.sv-quote::before,
+.halvet-quote::before,
+.hm-quote::before,
+.ethos-quote::before,
+.civ-quote::before,
+.literary-quote-item::before {
+  content: '۞';
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-style: normal;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: #d4af37;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+  pointer-events: none;
+  user-select: none;
+}
+
+.content-viewport blockquote cite,
+.content-viewport blockquote footer,
+#quote-modal blockquote cite,
+.reader-article blockquote cite {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-style: normal;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--w7-gold);
+}
+
+#quote-modal .quote-modal-text {
+  font-size: 1.14rem;
+  line-height: 1.75;
+  color: var(--w7-ink-primary);
+  border-left: 3px solid #d4af37;
+  padding: 18px 22px 18px 46px;
+  text-align: left;
+}
+
+/* --------------------------------------------------------------------------
+   5. WAVE 7 STUDIOS UNIFIED ELEVATION (DARK OBSIDIAN BASELINE)
+      (.irfan-*, .sv-*, .halvet-*, .hm-*, .ethos-*, .civ-*)
+   -------------------------------------------------------------------------- */
+.irfan-hero,
+.irfan-header,
+.sv-hero,
+.sv-header,
+.halvet-hero,
+.halvet-header,
+.hm-hero,
+.hm-header,
+.ethos-hero,
+.ethos-header,
+.civ-hero,
+.civ-header {
+  position: relative;
+  overflow: hidden;
+  background-image: var(--w7-seljuk-lattice), var(--w7-surface-hero);
+  background-size: 64px 64px, 100% 100%;
+  border: 1px solid var(--w7-gold-soft);
+  box-shadow:
+    var(--w7-shadow-sacred),
+    inset 0 0 0 1px rgba(20, 184, 166, 0.14);
+}
+
+.irfan-hero::after,
+.sv-hero::after,
+.halvet-hero::after,
+.hm-hero::after,
+.ethos-hero::after,
+.civ-hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4af37 28%, #14b8a6 72%, #00f2fe 88%, transparent);
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+.irfan-card,
+.irfan-panel,
+.sv-card,
+.sv-valley-card,
+.sv-stage-card,
+.halvet-card,
+.halvet-panel,
+.hm-card,
+.hm-sage-card,
+.hm-chat-panel,
+.ethos-card,
+.ethos-lexicon-card,
+.ethos-principle-card,
+.civ-card,
+.civ-layer-card,
+.civ-stratum-card {
+  border-color: rgba(212, 175, 55, 0.2);
+  box-shadow: var(--w7-shadow-card);
+  transition: border-color 0.25s var(--w7-ease), box-shadow 0.25s var(--w7-ease), transform 0.25s var(--w7-ease);
+}
+
+.irfan-card:hover,
+.sv-card:hover,
+.sv-valley-card:hover,
+.halvet-card:hover,
+.hm-card:hover,
+.hm-sage-card:hover,
+.ethos-card:hover,
+.ethos-lexicon-card:hover,
+.ethos-principle-card:hover,
+.civ-card:hover,
+.civ-layer-card:hover,
+.civ-stratum-card:hover {
+  border-color: rgba(212, 175, 55, 0.44);
+  box-shadow:
+    0 16px 38px -14px rgba(0, 0, 0, 0.72),
+    0 0 22px -8px rgba(212, 175, 55, 0.22),
+    0 0 18px -8px rgba(20, 184, 166, 0.18);
+}
+
+/* Refined serif cadence for spiritual prose inside Wave 7 studios */
+.irfan-shell blockquote,
+.sv-shell blockquote,
+.halvet-shell blockquote,
+.hm-shell blockquote,
+.ethos-shell blockquote,
+.civ-shell blockquote,
+.irfan-quote-text,
+.sv-quote-text,
+.halvet-quote-text,
+.hm-wisdom-text,
+.ethos-verse,
+.civ-epigraph {
+  font-family: var(--w7-font-serif);
+  font-style: italic;
+  line-height: 1.75;
+}
+
+/* --------------------------------------------------------------------------
+   6. FULL PARCHMENT / ALABASTER LIGHT-THEME CONTRAST PARITY
+      html body.light-theme for Wave 7 Studios & Philosophical Surfaces
+   -------------------------------------------------------------------------- */
+html body.light-theme .seyyah-philosophy-ribbon,
+html body.light-theme .seyyah-soul-inscription {
+  background-color: #fcf9f2;
+  background-image:
+    var(--w7-seljuk-lattice),
+    linear-gradient(132deg, rgba(212, 175, 55, 0.11) 0%, rgba(255, 253, 248, 0.97) 52%, rgba(20, 184, 166, 0.08) 100%);
+  border-color: rgba(180, 83, 9, 0.28);
+  color: var(--w7-ink-primary);
+  box-shadow:
+    var(--w7-shadow-sacred),
+    inset 0 0 0 1px rgba(13, 148, 136, 0.15);
+}
+
+html body.light-theme .seyyah-philosophy-ribbon::before,
+html body.light-theme .seyyah-soul-inscription::before {
+  background: linear-gradient(90deg, transparent, #b45309 25%, #d4af37 50%, #0d9488 78%, transparent);
+}
+
+html body.light-theme .seyyah-philosophy-ribbon::after,
+html body.light-theme .seyyah-soul-inscription::after {
+  color: rgba(161, 98, 7, 0.38);
+}
+
+html body.light-theme .seyyah-philosophy-ribbon .ribbon-title,
+html body.light-theme .seyyah-philosophy-ribbon strong,
+html body.light-theme .seyyah-soul-inscription .inscription-title,
+html body.light-theme .seyyah-soul-inscription h3,
+html body.light-theme .seyyah-soul-inscription h4 {
+  color: #92400e;
+}
+
+html body.light-theme .seyyah-philosophy-ribbon .ribbon-text,
+html body.light-theme .seyyah-soul-inscription .inscription-text,
+html body.light-theme .seyyah-soul-inscription p {
+  color: #292524;
+}
+
+html body.light-theme .seyyah-philosophy-ribbon .ribbon-badge,
+html body.light-theme .seyyah-soul-inscription .inscription-badge {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(13, 148, 136, 0.1));
+  border-color: rgba(180, 83, 9, 0.34);
+  color: #92400e;
+}
+
+/* Light-Theme Quote Modal */
+html body.light-theme #quote-modal .modal-content {
+  background-color: #fcf9f2;
+  background-image:
+    var(--w7-seljuk-lattice),
+    radial-gradient(circle at 10% 10%, rgba(212, 175, 55, 0.12), transparent 55%),
+    radial-gradient(circle at 90% 90%, rgba(13, 148, 136, 0.1), transparent 55%);
+  border-color: rgba(180, 83, 9, 0.34);
+  color: #1c1917;
+  box-shadow:
+    0 26px 56px -14px rgba(41, 32, 18, 0.22),
+    0 4px 16px -6px rgba(180, 83, 9, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 0 0 1px rgba(13, 148, 136, 0.14);
+}
+
+html body.light-theme #quote-modal .modal-header {
+  border-bottom-color: rgba(180, 83, 9, 0.16);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.09), transparent);
+}
+
+html body.light-theme #quote-modal .quote-modal-text {
+  color: #1c1917;
+}
+
+html body.light-theme #quote-modal .quote-modal-author {
+  color: #92400e;
+}
+
+/* Light-Theme Blockquotes */
+html body.light-theme .content-viewport blockquote,
+html body.light-theme #quote-modal blockquote,
+html body.light-theme .reader-article blockquote,
+html body.light-theme .seyyah-soul-inscription blockquote,
+html body.light-theme .irfan-quote,
+html body.light-theme .sv-quote,
+html body.light-theme .halvet-quote,
+html body.light-theme .hm-quote,
+html body.light-theme .ethos-quote,
+html body.light-theme .civ-quote,
+html body.light-theme .literary-quote-item {
+  background: var(--w7-surface-quote);
+  border-left-color: #b45309;
+  border-top-color: rgba(180, 83, 9, 0.2);
+  border-right-color: rgba(13, 148, 136, 0.18);
+  border-bottom-color: rgba(180, 83, 9, 0.16);
+  color: #292524;
+  box-shadow:
+    inset 3px 0 12px -8px rgba(180, 83, 9, 0.35),
+    0 6px 18px -12px rgba(41, 32, 18, 0.12);
+}
+
+html body.light-theme .content-viewport blockquote::before,
+html body.light-theme #quote-modal blockquote::before,
+html body.light-theme .reader-article blockquote::before,
+html body.light-theme .seyyah-soul-inscription blockquote::before,
+html body.light-theme .irfan-quote::before,
+html body.light-theme .sv-quote::before,
+html body.light-theme .halvet-quote::before,
+html body.light-theme .hm-quote::before,
+html body.light-theme .ethos-quote::before,
+html body.light-theme .civ-quote::before,
+html body.light-theme .literary-quote-item::before {
+  color: #b45309;
+  text-shadow: none;
+}
+
+html body.light-theme .content-viewport blockquote cite,
+html body.light-theme .content-viewport blockquote footer,
+html body.light-theme #quote-modal blockquote cite,
+html body.light-theme .reader-article blockquote cite {
+  color: #92400e;
+}
+
+/* Light-Theme Mega-Nav İrfan Group Parity */
+html body.light-theme .mnav-trigger.is-irfan {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.72), rgba(255, 251, 235, 0.92));
+  border-color: rgba(180, 83, 9, 0.28);
+  color: #78350f;
+}
+
+html body.light-theme .mnav-trigger.is-irfan.is-active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.16));
+  border-color: rgba(180, 83, 9, 0.56);
+  color: #78350f;
+  box-shadow: 0 4px 14px -4px rgba(180, 83, 9, 0.22);
+}
+
+html body.light-theme #mnav-dropdown-portal.is-irfan-panel {
+  background: rgba(255, 253, 247, 0.98);
+  border-color: rgba(180, 83, 9, 0.28);
+  box-shadow:
+    0 24px 56px -14px rgba(41, 32, 18, 0.18),
+    0 0 24px -8px rgba(180, 83, 9, 0.16);
+}
+
+/* Light-Theme Wave 7 Studio Shells & Containers */
+html body.light-theme .irfan-shell,
+html body.light-theme .irfan-studio,
+html body.light-theme .sv-shell,
+html body.light-theme .sv-studio,
+html body.light-theme .halvet-shell,
+html body.light-theme .halvet-studio,
+html body.light-theme .hm-shell,
+html body.light-theme .hm-studio,
+html body.light-theme .ethos-shell,
+html body.light-theme .ethos-studio,
+html body.light-theme .civ-shell,
+html body.light-theme .civ-studio {
+  color: var(--w7-ink-primary);
+}
+
+/* Light-Theme Wave 7 Heroes & Headers (Warm Alabaster Parchment) */
+html body.light-theme .irfan-hero,
+html body.light-theme .irfan-header,
+html body.light-theme .sv-hero,
+html body.light-theme .sv-header,
+html body.light-theme .halvet-hero,
+html body.light-theme .halvet-header,
+html body.light-theme .hm-hero,
+html body.light-theme .hm-header,
+html body.light-theme .ethos-hero,
+html body.light-theme .ethos-header,
+html body.light-theme .civ-hero,
+html body.light-theme .civ-header {
+  background-color: #fcf9f2;
+  background-image: var(--w7-seljuk-lattice), var(--w7-surface-hero);
+  background-size: 64px 64px, 100% 100%;
+  border-color: rgba(180, 83, 9, 0.26);
+  color: var(--w7-ink-primary);
+  box-shadow: var(--w7-shadow-sacred);
+}
+
+/* Light-Theme Wave 7 Cards, Panels, Boxes & List Items */
+html body.light-theme .irfan-card,
+html body.light-theme .irfan-panel,
+html body.light-theme .irfan-detail,
+html body.light-theme .irfan-master-card,
+html body.light-theme .irfan-province-card,
+html body.light-theme .sv-card,
+html body.light-theme .sv-panel,
+html body.light-theme .sv-valley-card,
+html body.light-theme .sv-stage-card,
+html body.light-theme .sv-reflection-card,
+html body.light-theme .halvet-card,
+html body.light-theme .halvet-panel,
+html body.light-theme .halvet-chamber,
+html body.light-theme .halvet-session-card,
+html body.light-theme .hm-card,
+html body.light-theme .hm-panel,
+html body.light-theme .hm-sage-card,
+html body.light-theme .hm-chat-panel,
+html body.light-theme .hm-message-card,
+html body.light-theme .ethos-card,
+html body.light-theme .ethos-panel,
+html body.light-theme .ethos-principle-card,
+html body.light-theme .ethos-lexicon-card,
+html body.light-theme .ethos-term-card,
+html body.light-theme .civ-card,
+html body.light-theme .civ-panel,
+html body.light-theme .civ-layer-card,
+html body.light-theme .civ-stratum-card,
+html body.light-theme .civ-epoch-card {
+  background: var(--w7-surface-card);
+  border-color: rgba(120, 92, 46, 0.18);
+  color: var(--w7-ink-primary);
+  box-shadow: var(--w7-shadow-card);
+}
+
+html body.light-theme .irfan-card:hover,
+html body.light-theme .irfan-master-card:hover,
+html body.light-theme .sv-card:hover,
+html body.light-theme .sv-valley-card:hover,
+html body.light-theme .halvet-card:hover,
+html body.light-theme .hm-card:hover,
+html body.light-theme .hm-sage-card:hover,
+html body.light-theme .ethos-card:hover,
+html body.light-theme .ethos-principle-card:hover,
+html body.light-theme .ethos-lexicon-card:hover,
+html body.light-theme .civ-card:hover,
+html body.light-theme .civ-layer-card:hover,
+html body.light-theme .civ-stratum-card:hover {
+  border-color: rgba(180, 83, 9, 0.42);
+  box-shadow:
+    0 14px 32px -12px rgba(41, 32, 18, 0.16),
+    0 0 0 1px rgba(13, 148, 136, 0.14);
+}
+
+/* Light-Theme Wave 7 Active Cards & Chat Bubbles */
+html body.light-theme .hm-message.is-sage,
+html body.light-theme .hm-bubble-sage,
+html body.light-theme .hm-msg-ai,
+html body.light-theme .irfan-card.is-active,
+html body.light-theme .sv-valley-card.is-active,
+html body.light-theme .hm-sage-card.is-active,
+html body.light-theme .civ-layer-card.is-active {
+  background: linear-gradient(145deg, rgba(254, 249, 235, 0.98) 0%, rgba(240, 253, 250, 0.94) 100%);
+  border-color: rgba(180, 83, 9, 0.44);
+  color: #1c1917;
+}
+
+html body.light-theme .hm-message.is-user,
+html body.light-theme .hm-bubble-user,
+html body.light-theme .hm-msg-user {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.12) 0%, rgba(2, 132, 199, 0.1) 100%);
+  border-color: rgba(13, 148, 136, 0.34);
+  color: #1c1917;
+}
+
+/* Light-Theme Wave 7 Headings & Body Text */
+html body.light-theme [class^="irfan-"] h1,
+html body.light-theme [class*=" irfan-"] h1,
+html body.light-theme [class^="irfan-"] h2,
+html body.light-theme [class*=" irfan-"] h2,
+html body.light-theme [class^="irfan-"] h3,
+html body.light-theme [class*=" irfan-"] h3,
+html body.light-theme [class^="irfan-"] h4,
+html body.light-theme [class*=" irfan-"] h4,
+html body.light-theme [class^="sv-"] h1,
+html body.light-theme [class*=" sv-"] h1,
+html body.light-theme [class^="sv-"] h2,
+html body.light-theme [class*=" sv-"] h2,
+html body.light-theme [class^="sv-"] h3,
+html body.light-theme [class*=" sv-"] h3,
+html body.light-theme [class^="sv-"] h4,
+html body.light-theme [class*=" sv-"] h4,
+html body.light-theme [class^="halvet-"] h1,
+html body.light-theme [class*=" halvet-"] h1,
+html body.light-theme [class^="halvet-"] h2,
+html body.light-theme [class*=" halvet-"] h2,
+html body.light-theme [class^="halvet-"] h3,
+html body.light-theme [class*=" halvet-"] h3,
+html body.light-theme [class^="halvet-"] h4,
+html body.light-theme [class*=" halvet-"] h4,
+html body.light-theme [class^="hm-"] h1,
+html body.light-theme [class*=" hm-"] h1,
+html body.light-theme [class^="hm-"] h2,
+html body.light-theme [class*=" hm-"] h2,
+html body.light-theme [class^="hm-"] h3,
+html body.light-theme [class*=" hm-"] h3,
+html body.light-theme [class^="hm-"] h4,
+html body.light-theme [class*=" hm-"] h4,
+html body.light-theme [class^="ethos-"] h1,
+html body.light-theme [class*=" ethos-"] h1,
+html body.light-theme [class^="ethos-"] h2,
+html body.light-theme [class*=" ethos-"] h2,
+html body.light-theme [class^="ethos-"] h3,
+html body.light-theme [class*=" ethos-"] h3,
+html body.light-theme [class^="ethos-"] h4,
+html body.light-theme [class*=" ethos-"] h4,
+html body.light-theme [class^="civ-"] h1,
+html body.light-theme [class*=" civ-"] h1,
+html body.light-theme [class^="civ-"] h2,
+html body.light-theme [class*=" civ-"] h2,
+html body.light-theme [class^="civ-"] h3,
+html body.light-theme [class*=" civ-"] h3,
+html body.light-theme [class^="civ-"] h4,
+html body.light-theme [class*=" civ-"] h4,
+html body.light-theme .irfan-title,
+html body.light-theme .sv-title,
+html body.light-theme .halvet-title,
+html body.light-theme .hm-title,
+html body.light-theme .ethos-title,
+html body.light-theme .civ-title {
+  color: var(--w7-ink-primary);
+}
+
+html body.light-theme .irfan-subtitle,
+html body.light-theme .irfan-desc,
+html body.light-theme .sv-subtitle,
+html body.light-theme .sv-desc,
+html body.light-theme .halvet-subtitle,
+html body.light-theme .halvet-desc,
+html body.light-theme .hm-subtitle,
+html body.light-theme .hm-desc,
+html body.light-theme .ethos-subtitle,
+html body.light-theme .ethos-desc,
+html body.light-theme .civ-subtitle,
+html body.light-theme .civ-desc,
+html body.light-theme [class^="irfan-"] p,
+html body.light-theme [class*=" irfan-"] p,
+html body.light-theme [class^="sv-"] p,
+html body.light-theme [class*=" sv-"] p,
+html body.light-theme [class^="halvet-"] p,
+html body.light-theme [class*=" halvet-"] p,
+html body.light-theme [class^="hm-"] p,
+html body.light-theme [class*=" hm-"] p,
+html body.light-theme [class^="ethos-"] p,
+html body.light-theme [class*=" ethos-"] p,
+html body.light-theme [class^="civ-"] p,
+html body.light-theme [class*=" civ-"] p {
+  color: var(--w7-ink-secondary);
+}
+
+html body.light-theme .irfan-meta,
+html body.light-theme .irfan-muted,
+html body.light-theme .sv-meta,
+html body.light-theme .sv-muted,
+html body.light-theme .halvet-meta,
+html body.light-theme .halvet-muted,
+html body.light-theme .hm-meta,
+html body.light-theme .hm-muted,
+html body.light-theme .ethos-meta,
+html body.light-theme .ethos-muted,
+html body.light-theme .civ-meta,
+html body.light-theme .civ-muted {
+  color: var(--w7-ink-muted);
+}
+
+/* Light-Theme Wave 7 Badges, Pills, Chips & Tabs */
+html body.light-theme .irfan-badge,
+html body.light-theme .irfan-pill,
+html body.light-theme .irfan-tag,
+html body.light-theme .sv-badge,
+html body.light-theme .sv-pill,
+html body.light-theme .halvet-badge,
+html body.light-theme .halvet-pill,
+html body.light-theme .hm-badge,
+html body.light-theme .hm-pill,
+html body.light-theme .ethos-badge,
+html body.light-theme .ethos-pill,
+html body.light-theme .civ-badge,
+html body.light-theme .civ-pill {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.11), rgba(13, 148, 136, 0.09));
+  border-color: rgba(180, 83, 9, 0.28);
+  color: #78350f;
+}
+
+html body.light-theme .irfan-chip,
+html body.light-theme .irfan-tab,
+html body.light-theme .sv-chip,
+html body.light-theme .sv-tab,
+html body.light-theme .halvet-chip,
+html body.light-theme .halvet-tab,
+html body.light-theme .hm-chip,
+html body.light-theme .hm-prompt-chip,
+html body.light-theme .ethos-chip,
+html body.light-theme .ethos-tab,
+html body.light-theme .civ-chip,
+html body.light-theme .civ-tab {
+  background: rgba(247, 242, 231, 0.92);
+  border-color: rgba(120, 92, 46, 0.22);
+  color: #3f3a34;
+}
+
+html body.light-theme .irfan-chip:hover,
+html body.light-theme .irfan-tab:hover,
+html body.light-theme .sv-chip:hover,
+html body.light-theme .sv-tab:hover,
+html body.light-theme .halvet-chip:hover,
+html body.light-theme .halvet-tab:hover,
+html body.light-theme .hm-chip:hover,
+html body.light-theme .hm-prompt-chip:hover,
+html body.light-theme .ethos-chip:hover,
+html body.light-theme .ethos-tab:hover,
+html body.light-theme .civ-chip:hover,
+html body.light-theme .civ-tab:hover {
+  background: rgba(254, 243, 199, 0.65);
+  border-color: rgba(180, 83, 9, 0.42);
+  color: #78350f;
+}
+
+html body.light-theme .irfan-chip.is-active,
+html body.light-theme .irfan-tab.is-active,
+html body.light-theme .irfan-tab.active,
+html body.light-theme .sv-chip.is-active,
+html body.light-theme .sv-tab.is-active,
+html body.light-theme .sv-tab.active,
+html body.light-theme .halvet-chip.is-active,
+html body.light-theme .halvet-tab.is-active,
+html body.light-theme .halvet-tab.active,
+html body.light-theme .hm-chip.is-active,
+html body.light-theme .ethos-chip.is-active,
+html body.light-theme .ethos-tab.is-active,
+html body.light-theme .ethos-tab.active,
+html body.light-theme .civ-chip.is-active,
+html body.light-theme .civ-tab.is-active,
+html body.light-theme .civ-tab.active {
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.16), rgba(13, 148, 136, 0.14));
+  border-color: rgba(180, 83, 9, 0.48);
+  color: #78350f;
+}
+
+/* Light-Theme Wave 7 Inputs, Textareas & Selects */
+html body.light-theme [class^="irfan-"] input,
+html body.light-theme [class*=" irfan-"] input,
+html body.light-theme [class^="irfan-"] select,
+html body.light-theme [class*=" irfan-"] select,
+html body.light-theme [class^="irfan-"] textarea,
+html body.light-theme [class*=" irfan-"] textarea,
+html body.light-theme [class^="sv-"] input,
+html body.light-theme [class*=" sv-"] input,
+html body.light-theme [class^="sv-"] select,
+html body.light-theme [class*=" sv-"] select,
+html body.light-theme [class^="sv-"] textarea,
+html body.light-theme [class*=" sv-"] textarea,
+html body.light-theme [class^="halvet-"] input,
+html body.light-theme [class*=" halvet-"] input,
+html body.light-theme [class^="halvet-"] select,
+html body.light-theme [class*=" halvet-"] select,
+html body.light-theme [class^="halvet-"] textarea,
+html body.light-theme [class*=" halvet-"] textarea,
+html body.light-theme [class^="hm-"] input,
+html body.light-theme [class*=" hm-"] input,
+html body.light-theme [class^="hm-"] select,
+html body.light-theme [class*=" hm-"] select,
+html body.light-theme [class^="hm-"] textarea,
+html body.light-theme [class*=" hm-"] textarea,
+html body.light-theme [class^="ethos-"] input,
+html body.light-theme [class*=" ethos-"] input,
+html body.light-theme [class^="ethos-"] select,
+html body.light-theme [class*=" ethos-"] select,
+html body.light-theme [class^="ethos-"] textarea,
+html body.light-theme [class*=" ethos-"] textarea,
+html body.light-theme [class^="civ-"] input,
+html body.light-theme [class*=" civ-"] input,
+html body.light-theme [class^="civ-"] select,
+html body.light-theme [class*=" civ-"] select,
+html body.light-theme [class^="civ-"] textarea,
+html body.light-theme [class*=" civ-"] textarea {
+  background: #fffdf8;
+  border-color: rgba(120, 92, 46, 0.24);
+  color: #1c1917;
+}
+
+html body.light-theme [class^="irfan-"] input::placeholder,
+html body.light-theme [class*=" irfan-"] input::placeholder,
+html body.light-theme [class^="irfan-"] textarea::placeholder,
+html body.light-theme [class*=" irfan-"] textarea::placeholder,
+html body.light-theme [class^="sv-"] input::placeholder,
+html body.light-theme [class*=" sv-"] input::placeholder,
+html body.light-theme [class^="sv-"] textarea::placeholder,
+html body.light-theme [class*=" sv-"] textarea::placeholder,
+html body.light-theme [class^="halvet-"] input::placeholder,
+html body.light-theme [class*=" halvet-"] input::placeholder,
+html body.light-theme [class^="halvet-"] textarea::placeholder,
+html body.light-theme [class*=" halvet-"] textarea::placeholder,
+html body.light-theme [class^="hm-"] input::placeholder,
+html body.light-theme [class*=" hm-"] input::placeholder,
+html body.light-theme [class^="hm-"] textarea::placeholder,
+html body.light-theme [class*=" hm-"] textarea::placeholder,
+html body.light-theme [class^="ethos-"] input::placeholder,
+html body.light-theme [class*=" ethos-"] input::placeholder,
+html body.light-theme [class^="ethos-"] textarea::placeholder,
+html body.light-theme [class*=" ethos-"] textarea::placeholder,
+html body.light-theme [class^="civ-"] input::placeholder,
+html body.light-theme [class*=" civ-"] input::placeholder,
+html body.light-theme [class^="civ-"] textarea::placeholder,
+html body.light-theme [class*=" civ-"] textarea::placeholder {
+  color: #78716c;
+}
+
+/* Light-Theme Halvet Contemplation Orb & Breath Ring Contrast */
+html body.light-theme .halvet-orb,
+html body.light-theme .halvet-breath-ring,
+html body.light-theme .halvet-breath-circle {
+  background: radial-gradient(circle, rgba(254, 243, 199, 0.85) 0%, rgba(204, 251, 241, 0.68) 58%, rgba(252, 249, 242, 0.95) 100%);
+  border-color: rgba(180, 83, 9, 0.38);
+  color: #78350f;
+  box-shadow:
+    0 14px 36px -10px rgba(180, 83, 9, 0.22),
+    0 0 28px -8px rgba(13, 148, 136, 0.2);
+}
+
+/* Light-Theme Secondary / Ghost Buttons inside Wave 7 Studios */
+html body.light-theme .irfan-btn-outline,
+html body.light-theme .sv-btn-outline,
+html body.light-theme .halvet-btn-outline,
+html body.light-theme .hm-btn-outline,
+html body.light-theme .ethos-btn-outline,
+html body.light-theme .civ-btn-outline {
+  background: rgba(255, 253, 248, 0.92);
+  border-color: rgba(180, 83, 9, 0.3);
+  color: #78350f;
+}
+
+html body.light-theme .irfan-btn-outline:hover,
+html body.light-theme .sv-btn-outline:hover,
+html body.light-theme .halvet-btn-outline:hover,
+html body.light-theme .hm-btn-outline:hover,
+html body.light-theme .ethos-btn-outline:hover,
+html body.light-theme .civ-btn-outline:hover {
+  background: rgba(254, 243, 199, 0.65);
+  border-color: rgba(180, 83, 9, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   7. ACCESSIBILITY — REDUCED MOTION & PRINT EDITORIAL STYLESHEET
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .seyyah-philosophy-ribbon,
+  .seyyah-philosophy-ribbon::before,
+  .seyyah-soul-inscription,
+  .seyyah-soul-inscription::before,
+  #quote-modal .modal-content,
+  [class^="irfan-"],
+  [class*=" irfan-"],
+  [class^="sv-"],
+  [class*=" sv-"],
+  [class^="halvet-"],
+  [class*=" halvet-"],
+  [class^="hm-"],
+  [class*=" hm-"],
+  [class^="ethos-"],
+  [class*=" ethos-"],
+  [class^="civ-"],
+  [class*=" civ-"] {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .seyyah-philosophy-ribbon:hover,
+  .seyyah-soul-inscription:hover,
+  .irfan-card:hover,
+  .sv-card:hover,
+  .sv-valley-card:hover,
+  .halvet-card:hover,
+  .hm-card:hover,
+  .hm-sage-card:hover,
+  .ethos-card:hover,
+  .ethos-lexicon-card:hover,
+  .ethos-principle-card:hover,
+  .civ-card:hover,
+  .civ-layer-card:hover,
+  .civ-stratum-card:hover {
+    transform: none !important;
+  }
+}
+
+@media print {
+  .seyyah-philosophy-ribbon,
+  .seyyah-soul-inscription {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #94a3b8 !important;
+    border-left: 3px solid #92400e !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .seyyah-philosophy-ribbon::before,
+  .seyyah-soul-inscription::before,
+  .irfan-hero::after,
+  .sv-hero::after,
+  .halvet-hero::after,
+  .hm-hero::after,
+  .ethos-hero::after,
+  .civ-hero::after {
+    display: none !important;
+  }
+
+  .content-viewport blockquote,
+  .reader-article blockquote,
+  .seyyah-soul-inscription blockquote,
+  .irfan-quote,
+  .sv-quote,
+  .halvet-quote,
+  .hm-quote,
+  .ethos-quote,
+  .civ-quote,
+  .literary-quote-item {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1 !important;
+    border-left: 3px solid #92400e !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .content-viewport blockquote::before,
+  .reader-article blockquote::before,
+  .seyyah-soul-inscription blockquote::before,
+  .irfan-quote::before,
+  .sv-quote::before,
+  .halvet-quote::before,
+  .hm-quote::before,
+  .ethos-quote::before,
+  .civ-quote::before,
+  .literary-quote-item::before {
+    color: #92400e !important;
+    text-shadow: none !important;
+  }
+
+  .irfan-hero,
+  .irfan-card,
+  .sv-hero,
+  .sv-card,
+  .sv-valley-card,
+  .halvet-hero,
+  .halvet-card,
+  .hm-hero,
+  .hm-card,
+  .hm-sage-card,
+  .ethos-hero,
+  .ethos-card,
+  .ethos-lexicon-card,
+  .ethos-principle-card,
+  .civ-hero,
+  .civ-card,
+  .civ-layer-card {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

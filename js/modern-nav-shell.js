@@ -1,7 +1,7 @@
 /**
- * Anadolu Seyahatnamesi — Modern 6-Group Categorized Mega-Navigation Shell
+ * Anadolu Seyahatnamesi — Modern 7-Group Categorized Mega-Navigation Shell
  * Transforms the flat .module-nav-strip into a SaaS-grade categorized navigation
- * bar with floating glassmorphic dropdown portals, AI badge highlighting,
+ * bar with floating glassmorphic dropdown portals, AI & İrfan badge highlighting,
  * keyboard navigation, and active view/hash synchronization.
  *
  * Registers on: window.SEYYAH_MODULES.modernNav = { init(ctx) }
@@ -45,6 +45,23 @@
         { view: 'aiQuiz', icon: '🧩', title: 'AI Kültür Yarışması', subtitle: 'Yapay zekâ destekli tarih testi' },
         { view: 'aiChef', icon: '👨‍🍳', title: 'AI Gurme Şef', subtitle: 'Yöresel mutfak ve lezzet rehberi' },
         { view: 'aiSearch', icon: '🔮', title: 'AI Akıllı Arama', subtitle: 'Anlamsal kültür ve rota arama' }
+      ]
+    },
+    {
+      id: 'irfan-felsefe',
+      icon: '🕌',
+      label: 'İrfan & Felsefe',
+      isIrfan: true,
+      badge: 'İRFAN',
+      accent: 'irfan',
+      items: [
+        { view: 'irfanAtlas', icon: '🕌', title: 'İrfan & Gönül Atlası', subtitle: '24 gönül sultanı ve 81 il manevi mirası' },
+        { view: 'hikmetMeclisi', icon: '📜', title: 'Hikmet Meclisi (5 Bilge AI)', subtitle: 'Evliya Çelebi, İbnü\'l-Arabî ve Yunus ile sohbet' },
+        { view: 'sevenValleys', icon: '🕊️', title: 'Yedi Vadi (Mantıku\'t-Tayr)', subtitle: 'Attâr\'ın 7 vadisinde içsel sefer merhaleleri' },
+        { view: 'halvet', icon: '🕯️', title: 'Halvet & Tefekkür Odası', subtitle: 'Selçuklu hendesesi, nefes ritmi ve ney sükûneti' },
+        { view: 'ethos', icon: '⚖️', title: 'Seyyah Ahlâkı & İrfan Lügatı', subtitle: 'Fütüvvet ilkeleri ve 24 tasavvufi sefer kavramı' },
+        { view: 'civLayers', icon: '🏛️', title: 'Medeniyet & Zaman Felsefesi', subtitle: 'Göbeklitepe\'den Selimiye\'ye taşın hafızası' },
+        { view: 'reader', icon: '📖', title: 'Manifesto & Makaleler', subtitle: '7 bölümlük Sefer Der Vatan külliyatı' }
       ]
     },
     {
@@ -154,7 +171,7 @@
     style.id = STYLE_ID;
     style.textContent = `
       /* ------------------------------------------------------------------
-         MODERN 6-GROUP MEGA-NAVIGATION SHELL
+         MODERN 7-GROUP MEGA-NAVIGATION SHELL
          ------------------------------------------------------------------ */
       nav.module-nav-strip.mnav-strip {
         display: flex;
@@ -284,6 +301,55 @@
         box-shadow: 0 0 10px rgba(139, 92, 246, 0.45);
       }
 
+      /* Prestigious İrfan & Felsefe Trigger & Antique Gold/Amber Badge */
+      .mnav-trigger.is-irfan {
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.12) 0%, rgba(180, 83, 9, 0.16) 100%);
+        border-color: rgba(245, 158, 11, 0.34);
+        color: #f1e6cf;
+      }
+
+      .mnav-trigger.is-irfan:hover,
+      .mnav-trigger.is-irfan.is-open {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(180, 83, 9, 0.26) 100%);
+        border-color: rgba(251, 191, 36, 0.6);
+        color: #fffbeb;
+        box-shadow:
+          0 0 22px rgba(245, 158, 11, 0.24),
+          0 0 12px rgba(217, 119, 6, 0.18),
+          inset 0 1px 0 rgba(254, 243, 199, 0.22);
+      }
+
+      .mnav-trigger.is-irfan.is-active {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.26) 0%, rgba(180, 83, 9, 0.32) 100%);
+        border-color: rgba(251, 191, 36, 0.78);
+        color: #fffbeb;
+        box-shadow:
+          0 0 24px rgba(245, 158, 11, 0.28),
+          0 0 14px rgba(217, 119, 6, 0.24),
+          inset 0 1px 0 rgba(254, 243, 199, 0.26);
+      }
+
+      .mnav-trigger.is-irfan.is-active .mnav-active-dot {
+        background: #fbbf24;
+        box-shadow: 0 0 8px rgba(251, 191, 36, 0.9);
+      }
+
+      .mnav-irfan-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1px 6px;
+        border-radius: 9999px;
+        font-size: 0.6rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        line-height: 1.35;
+        color: #fffbeb;
+        background: linear-gradient(135deg, rgba(180, 83, 9, 0.92) 0%, rgba(217, 119, 6, 0.92) 100%);
+        border: 1px solid rgba(251, 191, 36, 0.42);
+        box-shadow: 0 0 10px rgba(217, 119, 6, 0.32);
+      }
+
       .mnav-trigger-icon {
         font-size: 0.95rem;
         line-height: 1;
@@ -368,6 +434,15 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.16);
       }
 
+      #${PORTAL_ID}.is-irfan-panel {
+        border-color: rgba(245, 158, 11, 0.32);
+        box-shadow:
+          0 24px 56px -12px rgba(0, 0, 0, 0.84),
+          0 0 28px -6px rgba(217, 119, 6, 0.26),
+          0 0 0 1px rgba(251, 191, 36, 0.14),
+          inset 0 1px 0 rgba(254, 243, 199, 0.14);
+      }
+
       .mnav-portal-head {
         display: flex;
         align-items: center;
@@ -440,6 +515,13 @@
         border-color: rgba(168, 85, 247, 0.45);
       }
 
+      #${PORTAL_ID}.is-irfan-panel .mnav-item:hover,
+      #${PORTAL_ID}.is-irfan-panel .mnav-item:focus-visible {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(180, 83, 9, 0.12) 100%);
+        border-color: rgba(251, 191, 36, 0.45);
+        box-shadow: 0 6px 16px -8px rgba(245, 158, 11, 0.3);
+      }
+
       .mnav-item.is-active {
         background: linear-gradient(135deg, rgba(0, 242, 254, 0.16) 0%, rgba(79, 172, 254, 0.14) 100%);
         border-color: rgba(0, 242, 254, 0.55);
@@ -449,6 +531,11 @@
       #${PORTAL_ID}.is-ai-panel .mnav-item.is-active {
         background: linear-gradient(135deg, rgba(0, 242, 254, 0.18) 0%, rgba(168, 85, 247, 0.22) 100%);
         border-color: rgba(168, 85, 247, 0.62);
+      }
+
+      #${PORTAL_ID}.is-irfan-panel .mnav-item.is-active {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(180, 83, 9, 0.22) 100%);
+        border-color: rgba(251, 191, 36, 0.6);
       }
 
       .mnav-item-icon {
@@ -574,6 +661,26 @@
         box-shadow: 0 6px 18px -4px rgba(124, 58, 237, 0.35);
       }
 
+      body.light-theme .mnav-trigger.is-irfan {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.13) 0%, rgba(180, 83, 9, 0.1) 100%);
+        border-color: rgba(217, 119, 6, 0.34);
+        color: #78350f;
+      }
+
+      body.light-theme .mnav-trigger.is-irfan:hover,
+      body.light-theme .mnav-trigger.is-irfan.is-open {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(180, 83, 9, 0.16) 100%);
+        border-color: rgba(217, 119, 6, 0.56);
+        color: #451a03;
+      }
+
+      body.light-theme .mnav-trigger.is-irfan.is-active {
+        background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+        border-color: #b45309;
+        color: #fffbeb;
+        box-shadow: 0 6px 18px -4px rgba(180, 83, 9, 0.34);
+      }
+
       body.light-theme #${PORTAL_ID} {
         background: rgba(255, 255, 255, 0.96);
         border-color: rgba(15, 23, 42, 0.11);
@@ -588,6 +695,13 @@
         box-shadow:
           0 22px 48px -12px rgba(15, 23, 42, 0.18),
           0 0 24px -8px rgba(124, 58, 237, 0.22);
+      }
+
+      body.light-theme #${PORTAL_ID}.is-irfan-panel {
+        border-color: rgba(217, 119, 6, 0.28);
+        box-shadow:
+          0 22px 48px -12px rgba(15, 23, 42, 0.18),
+          0 0 24px -8px rgba(217, 119, 6, 0.2);
       }
 
       body.light-theme .mnav-portal-head {
@@ -619,6 +733,12 @@
       body.light-theme #${PORTAL_ID}.is-ai-panel .mnav-item:focus-visible {
         background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(124, 58, 237, 0.09) 100%);
         border-color: rgba(124, 58, 237, 0.4);
+      }
+
+      body.light-theme #${PORTAL_ID}.is-irfan-panel .mnav-item:hover,
+      body.light-theme #${PORTAL_ID}.is-irfan-panel .mnav-item:focus-visible {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(180, 83, 9, 0.08) 100%);
+        border-color: rgba(217, 119, 6, 0.45);
       }
 
       body.light-theme .mnav-item.is-active {
@@ -697,12 +817,16 @@
     `;
 
     const triggersHtml = NAV_GROUPS.map((group) => {
-      const aiClass = group.isAi ? ' is-ai' : '';
-      const aiBadge = group.isAi ? `<span class="mnav-ai-badge">${esc(group.badge || 'AI')}</span>` : '';
+      const variantClass = group.isAi ? ' is-ai' : group.isIrfan ? ' is-irfan' : '';
+      const badgeHtml = group.isAi
+        ? `<span class="mnav-ai-badge">${esc(group.badge || 'AI')}</span>`
+        : group.isIrfan
+          ? `<span class="mnav-irfan-badge">${esc(group.badge || 'İRFAN')}</span>`
+          : '';
       return `
         <button
           type="button"
-          class="mnav-trigger${aiClass}"
+          class="mnav-trigger${variantClass}"
           data-mnav-group="${esc(group.id)}"
           aria-haspopup="menu"
           aria-expanded="false"
@@ -710,7 +834,7 @@
         >
           <span class="mnav-trigger-icon" aria-hidden="true">${esc(group.icon)}</span>
           <span class="mnav-trigger-label">${esc(group.label)}</span>
-          ${aiBadge}
+          ${badgeHtml}
           <span class="mnav-active-dot" aria-hidden="true"></span>
           ${chevronSvg}
         </button>
@@ -764,7 +888,11 @@
   function renderPortalContent(group) {
     if (!_portalEl || !group) return;
     const currentView = getCurrentView();
-    const countText = group.isAi ? `${group.items.length} AI Modülü` : `${group.items.length} Modül`;
+    const countText = group.isAi
+      ? `${group.items.length} AI Modülü`
+      : group.isIrfan
+        ? `${group.items.length} İrfan Modülü`
+        : `${group.items.length} Modül`;
 
     const itemsHtml = group.items.map((item) => {
       const isActive = currentView === item.view;
@@ -788,14 +916,21 @@
       `;
     }).join('');
 
+    const portalBadgeHtml = group.isAi
+      ? `<span class="mnav-ai-badge">${esc(group.badge || 'AI')}</span>`
+      : group.isIrfan
+        ? `<span class="mnav-irfan-badge">${esc(group.badge || 'İRFAN')}</span>`
+        : '';
+
     _portalEl.classList.toggle('is-ai-panel', Boolean(group.isAi));
+    _portalEl.classList.toggle('is-irfan-panel', Boolean(group.isIrfan));
     _portalEl.setAttribute('aria-label', `${group.label} Menüsü`);
     _portalEl.innerHTML = `
       <div class="mnav-portal-head">
         <div class="mnav-portal-title-wrap">
           <span aria-hidden="true">${esc(group.icon)}</span>
           <span>${esc(group.label)}</span>
-          ${group.isAi ? `<span class="mnav-ai-badge">${esc(group.badge || 'AI')}</span>` : ''}
+          ${portalBadgeHtml}
         </div>
         <span class="mnav-portal-count">${esc(countText)}</span>
       </div>
