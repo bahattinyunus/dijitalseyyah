@@ -224,8 +224,13 @@
     };
   }
 
-  // Unified View Switcher (Core + 6 Modular Studio Views)
+  // Unified View Switcher (Core + 22 Modular Studio Views)
   function openView(viewName, updateHash = true) {
+    const mods = window.SEYYAH_MODULES || {};
+    if (state.currentView === 'cinematicTour' && viewName !== 'cinematicTour' && mods.cinematicTour && typeof mods.cinematicTour.stop === 'function') {
+      mods.cinematicTour.stop();
+    }
+
     const normalized = viewName === 'library' ? 'libraries' : viewName;
     if (normalized === 'dashboard') {
       renderDashboard(updateHash);
@@ -240,7 +245,6 @@
       return;
     }
 
-    const mods = window.SEYYAH_MODULES || {};
     const modMap = {
       compare: mods.cityCompare,
       gastronomy: mods.gastronomy,
@@ -256,7 +260,14 @@
       seasons: mods.seasons,
       landmarks: mods.landmarks,
       reader: mods.reader,
-      budget: mods.budget
+      budget: mods.budget,
+      cinematicTour: mods.cinematicTour,
+      passport: mods.passport,
+      radar: mods.radar,
+      advisor: mods.advisor,
+      unesco: mods.unesco,
+      distanceGame: mods.distanceGame,
+      regions: mods.regions
     };
 
     const targetMod = modMap[normalized];
@@ -289,7 +300,8 @@
       return true;
     } else if ([
       '#compare', '#gastronomy', '#libraries', '#library', '#quiz', '#analytics', '#journal',
-      '#atlas', '#packing', '#postcard', '#timeline', '#sound', '#seasons', '#landmarks', '#reader', '#budget'
+      '#atlas', '#packing', '#postcard', '#timeline', '#sound', '#seasons', '#landmarks', '#reader', '#budget',
+      '#cinematicTour', '#passport', '#radar', '#advisor', '#unesco', '#distanceGame', '#regions'
     ].includes(h)) {
       openView(h.slice(1), false);
       return true;
@@ -320,7 +332,7 @@
     }
     setupEventListeners();
 
-    // Initialize Global Enhancer Modules (Command Palette & PWA/UX)
+    // Initialize Global Enhancer Modules (Command Palette, PWA/UX & Ambient Motion)
     const mods = window.SEYYAH_MODULES || {};
     const ctx = getModuleCtx();
     if (mods.commandPalette && typeof mods.commandPalette.init === 'function') {
@@ -328,6 +340,9 @@
     }
     if (mods.pwaUx && typeof mods.pwaUx.init === 'function') {
       mods.pwaUx.init(ctx);
+    }
+    if (mods.ambientMotion && typeof mods.ambientMotion.init === 'function') {
+      mods.ambientMotion.init(ctx);
     }
   }
 
@@ -737,6 +752,11 @@
         if (v) openView(v);
       });
     });
+
+    // Enhance Dashboard with Wave-3 Marquee, Live Expedition Trail & 24-Module Hub
+    if (window.SEYYAH_MODULES && window.SEYYAH_MODULES.dashboardV3 && typeof window.SEYYAH_MODULES.dashboardV3.enhance === 'function') {
+      window.SEYYAH_MODULES.dashboardV3.enhance(els.viewportContent, getModuleCtx());
+    }
 
     document.querySelectorAll('.region-card').forEach(card => {
       card.addEventListener('click', () => {

@@ -20,9 +20,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="style.css?v=7">
-  <link rel="stylesheet" href="css/modules.css?v=7">
-  <link rel="stylesheet" href="css/modules-v2.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="css/modules.css?v=8">
+  <link rel="stylesheet" href="css/modules-v2.css?v=8">
+  <link rel="stylesheet" href="css/awwwards-polish.css?v=8">
 </head>
 <body>
   <div class="app-container">
@@ -92,16 +93,23 @@
     <!-- Secondary Interactive Modules Navigation Strip -->
     <nav class="module-nav-strip" aria-label="Keşif Modülleri">
       <button class="module-nav-btn active" data-view="dashboard">🏠 Genel Bakış</button>
+      <button class="module-nav-btn" data-view="cinematicTour">🎬 Sinematik Tur</button>
       <button class="module-nav-btn" data-view="atlas">🗺️ Vektör Atlas</button>
       <button class="module-nav-btn" data-view="route">🧭 Rota &amp; GPX</button>
+      <button class="module-nav-btn" data-view="radar">📡 Menzil Radarı</button>
+      <button class="module-nav-btn" data-view="advisor">✨ Seyyah Rehberi</button>
+      <button class="module-nav-btn" data-view="passport">🛂 Pasaport</button>
+      <button class="module-nav-btn" data-view="unesco">🏛️ UNESCO (21)</button>
+      <button class="module-nav-btn" data-view="regions">🌍 7 Bölge</button>
       <button class="module-nav-btn" data-view="gallery">📸 Galeri (162)</button>
       <button class="module-nav-btn" data-view="compare">⚖️ Karşılaştır</button>
       <button class="module-nav-btn" data-view="gastronomy">🍽️ Lezzetler</button>
       <button class="module-nav-btn" data-view="landmarks">🕌 Miras (373)</button>
       <button class="module-nav-btn" data-view="libraries">📚 Kütüphaneler</button>
       <button class="module-nav-btn" data-view="quiz">🎯 Bilgi Yarışması</button>
+      <button class="module-nav-btn" data-view="distanceGame">🎮 Mesafe Düellosu</button>
       <button class="module-nav-btn" data-view="analytics">📊 81 Plaka</button>
-      <button class="module-nav-btn" data-view="timeline">🏛️ Kronoloji</button>
+      <button class="module-nav-btn" data-view="timeline">⏳ Kronoloji</button>
       <button class="module-nav-btn" data-view="seasons">🌤️ Mevsimler</button>
       <button class="module-nav-btn" data-view="postcard">📮 Kartpostal</button>
       <button class="module-nav-btn" data-view="sound">🎧 Ses Stüdyosu</button>
@@ -214,25 +222,34 @@
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <!-- Data Module, Interactive Feature Modules & SPA Application Engine -->
-  <script src="web_data.js?v=5"></script>
-  <script src="js/command-palette.js?v=5"></script>
-  <script src="js/city-compare.js?v=5"></script>
-  <script src="js/gastronomy-atlas.js?v=5"></script>
-  <script src="js/library-directory.js?v=5"></script>
-  <script src="js/anatolia-quiz.js?v=5"></script>
-  <script src="js/analytics-charts.js?v=5"></script>
-  <script src="js/travel-journal.js?v=5"></script>
-  <script src="js/route-tools.js?v=5"></script>
-  <script src="js/pwa-ux.js?v=5"></script>
-  <script src="js/turkey-svg-atlas.js?v=5"></script>
-  <script src="js/packing-checklist.js?v=5"></script>
-  <script src="js/postcard-studio.js?v=5"></script>
-  <script src="js/heritage-timeline.js?v=5"></script>
-  <script src="js/sound-mixer.js?v=5"></script>
-  <script src="js/weather-season-guide.js?v=5"></script>
-  <script src="js/landmark-explorer.js?v=5"></script>
-  <script src="js/reading-companion.js?v=5"></script>
-  <script src="js/budget-planner.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <script src="web_data.js?v=8"></script>
+  <script src="js/command-palette.js?v=8"></script>
+  <script src="js/city-compare.js?v=8"></script>
+  <script src="js/gastronomy-atlas.js?v=8"></script>
+  <script src="js/library-directory.js?v=8"></script>
+  <script src="js/anatolia-quiz.js?v=8"></script>
+  <script src="js/analytics-charts.js?v=8"></script>
+  <script src="js/travel-journal.js?v=8"></script>
+  <script src="js/route-tools.js?v=8"></script>
+  <script src="js/pwa-ux.js?v=8"></script>
+  <script src="js/turkey-svg-atlas.js?v=8"></script>
+  <script src="js/packing-checklist.js?v=8"></script>
+  <script src="js/postcard-studio.js?v=8"></script>
+  <script src="js/heritage-timeline.js?v=8"></script>
+  <script src="js/sound-mixer.js?v=8"></script>
+  <script src="js/weather-season-guide.js?v=8"></script>
+  <script src="js/landmark-explorer.js?v=8"></script>
+  <script src="js/reading-companion.js?v=8"></script>
+  <script src="js/budget-planner.js?v=8"></script>
+  <script src="js/cinematic-tour.js?v=8"></script>
+  <script src="js/seyyah-passport.js?v=8"></script>
+  <script src="js/radar-explorer.js?v=8"></script>
+  <script src="js/seyyah-advisor.js?v=8"></script>
+  <script src="js/unesco-showcase.js?v=8"></script>
+  <script src="js/distance-game.js?v=8"></script>
+  <script src="js/region-dossier.js?v=8"></script>
+  <script src="js/ambient-motion.js?v=8"></script>
+  <script src="js/dashboard-v3.js?v=8"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

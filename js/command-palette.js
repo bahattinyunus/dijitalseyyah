@@ -261,6 +261,76 @@
         run: () => safeCall('openView', 'reader')
       },
       {
+        id: 'action-cinematic',
+        type: 'action',
+        icon: '🎬',
+        title: 'Sinematik Anadolu Turu',
+        subtitle: 'Ken Burns efektli belgesel slayt gösterisi ve tam ekran tur',
+        category: 'Stüdyo',
+        keywords: 'sinematik tur belgesel slayt video ken burns tam ekran',
+        run: () => safeCall('openView', 'cinematicTour')
+      },
+      {
+        id: 'action-passport',
+        type: 'action',
+        icon: '🛂',
+        title: 'Dijital Seyyah Pasaportu',
+        subtitle: '39 il SVG mühür damgası, 42 boş yuva ve PNG pasaport indirme',
+        category: 'Stüdyo',
+        keywords: 'pasaport muhur damga svg png koleksiyon rozet',
+        run: () => safeCall('openView', 'passport')
+      },
+      {
+        id: 'action-radar',
+        type: 'action',
+        icon: '📡',
+        title: 'Menzil Radarı (Yakınımdaki İller)',
+        subtitle: '50-600 km yarıçaplı animasyonlu SVG radar ve GPS tarayıcı',
+        category: 'Araç',
+        keywords: 'radar yakinimdakiler gps mesafe yaricap tarayici',
+        run: () => safeCall('openView', 'radar')
+      },
+      {
+        id: 'action-advisor',
+        type: 'action',
+        icon: '✨',
+        title: 'Akıllı Seyyah Rehberi (Asistan)',
+        subtitle: 'Doğal Türkçe sorularla anında rota, lezzet ve şehir önerileri al',
+        category: 'Asistan',
+        keywords: 'asistan rehber yapay zeka soru sor oneri sohbet chat',
+        run: () => safeCall('openView', 'advisor')
+      },
+      {
+        id: 'action-unesco',
+        type: 'action',
+        icon: '🏛️',
+        title: 'UNESCO Türkiye Dünya Mirası (21)',
+        subtitle: 'Türkiye\'nin 21 UNESCO Dünya Mirası alanı ve ziyaret durumu',
+        category: 'Keşif',
+        keywords: 'unesco dunya mirasi gobeklitepe efes selimiye pamukkale ani',
+        run: () => safeCall('openView', 'unesco')
+      },
+      {
+        id: 'action-distance-game',
+        type: 'action',
+        icon: '🎮',
+        title: 'Anadolu Mesafe & Coğrafya Düellosu',
+        subtitle: 'İki şehir arası km tahmini ve doğu/kuzey hız düellosu',
+        category: 'Oyun',
+        keywords: 'oyun duello mesafe tahmin cografya km game',
+        run: () => safeCall('openView', 'distanceGame')
+      },
+      {
+        id: 'action-regions',
+        type: 'action',
+        icon: '🌍',
+        title: '7 Bölge Derin Keşif Vitrini',
+        subtitle: '4 fotoğraflı bölge mozaikleri, bölge karneleri ve 2-Opt rota başlatıcı',
+        category: 'Keşif',
+        keywords: 'bolge marmara ege akdeniz karadeniz dogu guneydogu ic anadolu',
+        run: () => safeCall('openView', 'regions')
+      },
+      {
         id: 'action-random',
         type: 'action',
         icon: '🎲',
