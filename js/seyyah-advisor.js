@@ -39,8 +39,15 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
     } catch (e) {}
   }
 
+  const RETIRED_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.5-flash-lite', 'gemini-2.0-flash']);
+
   function getStoredGeminiModel() {
-    try { return localStorage.getItem(GEMINI_MODEL_STORAGE) || 'gemini-2.5-flash'; } catch (e) { return 'gemini-2.5-flash'; }
+    try {
+      const m = localStorage.getItem(GEMINI_MODEL_STORAGE) || 'gemini-flash-lite-latest';
+      return RETIRED_MODELS.has(m) ? 'gemini-flash-lite-latest' : m;
+    } catch (e) {
+      return 'gemini-flash-lite-latest';
+    }
   }
 
   function setStoredGeminiModel(model) {
@@ -105,7 +112,7 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
 
     // 1. Direct BYOK call if user configured their own key in localStorage
     if (byokKey) {
-      const candidateModels = [model, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash']
+      const candidateModels = [model, 'gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest']
         .filter((m, idx, arr) => m && arr.indexOf(m) === idx);
       const contents = alternatingHistory.map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
       contents.push({ role: 'user', parts: [{ text: prompt }] });
@@ -126,8 +133,8 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
         if (!res.ok) {
           const msg = (data && data.error && data.error.message) || `HTTP ${res.status}`;
           lastErr = new Error(msg);
-          // If quota/billing/not-found for this specific model, try next free-tier model
-          if (res.status === 429 || res.status === 404 || /quota|billing|limit|not found/i.test(msg)) {
+          // If quota/billing/overload/not-found for this specific model, try next live model
+          if (res.status === 429 || res.status === 404 || res.status === 503 || /quota|billing|limit|not found|high demand|no longer available/i.test(msg)) {
             continue;
           }
           throw lastErr;
@@ -1651,11 +1658,12 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
             Canlı sitede Netlify ortam değişkeni (<code>GEMINI_API_KEY</code>) otomatik kullanılır. Kendi tarayıcınızda test etmek veya kendi Gemini Pro / AI Studio anahtarınızı kullanmak için aşağıya girebilirsiniz (anahtar yalnızca tarayıcınızda <code>localStorage</code> içinde saklanır, sunucuya/GitHub'a gönderilmez).
           </p>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <select data-sa-model-select class="region-select" style="width: 220px; padding: 7px 10px; font-size: 0.8rem;">
-              <option value="gemini-2.5-flash" ${getStoredGeminiModel() === 'gemini-2.5-flash' ? 'selected' : ''}>⚡ gemini-2.5-flash (Hızlı)</option>
-              <option value="gemini-2.5-flash-lite" ${getStoredGeminiModel() === 'gemini-2.5-flash-lite' ? 'selected' : ''}>🪶 gemini-2.5-flash-lite (Ücretsiz Kota)</option>
-              <option value="gemini-2.5-pro" ${getStoredGeminiModel() === 'gemini-2.5-pro' ? 'selected' : ''}>🧠 gemini-2.5-pro (Derin)</option>
-              <option value="gemini-2.0-flash" ${getStoredGeminiModel() === 'gemini-2.0-flash' ? 'selected' : ''}>🚀 gemini-2.0-flash</option>
+            <select data-sa-model-select class="region-select" style="width: 245px; padding: 7px 10px; font-size: 0.8rem;">
+              <option value="gemini-flash-lite-latest" ${getStoredGeminiModel() === 'gemini-flash-lite-latest' ? 'selected' : ''}>⚡ gemini-flash-lite-latest (Önerilen)</option>
+              <option value="gemini-3.5-flash-lite" ${getStoredGeminiModel() === 'gemini-3.5-flash-lite' ? 'selected' : ''}>🚀 gemini-3.5-flash-lite</option>
+              <option value="gemini-3.8-flash" ${getStoredGeminiModel() === 'gemini-3.8-flash' ? 'selected' : ''}>✨ gemini-3.8-flash (Yeni Nesil)</option>
+              <option value="gemini-flash-latest" ${getStoredGeminiModel() === 'gemini-flash-latest' ? 'selected' : ''}>🌟 gemini-flash-latest</option>
+              <option value="gemini-pro-latest" ${getStoredGeminiModel() === 'gemini-pro-latest' ? 'selected' : ''}>🧠 gemini-pro-latest (Derin)</option>
             </select>
             <input type="password" data-sa-key-input class="sa-input" style="flex: 1; min-width: 200px; padding: 7px 12px; font-size: 0.8rem;" placeholder="AIza... (Opsiyonel kişisel Gemini API anahtarı)" value="${escapeHtml(getStoredGeminiKey())}" />
             <button type="button" class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8rem;" data-sa-key-save>Kaydet</button>

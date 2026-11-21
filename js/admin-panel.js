@@ -394,25 +394,29 @@ ${footer}
       `;
     } else if (activeTab === 'apis') {
       const curGeminiKey = localStorage.getItem(KEYS.geminiKey) || '';
-      const curGeminiModel = localStorage.getItem(KEYS.geminiModel) || 'gemini-2.5-flash';
+      const rawGemModel = localStorage.getItem(KEYS.geminiModel) || 'gemini-flash-lite-latest';
+      const curGeminiModel = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].includes(rawGemModel)
+        ? 'gemini-flash-lite-latest'
+        : rawGemModel;
 
       tabBodyHtml = `
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
           <div class="glass-card detail-card">
             <h3 style="font-family: var(--font-heading); color: var(--accent-cyan);">✨ Gemini AI Yapılandırması</h3>
-            <p style="font-size: 0.8rem; color: var(--text-secondary);">Canlıda Netlify <code>GEMINI_API_KEY</code> kullanılır; isterseniz burada kişisel anahtarınızı kaydedip canlı bağlantıyı test edebilirsiniz.</p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Kişisel Google AI Studio anahtarınızı (<code>AQ....</code> veya <code>AIza...</code>) tarayıcınıza kaydedip canlı bağlantıyı test edebilirsiniz.</p>
             <div class="adm-field">
               <label>Varsayılan Gemini Modeli</label>
               <select id="adm-gem-model" class="region-select">
-                <option value="gemini-2.5-flash" ${curGeminiModel === 'gemini-2.5-flash' ? 'selected' : ''}>⚡ gemini-2.5-flash (Hızlı &amp; Ekonomik)</option>
-                <option value="gemini-2.5-flash-lite" ${curGeminiModel === 'gemini-2.5-flash-lite' ? 'selected' : ''}>🪶 gemini-2.5-flash-lite (Yüksek Ücretsiz Kota)</option>
-                <option value="gemini-2.5-pro" ${curGeminiModel === 'gemini-2.5-pro' ? 'selected' : ''}>🧠 gemini-2.5-pro (Derin Muhakeme)</option>
-                <option value="gemini-2.0-flash" ${curGeminiModel === 'gemini-2.0-flash' ? 'selected' : ''}>🚀 gemini-2.0-flash</option>
+                <option value="gemini-flash-lite-latest" ${curGeminiModel === 'gemini-flash-lite-latest' ? 'selected' : ''}>⚡ gemini-flash-lite-latest (Önerilen &amp; Hızlı)</option>
+                <option value="gemini-3.5-flash-lite" ${curGeminiModel === 'gemini-3.5-flash-lite' ? 'selected' : ''}>🚀 gemini-3.5-flash-lite</option>
+                <option value="gemini-3.8-flash" ${curGeminiModel === 'gemini-3.8-flash' ? 'selected' : ''}>✨ gemini-3.8-flash (Yeni Nesil)</option>
+                <option value="gemini-flash-latest" ${curGeminiModel === 'gemini-flash-latest' ? 'selected' : ''}>🌟 gemini-flash-latest</option>
+                <option value="gemini-pro-latest" ${curGeminiModel === 'gemini-pro-latest' ? 'selected' : ''}>🧠 gemini-pro-latest (Derin Muhakeme)</option>
               </select>
             </div>
             <div class="adm-field">
-              <label>Kişisel Gemini API Key (Opsiyonel BYOK)</label>
-              <input type="password" id="adm-gem-key" class="adm-input" placeholder="AIza..." value="${escapeHtml(curGeminiKey)}" />
+              <label>Kişisel Gemini API Key (BYOK)</label>
+              <input type="password" id="adm-gem-key" class="adm-input" placeholder="AQ.... veya AIza..." value="${escapeHtml(curGeminiKey)}" />
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button type="button" class="btn btn-primary" id="adm-gem-save">💾 Kaydet</button>
