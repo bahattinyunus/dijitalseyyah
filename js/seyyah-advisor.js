@@ -22,6 +22,128 @@
   let chatHistory = [];
   let messageSeq = 0;
 
+  // Gemini API Storage & Helpers (BYOK localStorage + Netlify Serverless Proxy)
+  const GEMINI_KEY_STORAGE = 'dijital_seyyah_gemini_api_key';
+  const GEMINI_MODEL_STORAGE = 'dijital_seyyah_gemini_model';
+  const GEMINI_SYSTEM_PROMPT = `Sen "Dijital Seyyah: Anadolu Seyahatnamesi" projesinin yapay zekâ destekli seyahat ve tefekkür rehberisin.
+Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İl Halk Kütüphanesi çalışma ofisleri, 5 Gün Kuralı ve GSB Seyahatsever KYK kültürü hakkında doğru, samimi ve ilham verici Türkçe yanıtlar ver. Cevaplarını kısa, net ve **kalın** şehir adlarıyla yapılandır (en fazla 220 kelime).`;
+
+  function getStoredGeminiKey() {
+    try { return (localStorage.getItem(GEMINI_KEY_STORAGE) || '').trim(); } catch (e) { return ''; }
+  }
+
+  function setStoredGeminiKey(key) {
+    try {
+      if (key && key.trim()) localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());
+      else localStorage.removeItem(GEMINI_KEY_STORAGE);
+    } catch (e) {}
+  }
+
+  function getStoredGeminiModel() {
+    try { return localStorage.getItem(GEMINI_MODEL_STORAGE) || 'gemini-2.5-flash'; } catch (e) { return 'gemini-2.5-flash'; }
+  }
+
+  function setStoredGeminiModel(model) {
+    try { localStorage.setItem(GEMINI_MODEL_STORAGE, model); } catch (e) {}
+  }
+
+  function buildSeyyahContextSummary(provinces, safeCtx) {
+    const visited = provinces.filter((p) => p.visited).map((p) => p.name);
+    const customRoute = (safeCtx.state && safeCtx.state.customRouteCities) ||
+      (safeCtx.data && safeCtx.data.custom_route) ||
+      ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'Sakarya', 'İstanbul', 'Edirne'];
+    return [
+      `Toplam 81 ilin ${visited.length} tanesi gezildi (%${((visited.length / 81) * 100).toFixed(1)}).`,
+      `Gezilen iller: ${visited.join(', ')}.`,
+      `Aktif sıradaki sefer rotası: ${customRoute.join(' -> ')}.`,
+      `Güneydoğu Anadolu (0/9) sıradaki büyük Mezopotamya hedefidir.`
+    ].join('\n');
+  }
+
+  function extractMentionedProvinceCards(replyText, provinces, normalizeFn) {
+    const normReply = normalizeFn(replyText || '');
+    if (!normReply) return [];
+    const matched = [];
+    for (const p of provinces) {
+      const pNorm = normalizeFn(p.name);
+      if (pNorm.length >= 3 && new RegExp(`(^|[^a-z])${pNorm}([^a-z]|$)`).test(normReply)) {
+        matched.push({
+          key: p.key,
+          name: p.name,
+          plate: p.plate,
+          visited: p.visited,
+          thumb: p.banner_rel || '',
+          badge: p.region,
+          reason: (p.landmarks && p.landmarks[0]) ? `📍 ${p.landmarks[0]}` : (p.quote || p.region)
+        });
+        if (matched.length >= 6) break;
+      }
+    }
+    return matched;
+  }
+
+  async function askGeminiEngine(prompt, provinces, safeCtx) {
+    const model = getStoredGeminiModel();
+    const byokKey = getStoredGeminiKey();
+    const contextSummary = buildSeyyahContextSummary(provinces, safeCtx);
+    const recentHistory = chatHistory
+      .filter((m) => !m.loading && (m.role === 'user' || m.role === 'assistant'))
+      .slice(-6)
+      .map((m) => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        text: m.text
+      }));
+
+    // 1. Direct BYOK call if user configured their own key in localStorage
+    if (byokKey) {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(byokKey)}`;
+      const contents = recentHistory.map((m) => ({ role: m.role, parts: [{ text: m.text.slice(0, 700) }] }));
+      contents.push({ role: 'user', parts: [{ text: prompt }] });
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: `${GEMINI_SYSTEM_PROMPT}\n\nGüncel Veri:\n${contextSummary}` }] },
+          contents,
+          generationConfig: { temperature: 0.7, maxOutputTokens: 650 }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error((data && data.error && data.error.message) || `HTTP ${res.status}`);
+      }
+      const reply =
+        data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts
+          ? data.candidates[0].content.parts.map((pt) => pt.text || '').join('\n').trim()
+          : '';
+      if (reply) return { reply, source: `Gemini (${model} • Kişisel Anahtar)` };
+      throw new Error('Boş yanıt');
+    }
+
+    // 2. Netlify Serverless Proxy (/.netlify/functions/seyyah-ai) on http/https
+    if (typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+      const res = await fetch('/.netlify/functions/seyyah-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          model,
+          context: contextSummary,
+          history: recentHistory
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.reply) {
+          return { reply: data.reply, source: `Gemini (${data.model || model} • Canlı API)` };
+        }
+      }
+    }
+
+    return null;
+  }
+
   // ---------------------------------------------------------------------------
   // Helper Fallbacks & Utilities
   // ---------------------------------------------------------------------------
@@ -1493,8 +1615,29 @@
             </div>
           </div>
           <div class="sa-header-actions">
-            <span class="sa-stat-pill">🗺️ ${visitedCount}/${provinces.length} Gezildi • ${unvisitedCount} Kaldı</span>
-            <button type="button" class="sa-clear-btn" data-sa-clear>🗑️ Sohbeti Temizle</button>
+            <span class="sa-stat-pill" data-sa-engine-badge>${getStoredGeminiKey() ? '🟢 Gemini AI (Kişisel)' : '✨ Gemini AI + Çevrimdışı'}</span>
+            <button type="button" class="sa-clear-btn" data-sa-gemini-toggle>🔑 Gemini API</button>
+            <button type="button" class="sa-clear-btn" data-sa-clear>🗑️ Temizle</button>
+          </div>
+        </div>
+
+        <div class="sa-gemini-drawer" data-sa-gemini-drawer style="display: none; padding: 14px 16px; border-radius: 12px; background: rgba(15,23,42,0.75); border: 1px solid rgba(0,242,254,0.28); margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+            <strong style="font-size: 0.88rem; color: var(--accent-cyan);">🔑 Gemini AI Bağlantı Ayarları</strong>
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-size: 0.76rem; color: var(--accent-gold); text-decoration: none;">Google AI Studio'dan Anahtar Al ↗</a>
+          </div>
+          <p style="font-size: 0.76rem; color: var(--text-secondary); margin: 0 0 10px 0; line-height: 1.45;">
+            Canlı sitede Netlify ortam değişkeni (<code>GEMINI_API_KEY</code>) otomatik kullanılır. Kendi tarayıcınızda test etmek veya kendi Gemini Pro / AI Studio anahtarınızı kullanmak için aşağıya girebilirsiniz (anahtar yalnızca tarayıcınızda <code>localStorage</code> içinde saklanır, sunucuya/GitHub'a gönderilmez).
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <select data-sa-model-select class="region-select" style="width: 210px; padding: 7px 10px; font-size: 0.8rem;">
+              <option value="gemini-2.5-flash" ${getStoredGeminiModel() === 'gemini-2.5-flash' ? 'selected' : ''}>⚡ gemini-2.5-flash (Hızlı)</option>
+              <option value="gemini-2.5-pro" ${getStoredGeminiModel() === 'gemini-2.5-pro' ? 'selected' : ''}>🧠 gemini-2.5-pro (Derin)</option>
+              <option value="gemini-2.0-flash" ${getStoredGeminiModel() === 'gemini-2.0-flash' ? 'selected' : ''}>🚀 gemini-2.0-flash</option>
+            </select>
+            <input type="password" data-sa-key-input class="sa-input" style="flex: 1; min-width: 200px; padding: 7px 12px; font-size: 0.8rem;" placeholder="AIza... (Opsiyonel kişisel Gemini API anahtarı)" value="${escapeHtml(getStoredGeminiKey())}" />
+            <button type="button" class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8rem;" data-sa-key-save>Kaydet</button>
+            <button type="button" class="btn btn-outline" style="padding: 7px 12px; font-size: 0.8rem;" data-sa-key-clear>Sil</button>
           </div>
         </div>
 
@@ -1525,6 +1668,46 @@
     const formEl = container.querySelector('[data-sa-form]');
     const inputEl = container.querySelector('[data-sa-input]');
     const clearBtn = container.querySelector('[data-sa-clear]');
+    const geminiToggleBtn = container.querySelector('[data-sa-gemini-toggle]');
+    const geminiDrawer = container.querySelector('[data-sa-gemini-drawer]');
+    const engineBadge = container.querySelector('[data-sa-engine-badge]');
+    const modelSelect = container.querySelector('[data-sa-model-select]');
+    const keyInput = container.querySelector('[data-sa-key-input]');
+    const keySaveBtn = container.querySelector('[data-sa-key-save]');
+    const keyClearBtn = container.querySelector('[data-sa-key-clear]');
+    const normalizeFn = safeCtx.normalizeTurkish || fallbackNormalize;
+
+    if (geminiToggleBtn && geminiDrawer) {
+      geminiToggleBtn.addEventListener('click', () => {
+        const isHidden = geminiDrawer.style.display === 'none';
+        geminiDrawer.style.display = isHidden ? 'block' : 'none';
+      });
+    }
+
+    if (modelSelect) {
+      modelSelect.addEventListener('change', (e) => {
+        setStoredGeminiModel(e.target.value);
+        if (typeof safeCtx.showToast === 'function') safeCtx.showToast(`🧠 Model seçildi: ${e.target.value}`);
+      });
+    }
+
+    if (keySaveBtn && keyInput) {
+      keySaveBtn.addEventListener('click', () => {
+        setStoredGeminiKey(keyInput.value);
+        if (engineBadge) engineBadge.textContent = getStoredGeminiKey() ? '🟢 Gemini AI (Kişisel)' : '✨ Gemini AI + Çevrimdışı';
+        if (geminiDrawer) geminiDrawer.style.display = 'none';
+        if (typeof safeCtx.showToast === 'function') safeCtx.showToast('🔑 Gemini API anahtarı tarayıcınıza kaydedildi!');
+      });
+    }
+
+    if (keyClearBtn && keyInput) {
+      keyClearBtn.addEventListener('click', () => {
+        keyInput.value = '';
+        setStoredGeminiKey('');
+        if (engineBadge) engineBadge.textContent = '✨ Gemini AI + Çevrimdışı';
+        if (typeof safeCtx.showToast === 'function') safeCtx.showToast('🗑️ Kişisel API anahtarı temizlendi');
+      });
+    }
 
     function renderMessages() {
       messagesEl.innerHTML = chatHistory
@@ -1573,7 +1756,7 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    function handleAsk(queryText) {
+    async function handleAsk(queryText) {
       const trimmed = String(queryText || '').trim();
       if (!trimmed) return;
 
@@ -1585,14 +1768,53 @@
         cards: []
       });
 
-      const reply = resolveQuery(trimmed, provinces, safeCtx);
+      const loadingId = ++messageSeq;
       chatHistory.push({
-        id: ++messageSeq,
+        id: loadingId,
         role: 'assistant',
+        loading: true,
         time: nowTimeLabel(),
+        text: '✨ Seyyah Rehberi düşünüyor...',
+        cards: []
+      });
+      renderMessages();
+
+      try {
+        const aiRes = await askGeminiEngine(trimmed, provinces, safeCtx);
+        const idx = chatHistory.findIndex((m) => m.id === loadingId);
+        if (aiRes && aiRes.reply) {
+          const mentionedCards = extractMentionedProvinceCards(aiRes.reply, provinces, normalizeFn);
+          const aiMsg = {
+            id: loadingId,
+            role: 'assistant',
+            time: `${nowTimeLabel()} • ${aiRes.source}`,
+            text: aiRes.reply,
+            cards: mentionedCards
+          };
+          if (idx >= 0) chatHistory[idx] = aiMsg;
+          else chatHistory.push(aiMsg);
+          if (engineBadge) engineBadge.textContent = `🟢 ${aiRes.source}`;
+          renderMessages();
+          return;
+        }
+      } catch (err) {
+        if (typeof safeCtx.showToast === 'function') {
+          safeCtx.showToast(`⚠️ Gemini API hatası (çevrimdışı motora geçildi): ${err.message}`);
+        }
+      }
+
+      // Graceful fallback to local instant Turkish NLP engine
+      const reply = resolveQuery(trimmed, provinces, safeCtx);
+      const fallbackMsg = {
+        id: loadingId,
+        role: 'assistant',
+        time: `${nowTimeLabel()} • Çevrimdışı Motor`,
         text: reply.text,
         cards: reply.cards || []
-      });
+      };
+      const idx = chatHistory.findIndex((m) => m.id === loadingId);
+      if (idx >= 0) chatHistory[idx] = fallbackMsg;
+      else chatHistory.push(fallbackMsg);
 
       renderMessages();
     }
