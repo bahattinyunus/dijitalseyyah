@@ -4,6 +4,10 @@
 
 <br/><br/>
 
+<img src="assets/logo.png" alt="Dijital Seyyah Amblemi — Selçuklu Yıldızı, Pusula ve Seyahatname" width="136" height="136" style="border-radius: 28px;" />
+
+<br/><br/>
+
 <img src="assets/hero_title.svg" alt="DİJİTAL SEYYAH: ANADOLU SEYAHATNAMESİ" width="100%" />
 
 <br/>

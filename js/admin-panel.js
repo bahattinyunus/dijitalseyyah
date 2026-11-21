@@ -336,6 +336,7 @@ ${footer}
         <div class="adm-wrap">
           <div class="adm-auth-stage">
             <div class="adm-auth-card">
+              <img src="assets/logo.png" alt="Dijital Seyyah Logosu" style="width:72px;height:72px;border-radius:18px;align-self:center;border:1.5px solid rgba(251,191,36,0.55);box-shadow:0 8px 26px rgba(0,0,0,0.5),0 0 22px rgba(0,242,254,0.22);" />
               <div class="adm-auth-badge">🛡️ Yönetici Komuta Merkezi</div>
               <h2 class="adm-auth-title">Dijital Seyyah Admin</h2>
               <p style="text-align: center; font-size: 0.83rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
@@ -685,7 +686,7 @@ ${footer}
         <div class="adm-layout">
           <aside class="adm-rail">
             <div class="adm-profile">
-              <div class="adm-avatar">BY</div>
+              <img src="assets/logo.png" alt="Dijital Seyyah" style="width:40px;height:40px;border-radius:12px;object-fit:cover;border:1px solid rgba(251,191,36,0.5);" />
               <div style="min-width:0;">
                 <div style="font-family:var(--font-heading);font-weight:700;font-size:0.9rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Bahattin Yunus</div>
                 <div style="font-size:0.72rem;color:var(--accent-emerald);display:flex;align-items:center;gap:5px;">

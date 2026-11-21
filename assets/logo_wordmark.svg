@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 180" width="100%" height="180" role="img" aria-label="Dijital Seyyah — Anadolu Seyahatnamesi Marka Logosu">
+  <defs>
+    <linearGradient id="wmBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#060a15"/>
+      <stop offset="50%" stop-color="#0d162c"/>
+      <stop offset="100%" stop-color="#060a15"/>
+    </linearGradient>
+    <linearGradient id="wmGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff3b0"/>
+      <stop offset="45%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="wmCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#a5f3fc"/>
+      <stop offset="100%" stop-color="#00f2fe"/>
+    </linearGradient>
+    <linearGradient id="wmAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Frame -->
+  <rect x="4" y="4" width="872" height="172" rx="26" fill="url(#wmBg)" stroke="url(#wmGold)" stroke-width="2" stroke-opacity="0.55"/>
+  <rect x="12" y="12" width="856" height="156" rx="20" fill="none" stroke="url(#wmAccent)" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="6 4"/>
+
+  <!-- Left Seljuk Compass Emblem (Centered at 105, 90) -->
+  <g transform="translate(105, 90)">
+    <circle cx="0" cy="0" r="62" fill="#070c18" stroke="url(#wmGold)" stroke-width="2"/>
+    <circle cx="0" cy="0" r="54" fill="none" stroke="url(#wmAccent)" stroke-width="1" stroke-opacity="0.4" stroke-dasharray="3 4"/>
+    <!-- Interlocking Seljuk Squares -->
+    <rect x="-36" y="-36" width="72" height="72" rx="5" fill="rgba(15,23,42,0.7)" stroke="url(#wmGold)" stroke-width="2.2"/>
+    <rect x="-36" y="-36" width="72" height="72" rx="5" transform="rotate(45)" fill="rgba(9,14,28,0.82)" stroke="url(#wmGold)" stroke-width="2.2"/>
+    <!-- Compass Rose Needles -->
+    <polygon points="0,-48 8,-6 0,-12 -8,-6" fill="url(#wmAccent)"/>
+    <polygon points="0,48 8,6 0,12 -8,6" fill="url(#wmGold)"/>
+    <polygon points="48,0 6,8 12,0 6,-8" fill="url(#wmGold)" opacity="0.88"/>
+    <polygon points="-48,0 -6,8 -12,0 -6,-8" fill="url(#wmAccent)" opacity="0.88"/>
+    <!-- Open Seyahatname Book -->
+    <path d="M-22,28 Q-11,22 0,28 Q11,22 22,28 L20,35 Q10,30 0,36 Q-10,30 -20,35 Z" fill="url(#wmGold)"/>
+    <circle cx="0" cy="0" r="8" fill="#060a15" stroke="url(#wmGold)" stroke-width="2.2"/>
+    <circle cx="0" cy="0" r="3.5" fill="#00f2fe"/>
+  </g>
+
+  <!-- Vertical Filigree Divider -->
+  <line x1="194" y1="34" x2="194" y2="146" stroke="url(#wmGold)" stroke-width="1.5" stroke-opacity="0.35"/>
+  <rect x="190" y="86" width="8" height="8" transform="rotate(45 194 90)" fill="url(#wmGold)"/>
+
+  <!-- Typography Lockup -->
+  <text x="222" y="76" font-family="'Outfit', 'Segoe UI', sans-serif" font-size="42" font-weight="800" letter-spacing="3" fill="url(#wmCyan)">DİJİTAL SEYYAH</text>
+  <text x="224" y="108" font-family="'Outfit', 'Segoe UI', sans-serif" font-size="16" font-weight="700" letter-spacing="4.5" fill="url(#wmGold)">ANADOLU SEYAHATNAMESİ • SEFER DER VATAN</text>
+  <text x="224" y="138" font-family="'Plus Jakarta Sans', 'Segoe UI', sans-serif" font-size="13" font-weight="500" letter-spacing="1.2" fill="#94a3b8">81 İL  •  7 BÖLGE  •  162 FOTOĞRAF  •  KÜTÜPHANE OFİSLERİ  •  YAPAY ZEKÂ &amp; İRFAN ATLASI</text>
+
+  <!-- Right Seljuk Corner Star Ornament -->
+  <g transform="translate(815, 90)" opacity="0.32">
+    <rect x="-24" y="-24" width="48" height="48" rx="4" fill="none" stroke="url(#wmGold)" stroke-width="1.6"/>
+    <rect x="-24" y="-24" width="48" height="48" rx="4" transform="rotate(45)" fill="none" stroke="url(#wmAccent)" stroke-width="1.6"/>
+    <circle cx="0" cy="0" r="5" fill="url(#wmGold)"/>
+  </g>
+</svg>
