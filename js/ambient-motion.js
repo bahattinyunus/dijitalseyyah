@@ -547,26 +547,35 @@
       const targetText = (el.dataset.ambientTargetText || el.textContent || '').trim();
       if (!targetText) return;
 
-      // Cancel any in-flight animation for this element
       const existingRaf = activeNumberAnims.get(el);
+
+      if (reduced) {
+        if (existingRaf) {
+          window.cancelAnimationFrame(existingRaf);
+          activeNumberAnims.delete(el);
+        }
+        el.textContent = targetText;
+        return;
+      }
+
+      // Avoid interrupting an in-flight animation or double-animating the same target value
+      if (el.dataset.ambientAnimated === targetText) {
+        if (!existingRaf && el.textContent !== targetText) {
+          el.textContent = targetText;
+        }
+        return;
+      }
+
+      // Cancel any previous animation for a different target value
       if (existingRaf) {
         window.cancelAnimationFrame(existingRaf);
         activeNumberAnims.delete(el);
       }
 
-      if (reduced) {
-        el.textContent = targetText;
-        return;
-      }
-
-      // Avoid double-animating the exact same untouched value on the same DOM node
-      if (el.dataset.ambientAnimated === targetText) {
-        return;
-      }
-
       const parsed = parseNumericStat(targetText);
       if (!parsed || parsed.value === 0) {
         el.dataset.ambientAnimated = targetText;
+        el.textContent = targetText;
         return;
       }
 
@@ -599,9 +608,16 @@
         }
       }
 
-      el.textContent = formatNumericStat(0, parsed);
       const rafId = window.requestAnimationFrame(tick);
       activeNumberAnims.set(el, rafId);
+
+      // Fail-safe: guarantee exact final text after animation window even if rAF is throttled
+      setTimeout(() => {
+        if (el.isConnected && el.dataset.ambientTargetText === parsed.originalText) {
+          el.textContent = parsed.originalText;
+          activeNumberAnims.delete(el);
+        }
+      }, COUNT_UP_DURATION_MS + 120);
     });
   }
 

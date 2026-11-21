@@ -29,8 +29,40 @@
     'Antalya', 'Erzurum', 'İzmir', 'Ankara'
   ];
 
-  // 4 Categorized Groups covering all 24 Wave 1-3 modules
+  // 6 Categorized Groups covering all Wave 1-7 interactive studios & modules
   const FEATURE_GROUPS = [
+    {
+      id: 'ai',
+      title: 'Yapay Zekâ (Gemini AI)',
+      icon: '✨',
+      accent: 'var(--accent-cyan, #00f2fe)',
+      accentBg: 'rgba(0, 242, 254, 0.14)',
+      items: [
+        { view: 'advisor', icon: '✨', label: 'Akıllı Seyyah Rehberi', tag: 'Gemini AI' },
+        { view: 'aiPlanner', icon: '🧠', label: 'AI Sefer Mühendisi', tag: '5 Gün Plan' },
+        { view: 'aiMood', icon: '🎭', label: 'AI Ruh Hali Kaşifi', tag: '%99 Uyum' },
+        { view: 'aiWriter', icon: '✍️', label: 'AI Seyahatname Yazarı', tag: 'Canlı Akış' },
+        { view: 'aiBattle', icon: '⚔️', label: 'AI Şehir Düellosu', tag: 'Hakem' },
+        { view: 'aiQuiz', icon: '🧩', label: 'Sonsuz AI Yarışma', tag: 'Dinamik' },
+        { view: 'aiChef', icon: '🍽️', label: 'AI Gurme Şef', tag: 'Sofra' },
+        { view: 'aiSearch', icon: '🔎', label: 'AI Doğal Dil Arama', tag: 'Semantik' }
+      ]
+    },
+    {
+      id: 'irfan',
+      title: 'İrfan, Tefekkür & Felsefe',
+      icon: '🕌',
+      accent: 'var(--accent-gold, #f59e0b)',
+      accentBg: 'rgba(245, 158, 11, 0.14)',
+      items: [
+        { view: 'irfanAtlas', icon: '🕌', label: 'İrfan & Gönül Atlası', tag: '303 Şahsiyet' },
+        { view: 'hikmetMeclisi', icon: '📜', label: 'Hikmet Meclisi', tag: '5 Bilge AI' },
+        { view: 'sevenValleys', icon: '🕊️', label: 'Yedi Vadi (Attâr)', tag: 'Kaf Dağı' },
+        { view: 'halvet', icon: '🕯️', label: 'Halvet & Tefekkür Odası', tag: 'Ney & Nefes' },
+        { view: 'ethos', icon: '⚖️', label: 'Seyyah Ahlâkı & Lügat', tag: '24 Kavram' },
+        { view: 'civLayers', icon: '🏛️', label: 'Medeniyet & Zaman', tag: '7 Katman' }
+      ]
+    },
     {
       id: 'explore',
       title: 'Keşif & Harita',
@@ -42,8 +74,8 @@
         { view: 'route', icon: '🧭', label: 'Rota & GPX', tag: '2-Opt' },
         { view: 'radar', icon: '📡', label: 'Yakınlık Radarı', tag: 'Canlı' },
         { view: 'regions', icon: '🌍', label: '7 Bölge Rehberi', tag: '7 Coğrafya' },
-        { view: 'seasons', icon: '🌤️', label: 'Mevsim Rehberi', tag: 'İklim' },
-        { view: 'analytics', icon: '📊', label: '81 Plaka Analitik', tag: '9×9 Matris' }
+        { view: 'photoWall', icon: '🖼️', label: '162 Kare Mozaik', tag: 'Masonry' },
+        { view: 'deepStats', icon: '📈', label: 'İleri Analitik & Radar', tag: '81/81 Tahmin' }
       ]
     },
     {
@@ -53,7 +85,7 @@
       accent: 'var(--accent-gold, #f59e0b)',
       accentBg: 'rgba(245, 158, 11, 0.12)',
       items: [
-        { view: 'unesco', icon: '🏛️', label: 'UNESCO Mirası', tag: 'Dünya Mirası' },
+        { view: 'unesco', icon: '🏛️', label: 'UNESCO Mirası', tag: '21 Alan' },
         { view: 'landmarks', icon: '🕌', label: 'Tarihi Miras', tag: '373 Eser' },
         { view: 'gastronomy', icon: '🍽️', label: 'Lezzet Atlası', tag: 'Mutfak' },
         { view: 'libraries', icon: '📚', label: 'Kütüphane Ofisleri', tag: '81 Ofis' },
@@ -63,31 +95,31 @@
     },
     {
       id: 'studio',
-      title: 'Stüdyo & Oyun',
+      title: 'Stüdyo, Odak & Oyun',
       icon: '🎬',
       accent: 'var(--accent-purple, #a855f7)',
       accentBg: 'rgba(168, 85, 247, 0.12)',
       items: [
+        { view: 'pomodoro', icon: '🍅', label: 'Kütüphane Pomodoro', tag: '25/50 dk' },
         { view: 'cinematicTour', icon: '🎬', label: 'Sinematik Tur', tag: 'Sinema' },
         { view: 'postcard', icon: '📮', label: 'Kartpostal Stüdyosu', tag: 'HD PNG' },
         { view: 'sound', icon: '🎧', label: 'Sufi Ses Stüdyosu', tag: '5 Kanal' },
         { view: 'quiz', icon: '🎯', label: 'Bilgi Yarışması', tag: '4 Mod' },
-        { view: 'distanceGame', icon: '📏', label: 'Mesafe Tahmin Oyunu', tag: 'Oyun' },
-        { view: 'compare', icon: '⚖️', label: 'Şehir Karşılaştır', tag: 'Analiz' }
+        { view: 'distanceGame', icon: '📏', label: 'Mesafe Düellosu', tag: 'Oyun' }
       ]
     },
     {
       id: 'planning',
-      title: 'Planlama & Defter',
+      title: 'Planlama, Başarım & Defter',
       icon: '🧳',
       accent: 'var(--accent-emerald, #10b981)',
       accentBg: 'rgba(16, 185, 129, 0.12)',
       items: [
+        { view: 'achievements', icon: '🏆', label: 'Rütbe & Başarımlar', tag: '23 Rozet' },
+        { view: 'bucketList', icon: '🎯', label: 'Anadolu Bucket List', tag: '24 Hedef' },
         { view: 'passport', icon: '🛂', label: 'Dijital Pasaport', tag: 'Mühürler' },
-        { view: 'advisor', icon: '✨', label: 'Seyyah Danışmanı', tag: 'Akıllı Öneri' },
         { view: 'budget', icon: '💰', label: 'Bütçe Hesaplayıcı', tag: 'GSB Plan' },
         { view: 'packing', icon: '🎒', label: 'Sırt Çantası', tag: 'Liste' },
-        { view: 'reader', icon: '📖', label: 'Makaleler & Okuma', tag: 'Kıraat' },
         { view: 'journal', icon: '📝', label: 'Seyir Defterim', tag: 'Günlük' }
       ]
     }
