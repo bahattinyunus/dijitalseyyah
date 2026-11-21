@@ -24,10 +24,32 @@ class MapGenerator:
             prefer_canvas=True
         )
 
-        # Harita Temaları (LayerControl ile değiştirilebilir)
-        folium.TileLayer("CartoDB dark_matter", name="🌑 Gece Teması (Dark)", show=True).add_to(m)
-        folium.TileLayer("CartoDB positron", name="☀️ Gündüz Teması (Light)", show=False).add_to(m)
-        folium.TileLayer("OpenStreetMap", name="🗺️ OpenStreetMap", show=False).add_to(m)
+        # Harita Temaları (100% Ücretsiz, API Anahtarsız Esri ArcGIS & OpenTopoMap Katmanları)
+        folium.TileLayer(
+            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+            attr="Esri — World Topographic Map",
+            name="🌑 Gece Teması (Obsidian Dark)",
+            class_name="seyyah-dark-tiles",
+            show=True,
+        ).add_to(m)
+        folium.TileLayer(
+            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+            attr="Esri — World Topographic Map",
+            name="☀️ Gündüz Teması (Topoğrafik)",
+            show=False,
+        ).add_to(m)
+        folium.TileLayer(
+            tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            attr="Esri — World Imagery (Uydu)",
+            name="🛰️ Uydu Görünümü (Satellite)",
+            show=False,
+        ).add_to(m)
+        folium.TileLayer(
+            tiles="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+            attr="OpenTopoMap (CC-BY-SA)",
+            name="🏔️ Fiziki Kabartma Harita",
+            show=False,
+        ).add_to(m)
 
         stats = self.engine.stats
         pct = stats["progress_pct"]
@@ -40,6 +62,13 @@ class MapGenerator:
         # Özel CSS Stilleri
         css_style = """
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+        .leaflet-container {
+            background: #070d19 !important;
+        }
+        .seyyah-dark-tiles {
+            filter: invert(100%) hue-rotate(185deg) brightness(95%) contrast(92%) saturate(115%);
+        }
 
         .map-title-panel {
             position: absolute;

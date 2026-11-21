@@ -2087,7 +2087,15 @@
 
   // Modal Helpers
   function openMapModal() {
-    if (els.mapModal) els.mapModal.classList.add('active');
+    if (els.mapModal) {
+      els.mapModal.classList.add('active');
+      const mapIframe = document.getElementById('map-iframe') || els.mapModal.querySelector('iframe');
+      if (mapIframe && mapIframe.contentWindow) {
+        setTimeout(() => {
+          try { mapIframe.contentWindow.dispatchEvent(new Event('resize')); } catch (e) {}
+        }, 120);
+      }
+    }
   }
 
   function openQuoteModal() {
