@@ -1,0 +1,999 @@
+/* ==========================================================================
+   ANADOLU SEYAHATNAMESİ — WAVE 8 MAGNUM OPUS STYLESHEET
+   Visual Cohesion, Light/Dark Parity & Responsive Perfection
+   --------------------------------------------------------------------------
+   1. Wave 8 Design Tokens (Obsidian Night & Alabaster/Parchment Light)
+   2. Dashboard Vertical Rhythm (.dashboard-view gap: 18px) & .stats-grid KPI Polish
+   3. Dashboard Vitrin Mode Switcher (.seyyah-dash-mode-bar & .sdo-*)
+   4. City Breadcrumb & Bottom Plate/Neighbor Bar (.seyyah-city-breadcrumb-bar,
+      .seyyah-city-bottom-nav)
+   5. Unified Wave 8 Studio Shell & Typography Cohesion
+      - Constellation Sky Map (.sky-* / .skymap-*)
+      - Caravanserai & Silk Road Atlas (.skn-* / .kervan-* / .crv-*)
+      - Poetry & Literature Divan (.divan-*)
+      - Library Work Log Heatmap (.lwl-* / .wlog-*)
+      - Expedition Berat Certificate Studio (.ec-* / .cert-*)
+      - Anatolian Proverbs & Blessings (.proverb-* / .prov-*)
+   6. Full html body.light-theme Contrast Parity
+   7. Keyboard Accessibility (:focus-visible) & Responsive Breakpoints
+   8. @media (prefers-reduced-motion: reduce) & @media print Editorial Rules
+   CRITICAL GUARDRAIL: NEVER overrides .cmd-overlay display property.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. WAVE 8 DESIGN TOKENS (OBSIDIAN DARK & ALABASTER/PARCHMENT LIGHT)
+   -------------------------------------------------------------------------- */
+:root {
+  --w8-surface: rgba(10, 16, 31, 0.88);
+  --w8-surface-card: linear-gradient(160deg, rgba(16, 24, 43, 0.86) 0%, rgba(9, 14, 27, 0.92) 100%);
+  --w8-surface-hero: linear-gradient(140deg, rgba(13, 21, 40, 0.94) 0%, rgba(9, 14, 28, 0.96) 56%, rgba(14, 27, 39, 0.92) 100%);
+  --w8-surface-subtle: rgba(255, 255, 255, 0.045);
+  --w8-surface-hover: rgba(255, 255, 255, 0.085);
+  --w8-surface-parchment: linear-gradient(155deg, rgba(22, 18, 13, 0.94) 0%, rgba(15, 21, 36, 0.94) 100%);
+
+  --w8-ink-primary: #f8fafc;
+  --w8-ink-secondary: #cbd5e1;
+  --w8-ink-muted: #94a3b8;
+  --w8-ink-cyan: #67e8f9;
+  --w8-ink-gold: #fde68a;
+  --w8-ink-emerald: #6ee7b7;
+  --w8-ink-violet: #d8b4fe;
+
+  --w8-cyan: #00f2fe;
+  --w8-gold: #d4af37;
+  --w8-amber: #f59e0b;
+  --w8-emerald: #10b981;
+  --w8-turquoise: #14b8a6;
+  --w8-violet: #a855f7;
+
+  --w8-hairline: rgba(255, 255, 255, 0.095);
+  --w8-hairline-strong: rgba(0, 242, 254, 0.36);
+  --w8-gold-hairline: rgba(212, 175, 55, 0.34);
+
+  --w8-shadow-card:
+    0 14px 36px -14px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --w8-shadow-elevated:
+    0 22px 48px -16px rgba(0, 0, 0, 0.78),
+    0 0 28px -10px rgba(0, 242, 254, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --w8-shadow-gold:
+    0 20px 44px -16px rgba(0, 0, 0, 0.78),
+    0 0 26px -10px rgba(212, 175, 55, 0.24),
+    inset 0 1px 0 rgba(254, 243, 199, 0.14);
+
+  --w8-radius-sm: 10px;
+  --w8-radius-md: 14px;
+  --w8-radius-lg: 18px;
+  --w8-radius-xl: 22px;
+
+  --w8-font-heading: var(--font-heading, 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif);
+  --w8-font-serif: 'Georgia', 'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif;
+  --w8-font-mono: ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  --w8-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html body.light-theme {
+  --w8-surface: rgba(255, 255, 255, 0.94);
+  --w8-surface-card: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 249, 252, 0.95) 100%);
+  --w8-surface-hero: linear-gradient(145deg, rgba(255, 253, 248, 0.98) 0%, rgba(246, 248, 252, 0.96) 58%, rgba(240, 249, 255, 0.95) 100%);
+  --w8-surface-subtle: rgba(15, 23, 42, 0.04);
+  --w8-surface-hover: rgba(2, 132, 199, 0.08);
+  --w8-surface-parchment: linear-gradient(160deg, rgba(255, 252, 244, 0.98) 0%, rgba(249, 243, 229, 0.95) 100%);
+
+  --w8-ink-primary: #0f172a;
+  --w8-ink-secondary: #334155;
+  --w8-ink-muted: #475569;
+  --w8-ink-cyan: #0369a1;
+  --w8-ink-gold: #92400e;
+  --w8-ink-emerald: #065f46;
+  --w8-ink-violet: #5b21b6;
+
+  --w8-cyan: #0284c7;
+  --w8-gold: #b45309;
+  --w8-amber: #b45309;
+  --w8-emerald: #047857;
+  --w8-turquoise: #0f766e;
+  --w8-violet: #6d28d9;
+
+  --w8-hairline: rgba(15, 23, 42, 0.11);
+  --w8-hairline-strong: rgba(2, 132, 199, 0.38);
+  --w8-gold-hairline: rgba(180, 83, 9, 0.3);
+
+  --w8-shadow-card:
+    0 10px 28px -12px rgba(15, 23, 42, 0.11),
+    0 2px 6px -2px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  --w8-shadow-elevated:
+    0 18px 40px -14px rgba(15, 23, 42, 0.15),
+    0 4px 14px -6px rgba(2, 132, 199, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  --w8-shadow-gold:
+    0 16px 38px -14px rgba(41, 32, 18, 0.16),
+    0 4px 16px -6px rgba(180, 83, 9, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. DASHBOARD VERTICAL RHYTHM & 4 KPI CARDS (.dashboard-view & .stats-grid)
+   -------------------------------------------------------------------------- */
+.dashboard-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dashboard-view > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.dashboard-view .stats-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  visibility: visible;
+  opacity: 1;
+}
+
+.dashboard-view .stats-grid .stat-card {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 20px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--w8-hairline);
+  box-shadow: var(--w8-shadow-card);
+  transition:
+    transform 220ms var(--w8-ease),
+    border-color 220ms var(--w8-ease),
+    box-shadow 220ms var(--w8-ease);
+}
+
+.dashboard-view .stats-grid .stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  opacity: 0.92;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 242, 254, 0.85), rgba(79, 172, 254, 0.45), transparent);
+}
+
+.dashboard-view .stats-grid .stat-card:nth-child(1)::before {
+  background: linear-gradient(90deg, #10b981, rgba(16, 185, 129, 0.25), transparent);
+}
+
+.dashboard-view .stats-grid .stat-card:nth-child(2)::before {
+  background: linear-gradient(90deg, #00f2fe, rgba(0, 242, 254, 0.25), transparent);
+}
+
+.dashboard-view .stats-grid .stat-card:nth-child(3)::before {
+  background: linear-gradient(90deg, #f59e0b, rgba(245, 158, 11, 0.25), transparent);
+}
+
+.dashboard-view .stats-grid .stat-card:nth-child(4)::before {
+  background: linear-gradient(90deg, #a855f7, rgba(168, 85, 247, 0.25), transparent);
+}
+
+.dashboard-view .stats-grid .stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--w8-hairline-strong);
+  box-shadow: var(--w8-shadow-elevated);
+}
+
+.dashboard-view .stat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: var(--w8-ink-muted);
+}
+
+.dashboard-view .stat-card-value {
+  font-family: var(--w8-font-heading);
+  font-size: clamp(1.55rem, 2.2vw, 1.95rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "cv05" 1;
+  color: var(--w8-ink-primary);
+}
+
+.dashboard-view .stat-card-desc {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--w8-ink-secondary);
+}
+
+html body.light-theme .dashboard-view .stats-grid .stat-card {
+  background: var(--w8-surface-card);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: var(--w8-shadow-card);
+}
+
+html body.light-theme .dashboard-view .stats-grid .stat-card:hover {
+  border-color: rgba(2, 132, 199, 0.36);
+  box-shadow: var(--w8-shadow-elevated);
+}
+
+html body.light-theme .dashboard-view .stat-card-header {
+  color: #475569;
+}
+
+html body.light-theme .dashboard-view .stat-card-desc {
+  color: #334155;
+}
+
+/* --------------------------------------------------------------------------
+   3. DASHBOARD VITRIN MODE SWITCHER PILLS (.seyyah-dash-mode-bar & .sdo-*)
+   -------------------------------------------------------------------------- */
+.seyyah-dash-mode-bar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--w8-radius-lg);
+  background: var(--w8-surface);
+  border: 1px solid var(--w8-hairline);
+  box-shadow: var(--w8-shadow-card);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.seyyah-dash-mode-bar .sdo-bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.seyyah-dash-mode-bar .sdo-mode-pill,
+.seyyah-dash-mode-bar .mode-pill,
+.seyyah-dash-mode-bar .seyyah-dash-mode-pill {
+  font-family: var(--w8-font-heading);
+  letter-spacing: -0.01em;
+  transition:
+    background 180ms var(--w8-ease),
+    border-color 180ms var(--w8-ease),
+    color 180ms var(--w8-ease),
+    transform 180ms var(--w8-ease),
+    box-shadow 200ms var(--w8-ease);
+}
+
+.seyyah-dash-mode-bar .sdo-irfan-btn {
+  transition:
+    background 180ms var(--w8-ease),
+    border-color 180ms var(--w8-ease),
+    color 180ms var(--w8-ease),
+    transform 180ms var(--w8-ease),
+    box-shadow 200ms var(--w8-ease);
+}
+
+html body.light-theme .seyyah-dash-mode-bar {
+  background: linear-gradient(145deg, rgba(255, 253, 248, 0.96) 0%, rgba(246, 242, 232, 0.94) 100%);
+  border-color: rgba(120, 92, 46, 0.16);
+  box-shadow: var(--w8-shadow-card);
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-bar-eyebrow {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(180, 83, 9, 0.28);
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-mode-caption {
+  color: #475569;
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-pills-track {
+  background: rgba(15, 23, 42, 0.055);
+  border-color: rgba(15, 23, 42, 0.09);
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-mode-pill {
+  color: #334155;
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-mode-pill:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-mode-pill.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  border-color: rgba(180, 83, 9, 0.45);
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-mode-pill[data-sdo-mode="focus"].is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-color: rgba(3, 105, 161, 0.45);
+}
+
+html body.light-theme .seyyah-dash-mode-bar .sdo-mode-pill[data-sdo-mode="irfan"].is-active {
+  color: #78350f;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(13, 148, 136, 0.16) 100%);
+  border-color: rgba(180, 83, 9, 0.48);
+}
+
+/* --------------------------------------------------------------------------
+   4. CITY PLATE BREADCRUMB & BOTTOM NEIGHBORS BAR
+      (.seyyah-city-breadcrumb-bar & .seyyah-city-bottom-nav)
+   -------------------------------------------------------------------------- */
+.seyyah-city-breadcrumb-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--w8-surface);
+  border: 1px solid var(--w8-hairline);
+  box-shadow: var(--w8-shadow-card);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+}
+
+.seyyah-city-breadcrumb-bar-plate-pill,
+.seyyah-city-breadcrumb-bar-plate-code,
+.seyyah-city-breadcrumb-bar-neighbor-dist,
+.seyyah-city-bottom-nav .seyyah-city-breadcrumb-bar-plate-pill {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.seyyah-city-bottom-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--w8-surface-card);
+  border: 1px solid var(--w8-hairline);
+  box-shadow: var(--w8-shadow-card);
+}
+
+.seyyah-city-breadcrumb-bar-home-btn,
+.seyyah-city-breadcrumb-bar-plate-btn,
+.seyyah-city-breadcrumb-bar-neighbor-chip,
+.seyyah-city-bottom-nav-card {
+  transition:
+    background 180ms var(--w8-ease),
+    border-color 180ms var(--w8-ease),
+    color 180ms var(--w8-ease),
+    transform 180ms var(--w8-ease),
+    box-shadow 180ms var(--w8-ease);
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar,
+html body.light-theme .seyyah-city-bottom-nav {
+  background: var(--w8-surface-card);
+  border-color: rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+  box-shadow: var(--w8-shadow-card);
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar-crumbs,
+html body.light-theme .seyyah-city-breadcrumb-bar-neighbors-label,
+html body.light-theme .seyyah-city-bottom-nav-shortcut,
+html body.light-theme .seyyah-city-bottom-nav-dir,
+html body.light-theme .seyyah-city-bottom-nav-meta {
+  color: #475569;
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar-current,
+html body.light-theme .seyyah-city-bottom-nav-city {
+  color: #0f172a;
+}
+
+html body.light-theme .seyyah-city-bottom-nav-title {
+  color: #0369a1;
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar-home-btn,
+html body.light-theme .seyyah-city-breadcrumb-bar-plate-btn,
+html body.light-theme .seyyah-city-breadcrumb-bar-neighbor-chip,
+html body.light-theme .seyyah-city-bottom-nav-card {
+  background: rgba(248, 250, 252, 0.92);
+  border-color: rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar-home-btn:hover,
+html body.light-theme .seyyah-city-breadcrumb-bar-plate-btn:hover,
+html body.light-theme .seyyah-city-breadcrumb-bar-neighbor-chip:hover,
+html body.light-theme .seyyah-city-bottom-nav-card:hover {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.42);
+  box-shadow: 0 10px 24px -12px rgba(15, 23, 42, 0.14);
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar-plate-pill {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: rgba(2, 132, 199, 0.3);
+  color: #0369a1;
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar-plate-code,
+html body.light-theme .seyyah-city-breadcrumb-bar-neighbor-dist {
+  color: #0369a1;
+}
+
+html body.light-theme .seyyah-city-breadcrumb-bar-neighbors {
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   5. UNIFIED WAVE 8 STUDIO SHELLS, HEROES, CARDS & TABULAR NUMERALS
+      Covers both live JS prefixes (sky-*, skn-*, divan-*, lwl-*, ec-*, proverb-*)
+      and canonical aliases (skymap-*, kervan-*, crv-*, wlog-*, cert-*, prov-*)
+   -------------------------------------------------------------------------- */
+.sky-studio,
+.skymap-shell,
+.skymap-studio,
+.skn-root,
+.kervan-shell,
+.kervan-studio,
+.crv-shell,
+.crv-studio,
+.divan-studio,
+.divan-shell,
+.lwl-studio,
+.wlog-shell,
+.wlog-studio,
+.ec-root,
+.cert-shell,
+.cert-studio,
+.proverb-studio,
+.prov-shell,
+.prov-studio {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  gap: 18px;
+}
+
+.sky-hero,
+.skymap-hero,
+.skn-hero,
+.kervan-hero,
+.crv-hero,
+.divan-hero,
+.lwl-hero,
+.wlog-hero,
+.ec-hero,
+.cert-hero,
+.proverb-hero,
+.prov-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--w8-radius-xl);
+  box-shadow: var(--w8-shadow-elevated);
+}
+
+.sky-hero::before,
+.skymap-hero::before,
+.skn-hero::before,
+.kervan-hero::before,
+.crv-hero::before,
+.divan-hero::before,
+.lwl-hero::before,
+.wlog-hero::before,
+.ec-hero::before,
+.cert-hero::before,
+.proverb-hero::before,
+.prov-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--w8-gold) 26%, var(--w8-cyan) 68%, var(--w8-emerald) 88%, transparent);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.sky-hero h1,
+.sky-hero h2,
+.skn-title,
+.divan-hero h1,
+.divan-hero h2,
+.lwl-hero-title,
+.ec-hero-title,
+.proverb-hero h1,
+.proverb-hero h2,
+.skymap-title,
+.kervan-title,
+.crv-title,
+.divan-title,
+.wlog-title,
+.cert-title,
+.prov-title {
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+/* Crisp Tabular Numerals on All Wave 8 KPIs, Plates, Metrics & Heatmaps */
+.sky-stat-val,
+.skymap-kpi-val,
+.skn-kpi-value,
+.skn-plate,
+.kervan-kpi-val,
+.kervan-km,
+.crv-kpi-val,
+.crv-km,
+.divan-stat-pill,
+.divan-section-count,
+.lwl-kpi-val,
+.lwl-plate-pill,
+.lwl-hours-badge,
+.lwl-cat-stat,
+.wlog-kpi-val,
+.wlog-stat-val,
+.ec-stat-val,
+.cert-kpi-val,
+.cert-serial,
+.proverb-stat-pill,
+.prov-kpi-val {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Signature Module Elevations */
+.sky-dome-card,
+.skymap-stage,
+.skymap-canvas-wrap,
+.skymap-svg-wrap {
+  border-radius: var(--w8-radius-lg);
+  box-shadow: var(--w8-shadow-elevated);
+}
+
+.skn-han-card,
+.skn-prov-card,
+.skn-kpi-card,
+.kervan-card,
+.kervan-route-card,
+.crv-card,
+.crv-route-card {
+  border-radius: var(--w8-radius-lg);
+  transition: border-color 200ms var(--w8-ease), transform 200ms var(--w8-ease), box-shadow 200ms var(--w8-ease);
+}
+
+.divan-card,
+.divan-paper,
+.divan-excerpt-box {
+  border-radius: var(--w8-radius-lg);
+}
+
+.divan-excerpt-box,
+.divan-paper-body,
+.divan-beyit,
+.divan-couplet,
+.divan-verse {
+  font-family: var(--w8-font-serif);
+  line-height: 1.8;
+}
+
+.lwl-panel,
+.lwl-kpi-card,
+.lwl-lib-card,
+.wlog-card,
+.wlog-panel,
+.wlog-heatmap-wrap {
+  border-radius: var(--w8-radius-lg);
+}
+
+.ec-panel,
+.ec-preview-stage,
+.ec-stat-card,
+.cert-card,
+.cert-panel,
+.cert-frame,
+.cert-sheet {
+  border-radius: var(--w8-radius-lg);
+}
+
+.proverb-spotlight,
+.proverb-card,
+.prov-card,
+.prov-quote-card,
+.prov-blessing-card {
+  border-radius: var(--w8-radius-lg);
+}
+
+.proverb-main-text,
+.proverb-spotlight-quote,
+.prov-text,
+.prov-saying,
+.prov-blessing {
+  font-family: var(--w8-font-serif);
+  line-height: 1.72;
+}
+
+/* --------------------------------------------------------------------------
+   6. FULL html body.light-theme CONTRAST PARITY FOR ALL WAVE 8 MODULES
+   -------------------------------------------------------------------------- */
+html body.light-theme .sky-hero,
+html body.light-theme .skymap-hero,
+html body.light-theme .skn-hero,
+html body.light-theme .kervan-hero,
+html body.light-theme .crv-hero,
+html body.light-theme .divan-hero,
+html body.light-theme .lwl-hero,
+html body.light-theme .wlog-hero,
+html body.light-theme .ec-hero,
+html body.light-theme .cert-hero,
+html body.light-theme .proverb-hero,
+html body.light-theme .prov-hero {
+  background: var(--w8-surface-hero);
+  border-color: rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+  box-shadow: var(--w8-shadow-elevated);
+}
+
+html body.light-theme .sky-controls,
+html body.light-theme .sky-menzil-card,
+html body.light-theme .sky-marifet-card,
+html body.light-theme .skymap-card,
+html body.light-theme .skymap-panel,
+html body.light-theme .skymap-inspector,
+html body.light-theme .skymap-legend,
+html body.light-theme .skn-kpi-card,
+html body.light-theme .skn-han-card,
+html body.light-theme .skn-prov-card,
+html body.light-theme .skn-ai-output,
+html body.light-theme .kervan-card,
+html body.light-theme .kervan-panel,
+html body.light-theme .crv-card,
+html body.light-theme .crv-panel,
+html body.light-theme .divan-controls,
+html body.light-theme .divan-card,
+html body.light-theme .divan-ai-studio,
+html body.light-theme .divan-paper,
+html body.light-theme .lwl-kpi-card,
+html body.light-theme .lwl-panel,
+html body.light-theme .lwl-inspector,
+html body.light-theme .lwl-lib-card,
+html body.light-theme .lwl-session-item,
+html body.light-theme .wlog-card,
+html body.light-theme .wlog-panel,
+html body.light-theme .wlog-heatmap-wrap,
+html body.light-theme .ec-stat-card,
+html body.light-theme .ec-panel,
+html body.light-theme .ec-preview-stage,
+html body.light-theme .cert-card,
+html body.light-theme .cert-panel,
+html body.light-theme .proverb-controls,
+html body.light-theme .proverb-spotlight,
+html body.light-theme .proverb-card,
+html body.light-theme .proverb-modal,
+html body.light-theme .prov-card,
+html body.light-theme .prov-panel {
+  background: var(--w8-surface-card);
+  border-color: rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+  box-shadow: var(--w8-shadow-card);
+}
+
+html body.light-theme .divan-paper,
+html body.light-theme .divan-excerpt-box,
+html body.light-theme .skn-vakif-box,
+html body.light-theme .skn-thesis-quote,
+html body.light-theme .proverb-spotlight {
+  background: var(--w8-surface-parchment);
+  border-color: rgba(180, 83, 9, 0.24);
+}
+
+html body.light-theme .sky-studio h1,
+html body.light-theme .sky-studio h2,
+html body.light-theme .sky-studio h3,
+html body.light-theme .skn-root h1,
+html body.light-theme .skn-root h2,
+html body.light-theme .skn-root h3,
+html body.light-theme .skn-prov-name,
+html body.light-theme .skn-han-title,
+html body.light-theme .divan-studio h1,
+html body.light-theme .divan-studio h2,
+html body.light-theme .divan-studio h3,
+html body.light-theme .divan-author-name,
+html body.light-theme .lwl-studio h1,
+html body.light-theme .lwl-studio h2,
+html body.light-theme .lwl-studio h3,
+html body.light-theme .lwl-card-name,
+html body.light-theme .lwl-session-title,
+html body.light-theme .ec-root h1,
+html body.light-theme .ec-root h2,
+html body.light-theme .ec-root h3,
+html body.light-theme .ec-panel-title,
+html body.light-theme .proverb-studio h1,
+html body.light-theme .proverb-studio h2,
+html body.light-theme .proverb-studio h3,
+html body.light-theme .proverb-main-text,
+html body.light-theme .proverb-spotlight-quote {
+  color: #0f172a;
+}
+
+html body.light-theme .sky-marifet-note,
+html body.light-theme .skn-subtitle,
+html body.light-theme .skn-kpi-sub,
+html body.light-theme .divan-hero-sub,
+html body.light-theme .divan-commentary,
+html body.light-theme .divan-echo-note,
+html body.light-theme .lwl-hero-desc,
+html body.light-theme .lwl-panel-sub,
+html body.light-theme .lwl-card-note,
+html body.light-theme .lwl-session-note,
+html body.light-theme .ec-hero-sub,
+html body.light-theme .ec-stat-sub,
+html body.light-theme .proverb-hero-sub,
+html body.light-theme .proverb-meaning,
+html body.light-theme .proverb-context,
+html body.light-theme .proverb-spotlight-meaning,
+html body.light-theme .proverb-spotlight-context {
+  color: #334155;
+}
+
+html body.light-theme .sky-search-input,
+html body.light-theme .skn-root input,
+html body.light-theme .skn-root select,
+html body.light-theme .divan-search-input,
+html body.light-theme .divan-input,
+html body.light-theme .divan-select,
+html body.light-theme .lwl-input,
+html body.light-theme .lwl-select,
+html body.light-theme .lwl-textarea,
+html body.light-theme .ec-input,
+html body.light-theme .ec-textarea,
+html body.light-theme .proverb-search-input,
+html body.light-theme [class^="skymap-"] input,
+html body.light-theme [class^="kervan-"] input,
+html body.light-theme [class^="crv-"] input,
+html body.light-theme [class^="wlog-"] input,
+html body.light-theme [class^="cert-"] input,
+html body.light-theme [class^="prov-"] input {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+}
+
+/* --------------------------------------------------------------------------
+   7. KEYBOARD ACCESSIBILITY (:focus-visible) & RESPONSIVE PERFECTION
+   -------------------------------------------------------------------------- */
+html body .seyyah-dash-mode-bar button:focus-visible,
+html body .seyyah-city-breadcrumb-bar button:focus-visible,
+html body .seyyah-city-bottom-nav button:focus-visible,
+html body .sky-studio button:focus-visible,
+html body .skn-root button:focus-visible,
+html body .divan-studio button:focus-visible,
+html body .lwl-studio button:focus-visible,
+html body .ec-root button:focus-visible,
+html body .proverb-studio button:focus-visible,
+html body [class^="skymap-"] button:focus-visible,
+html body [class^="kervan-"] button:focus-visible,
+html body [class^="crv-"] button:focus-visible,
+html body [class^="wlog-"] button:focus-visible,
+html body [class^="cert-"] button:focus-visible,
+html body [class^="prov-"] button:focus-visible {
+  outline: 2px solid var(--w8-cyan);
+  outline-offset: 2px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-view .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .sky-hero,
+  .skn-hero,
+  .divan-hero,
+  .lwl-hero,
+  .ec-hero,
+  .proverb-hero,
+  .skymap-hero,
+  .kervan-hero,
+  .crv-hero,
+  .wlog-hero,
+  .cert-hero,
+  .prov-hero {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .ec-workspace,
+  .lwl-workspace-grid,
+  .lwl-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-view {
+    gap: 14px;
+  }
+
+  .seyyah-dash-mode-bar {
+    padding: 10px 12px;
+  }
+
+  .seyyah-dash-mode-bar .sdo-pills-track {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .seyyah-dash-mode-bar .sdo-pills-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .seyyah-city-breadcrumb-bar {
+    padding: 10px 12px;
+  }
+
+  .seyyah-city-bottom-nav {
+    padding: 14px;
+  }
+
+  .seyyah-city-bottom-nav-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .dashboard-view .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. ACCESSIBILITY — REDUCED MOTION & PRINT EDITORIAL STYLESHEET
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-view .stats-grid .stat-card,
+  .seyyah-dash-mode-bar,
+  .seyyah-dash-mode-bar .sdo-mode-pill,
+  .seyyah-dash-mode-bar .sdo-irfan-btn,
+  .seyyah-city-breadcrumb-bar,
+  .seyyah-city-breadcrumb-bar-home-btn,
+  .seyyah-city-breadcrumb-bar-plate-btn,
+  .seyyah-city-breadcrumb-bar-neighbor-chip,
+  .seyyah-city-bottom-nav,
+  .seyyah-city-bottom-nav-card,
+  [class^="sky-"],
+  [class*=" sky-"],
+  [class^="skymap-"],
+  [class*=" skymap-"],
+  [class^="skn-"],
+  [class*=" skn-"],
+  [class^="kervan-"],
+  [class*=" kervan-"],
+  [class^="crv-"],
+  [class*=" crv-"],
+  [class^="divan-"],
+  [class*=" divan-"],
+  [class^="lwl-"],
+  [class*=" lwl-"],
+  [class^="wlog-"],
+  [class*=" wlog-"],
+  [class^="ec-"],
+  [class*=" ec-"],
+  [class^="cert-"],
+  [class*=" cert-"],
+  [class^="proverb-"],
+  [class*=" proverb-"],
+  [class^="prov-"],
+  [class*=" prov-"] {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .dashboard-view .stats-grid .stat-card:hover,
+  .seyyah-dash-mode-bar .sdo-mode-pill:hover,
+  .seyyah-dash-mode-bar .sdo-irfan-btn:hover,
+  .seyyah-city-breadcrumb-bar-home-btn:hover,
+  .seyyah-city-breadcrumb-bar-plate-btn:hover,
+  .seyyah-city-breadcrumb-bar-neighbor-chip:hover,
+  .seyyah-city-bottom-nav-card:hover,
+  .skn-han-card:hover,
+  .skn-prov-card:hover,
+  .divan-card:hover,
+  .lwl-lib-card:hover,
+  .proverb-card:hover {
+    transform: none !important;
+  }
+}
+
+@media print {
+  /* Hide interactive Wave 8 dashboard mode bar & city navigation bars on paper */
+  .seyyah-dash-mode-bar,
+  .seyyah-city-breadcrumb-bar,
+  .seyyah-city-bottom-nav {
+    display: none !important;
+  }
+
+  /* Crisp ink-on-white rendering for KPI cards and all Wave 8 studios */
+  .dashboard-view .stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .dashboard-view .stats-grid .stat-card,
+  .sky-hero,
+  .sky-controls,
+  .sky-menzil-card,
+  .sky-marifet-card,
+  .skymap-hero,
+  .skymap-card,
+  .skymap-panel,
+  .skn-hero,
+  .skn-kpi-card,
+  .skn-han-card,
+  .skn-prov-card,
+  .skn-ai-output,
+  .kervan-hero,
+  .kervan-card,
+  .crv-hero,
+  .crv-card,
+  .divan-hero,
+  .divan-card,
+  .divan-paper,
+  .divan-excerpt-box,
+  .lwl-hero,
+  .lwl-kpi-card,
+  .lwl-panel,
+  .lwl-inspector,
+  .lwl-lib-card,
+  .wlog-hero,
+  .wlog-card,
+  .wlog-heatmap-wrap,
+  .ec-hero,
+  .ec-stat-card,
+  .ec-panel,
+  .ec-preview-stage,
+  .cert-hero,
+  .cert-card,
+  .proverb-hero,
+  .proverb-spotlight,
+  .proverb-card,
+  .prov-hero,
+  .prov-card {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Preserve Berat Certificate double-frame elegance on paper */
+  .ec-canvas-wrap,
+  .cert-frame,
+  .cert-sheet,
+  .cert-preview {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 2px solid #92400e !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

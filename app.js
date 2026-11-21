@@ -289,6 +289,12 @@
       hikmetMeclisi: mods.hikmetMeclisi,
       ethos: mods.ethos,
       civLayers: mods.civLayers,
+      skyMap: mods.skyMap,
+      caravanserai: mods.caravanserai,
+      divan: mods.divan,
+      workLog: mods.workLog,
+      certificate: mods.certificate,
+      proverbs: mods.proverbs,
       pomodoro: mods.pomodoro,
       achievements: mods.achievements,
       photoWall: mods.photoWall,
@@ -336,6 +342,7 @@
       '#cinematicTour', '#passport', '#radar', '#advisor', '#unesco', '#distanceGame', '#regions', '#aiPlanner',
       '#aiMood', '#aiWriter', '#aiBattle', '#aiQuiz', '#aiSearch', '#aiChef',
       '#irfanAtlas', '#sevenValleys', '#halvet', '#hikmetMeclisi', '#ethos', '#civLayers',
+      '#skyMap', '#caravanserai', '#divan', '#workLog', '#certificate', '#proverbs',
       '#pomodoro', '#achievements', '#photoWall', '#bucketList', '#deepStats', '#admin'
     ].includes(h)) {
       openView(h.slice(1), false);
@@ -383,13 +390,13 @@
     if (mods.ambientMotion && typeof mods.ambientMotion.init === 'function') {
       mods.ambientMotion.init(ctx);
     }
-    // Wave 4, 5, 6 & 7 Next-Gen AI, Modern Mega-Nav, Philosophy & Luxury UX Enhancer Modules
+    // Wave 4, 5, 6, 7 & 8 Next-Gen AI, Modern Mega-Nav, Philosophy, Orchestrator & Luxury UX Enhancer Modules
     [
       'modernNav', 'aiHud',
       'floatingCopilot', 'aiCityConcierge', 'liveWeather', 'interactive3d',
       'voiceNarrator', 'storyReels', 'quickDock', 'shareCard',
       'mobileUx', 'pomodoro', 'achievements', 'dailySpotlight', 'proTools',
-      'citySoul', 'philosophyRibbon'
+      'citySoul', 'philosophyRibbon', 'cityNavBar', 'dashboardOrchestrator'
     ].forEach(modKey => {
       if (mods[modKey] && typeof mods[modKey].init === 'function') {
         try { mods[modKey].init(ctx); } catch (e) { console.warn('[Seyyah] Module init error:', modKey, e); }

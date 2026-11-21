@@ -26,7 +26,8 @@
         { view: 'regions', icon: '🌍', title: '7 Bölge', subtitle: 'Coğrafi bölge keşif dosyaları' },
         { view: 'photoWall', icon: '🖼️', title: '162 Mozaik', subtitle: 'Tüm illerin fotoğraf duvarı' },
         { view: 'gallery', icon: '📸', title: 'Galeri', subtitle: 'Yüksek çözünürlüklü şehir kareleri' },
-        { view: 'cinematicTour', icon: '🎬', title: 'Sinematik Tur', subtitle: 'Otomatik görsel Anadolu yolculuğu' }
+        { view: 'cinematicTour', icon: '🎬', title: 'Sinematik Tur', subtitle: 'Otomatik görsel Anadolu yolculuğu' },
+        { view: 'skyMap', icon: '🌌', title: 'Anadolu Semâsı (81 Yıldız)', subtitle: '81 il takımyıldızı ve rasathane gök haritası' }
       ]
     },
     {
@@ -61,7 +62,9 @@
         { view: 'halvet', icon: '🕯️', title: 'Halvet & Tefekkür Odası', subtitle: 'Selçuklu hendesesi, nefes ritmi ve ney sükûneti' },
         { view: 'ethos', icon: '⚖️', title: 'Seyyah Ahlâkı & İrfan Lügatı', subtitle: 'Fütüvvet ilkeleri ve 24 tasavvufi sefer kavramı' },
         { view: 'civLayers', icon: '🏛️', title: 'Medeniyet & Zaman Felsefesi', subtitle: 'Göbeklitepe\'den Selimiye\'ye taşın hafızası' },
-        { view: 'reader', icon: '📖', title: 'Manifesto & Makaleler', subtitle: '7 bölümlük Sefer Der Vatan külliyatı' }
+        { view: 'reader', icon: '📖', title: 'Manifesto & Makaleler', subtitle: '7 bölümlük Sefer Der Vatan külliyatı' },
+        { view: 'divan', icon: '🖋️', title: 'Şiir, Türkü & Edebiyat Divanı', subtitle: 'Tanpınar Beş Şehir, Yunus ve ozanlar antolojisi' },
+        { view: 'proverbs', icon: '🗣️', title: 'Anadolu Sözleri & Yol Duaları', subtitle: '7 bölge atasözleri, yöresel ağız ve dualar' }
       ]
     },
     {
@@ -75,7 +78,8 @@
         { view: 'bucketList', icon: '🎯', title: 'Bucket List', subtitle: 'Gezilecek hayal hedeflerini yönet' },
         { view: 'budget', icon: '💰', title: 'Bütçe', subtitle: 'Seyahat masraf ve harcama planı' },
         { view: 'packing', icon: '🎒', title: 'Sırt Çantası', subtitle: 'Akıllı bavul ve ekipman listesi' },
-        { view: 'seasons', icon: '🌤️', title: 'Mevsimler', subtitle: 'İklim ve en iyi zamanlama' }
+        { view: 'seasons', icon: '🌤️', title: 'Mevsimler', subtitle: 'İklim ve en iyi zamanlama' },
+        { view: 'caravanserai', icon: '🏰', title: 'Kervansaray & İpek Yolu', subtitle: '12 tarihi Sultan Hanı ve 81 GSB menzil rehberi' }
       ]
     },
     {
@@ -103,7 +107,8 @@
         { view: 'postcard', icon: '📮', title: 'Kartpostal', subtitle: 'Özel şehir kartpostalı tasarla' },
         { view: 'sound', icon: '🎧', title: 'Ses Stüdyosu', subtitle: 'Doğa ve şehir ortam sesleri' },
         { view: 'quiz', icon: '🏆', title: 'Bilgi Yarışması', subtitle: '81 il kültür bilgi testi' },
-        { view: 'distanceGame', icon: '🎮', title: 'Mesafe Düellosu', subtitle: 'Şehirler arası mesafe tahmin oyunu' }
+        { view: 'distanceGame', icon: '🎮', title: 'Mesafe Düellosu', subtitle: 'Şehirler arası mesafe tahmin oyunu' },
+        { view: 'certificate', icon: '📜', title: 'Sefer Beratı & Sertifika', subtitle: '1920×1080 Selçuklu mühürlü HD berat üretici' }
       ]
     },
     {
@@ -116,7 +121,8 @@
         { view: 'analytics', icon: '📊', title: '81 Plaka', subtitle: 'Tüm illerin plaka tamamlama matrisi' },
         { view: 'achievements', icon: '🎖️', title: 'Rütbe & Başarımlar', subtitle: 'Rozetler, seviye ve seyyah rütben' },
         { view: 'journal', icon: '📝', title: 'Seyir Defterim', subtitle: 'Kişisel gezi notları ve anılar' },
-        { view: 'compare', icon: '⚖️', title: 'Şehir Karşılaştır', subtitle: 'İki ili yan yana kıyasla' }
+        { view: 'compare', icon: '⚖️', title: 'Şehir Karşılaştır', subtitle: 'İki ili yan yana kıyasla' },
+        { view: 'workLog', icon: '💻', title: 'Kütüphane Mesai Heatmap', subtitle: '780+ saat ilim mesaisi matrisi ve çalışma kaydı' }
       ]
     }
   ];

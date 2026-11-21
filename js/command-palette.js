@@ -431,6 +431,66 @@
         run: () => safeCall('openView', 'civLayers')
       },
       {
+        id: 'action-sky-map',
+        type: 'action',
+        icon: '🌌',
+        title: 'Anadolu Semâsı: 81 Yıldız & Takımyıldızı Haritası',
+        subtitle: '81 ilin gece göğündeki yıldız haritası, kuyrukluyıldız rotası ve Marifetnâme',
+        category: 'Keşif',
+        keywords: 'sema yildiz takim yildizi gok haritasi rasathane marifetname astronomi',
+        run: () => safeCall('openView', 'skyMap')
+      },
+      {
+        id: 'action-caravanserai',
+        type: 'action',
+        icon: '🏰',
+        title: 'Anadolu Kervansarayları & Modern GSB Menzil Atlası',
+        subtitle: '13 tarihi Sultan Hanı, İpek Yolu ve 81 il GSB Seyahatsever kervansaray rehberi',
+        category: 'Rota & Plan',
+        keywords: 'kervansaray sultanhani ipek yolu han gsb kyk vakif',
+        run: () => safeCall('openView', 'caravanserai')
+      },
+      {
+        id: 'action-divan',
+        type: 'action',
+        icon: '🖋️',
+        title: 'Anadolu Şiir, Türkü & "Beş Şehir" Edebiyat Divanı',
+        subtitle: 'Tanpınar Beş Şehir, Yunus Emre, Âşık Veysel, Karacaoğlan ve AI Şiir Yazarı',
+        category: 'İrfan & Felsefe',
+        keywords: 'siir turku edebiyat divan tanpinar bes sehir asik veysel neset ertas',
+        run: () => safeCall('openView', 'divan')
+      },
+      {
+        id: 'action-work-log',
+        type: 'action',
+        icon: '💻',
+        title: '81 İl Kütüphane Mesai Defteri & 780+ Saat Heatmap',
+        subtitle: 'İl Halk Kütüphanelerindeki yazılım/okuma mesaisi katkı matrisi ve kaydı',
+        category: 'Analiz',
+        keywords: 'kutuphane mesai heatmap calisma kodlama 780 saat portfoy',
+        run: () => safeCall('openView', 'workLog')
+      },
+      {
+        id: 'action-certificate',
+        type: 'action',
+        icon: '📜',
+        title: 'Sefer Der Vatan Beratı & 1920×1080 Sertifika Stüdyosu',
+        subtitle: 'Selçuklu 8 köşeli yıldız altın mühürlü, isme özel HD PNG sefer beratı indir',
+        category: 'Stüdyo',
+        keywords: 'berat sertifika muhur ferman png 1920x1080 hafizi anadolu',
+        run: () => safeCall('openView', 'certificate')
+      },
+      {
+        id: 'action-proverbs',
+        type: 'action',
+        icon: '🗣️',
+        title: 'Anadolu Sözlüğü: Deyimler, Atasözleri & Yol Duaları',
+        subtitle: '7 bölgeden 28 otantik yol atasözü, yöresel ağız ve kadim misafir duaları',
+        category: 'İrfan & Felsefe',
+        keywords: 'atasozu deyim dua sozluk agiz yoresel kelime',
+        run: () => safeCall('openView', 'proverbs')
+      },
+      {
         id: 'action-pomodoro',
         type: 'action',
         icon: '🍅',
