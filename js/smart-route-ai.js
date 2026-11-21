@@ -9,11 +9,21 @@
   'use strict';
 
   const GEMINI_KEY_STORAGE = 'dijital_seyyah_gemini_api_key';
+  const GEMINI_MODEL_STORAGE = 'dijital_seyyah_gemini_model';
+  const DEFAULT_MODEL = 'gemini-flash-lite-latest';
   const GEMINI_MODELS = [
     'gemini-flash-lite-latest',
     'gemini-3.5-flash-lite',
     'gemini-3.8-flash'
   ];
+  const RETIRED_MODELS = new Set([
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-2.0-pro'
+  ]);
 
   const DURATIONS = [
     { id: '3', days: 3, stops: 1, label: '3 Gün', hint: 'Hafta sonu ekspres sefer' },
@@ -160,14 +170,25 @@
     }
   }
 
-  function setStoredGeminiKey(key) {
+  function isRetiredModel(modelName) {
+    if (!modelName) return false;
+    return RETIRED_MODELS.has(modelName) || /^gemini-2\.[05]($|-)/i.test(modelName);
+  }
+
+  function getPreferredGeminiModel() {
     try {
-      if (key && key.trim()) {
-        localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());
-      } else {
-        localStorage.removeItem(GEMINI_KEY_STORAGE);
-      }
-    } catch (e) {}
+      const raw = (localStorage.getItem(GEMINI_MODEL_STORAGE) || '').trim();
+      if (!raw || isRetiredModel(raw)) return DEFAULT_MODEL;
+      return raw;
+    } catch (e) {
+      return DEFAULT_MODEL;
+    }
+  }
+
+  function getCandidateGeminiModels() {
+    const preferred = getPreferredGeminiModel();
+    const list = [preferred].concat(GEMINI_MODELS);
+    return list.filter((m, idx) => m && list.indexOf(m) === idx);
   }
 
   function stripBold(str) {
@@ -313,10 +334,11 @@
   // Google Gemini API Caller with Model Auto-Fallback
   // ---------------------------------------------------------------------------
   async function requestGeminiExpedition(apiKey, systemInstruction, userPrompt) {
+    const models = getCandidateGeminiModels();
     let lastError = null;
 
-    for (let i = 0; i < GEMINI_MODELS.length; i++) {
-      const model = GEMINI_MODELS[i];
+    for (let i = 0; i < models.length; i++) {
+      const model = models[i];
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
       const res = await fetch(url, {
@@ -347,7 +369,7 @@
           res.status === 404 ||
           res.status === 503 ||
           /quota|billing|limit|not found|high demand|overload|unavailable/i.test(errMsg);
-        if (isFallbackWorthy && i < GEMINI_MODELS.length - 1) {
+        if (isFallbackWorthy && i < models.length - 1) {
           continue;
         }
         throw lastError;
@@ -804,6 +826,7 @@
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
       .sap-status-pill {
@@ -822,38 +845,23 @@
         border-color: rgba(245, 158, 11, 0.32);
       }
 
-      .sap-ghost-btn {
-        cursor: pointer;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        background: rgba(15, 23, 42, 0.65);
-        color: var(--text-primary, #f8fafc);
-        border-radius: 10px;
-        padding: 7px 12px;
-        font-size: 0.8rem;
+      .sap-model-pill {
+        font-size: 0.74rem;
         font-weight: 600;
-        transition: all 0.2s ease;
-      }
-
-      .sap-ghost-btn:hover {
-        border-color: rgba(0, 242, 254, 0.45);
-        color: var(--accent-cyan, #00f2fe);
-        transform: translateY(-1px);
-      }
-
-      .sap-api-drawer {
-        padding: 16px 20px;
-        border-radius: 16px;
-        background: rgba(15, 23, 42, 0.84);
+        padding: 6px 11px;
+        border-radius: 999px;
+        background: rgba(0, 242, 254, 0.1);
+        color: #67e8f9;
         border: 1px solid rgba(0, 242, 254, 0.28);
-        backdrop-filter: blur(14px);
       }
 
-      .sap-api-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-top: 10px;
+      .sap-admin-note {
+        font-size: 0.73rem;
+        color: var(--text-secondary, #94a3b8);
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .sap-form-card {
@@ -1310,16 +1318,26 @@
       body.light-theme .sap-hero,
       body.light-theme .sap-form-card,
       body.light-theme .sap-result-card,
-      body.light-theme .sap-api-drawer,
       body.light-theme .sap-loading-box {
         background: rgba(255, 255, 255, 0.88);
         border-color: rgba(15, 23, 42, 0.12);
         box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
       }
 
+      body.light-theme .sap-model-pill {
+        background: rgba(2, 132, 199, 0.1);
+        border-color: rgba(2, 132, 199, 0.28);
+        color: #0369a1;
+      }
+
+      body.light-theme .sap-admin-note {
+        background: rgba(15, 23, 42, 0.04);
+        border-color: rgba(15, 23, 42, 0.12);
+        color: #475569;
+      }
+
       body.light-theme .sap-select,
-      body.light-theme .sap-input,
-      body.light-theme .sap-ghost-btn {
+      body.light-theme .sap-input {
         background: rgba(248, 250, 252, 0.95);
         border-color: rgba(15, 23, 42, 0.16);
         color: #0f172a;
@@ -1406,6 +1424,7 @@
 
     function renderView() {
       const hasKey = Boolean(getStoredGeminiKey());
+      const activeModel = getPreferredGeminiModel();
       const startProv = provinces.find((p) => p.key === uiState.startCityKey) || provinces[0];
 
       const resultHtml = (() => {
@@ -1484,8 +1503,8 @@
               res.noKey
                 ? `
               <div class="sap-offline-banner">
-                <span>💡 Tarayıcınızda Gemini API anahtarı henüz tanımlı değil; plan yerel 81 il verisiyle anında üretildi.</span>
-                <button type="button" class="sap-ghost-btn" data-sap-open-key style="padding: 5px 10px; font-size: 0.76rem;">🔑 API Anahtarı Gir</button>
+                <span>💡 Canlı Gemini API anahtarı henüz tanımlı değil; plan yerel 81 il verisiyle anında üretildi.</span>
+                <span style="font-size: 0.76rem; font-weight: 600;">🔒 API ayarları yalnızca Admin Paneli üzerinden yönetilir.</span>
               </div>
             `
                 : ''
@@ -1509,26 +1528,12 @@
             </div>
             <div class="sap-hero-actions">
               <span class="sap-status-pill ${hasKey ? '' : 'is-offline'}" data-sap-key-badge>
-                ${hasKey ? '🟢 Gemini API Anahtarı Kayıtlı' : '⚡ Çevrimdışı Hazır (API Anahtarsız)'}
+                ${hasKey ? '🟢 Gemini API Bağlı' : '⚡ Çevrimdışı Hazır (API Anahtarsız)'}
               </span>
-              <button type="button" class="sap-ghost-btn" data-sap-key-toggle>🔑 Gemini API Ayarı</button>
+              <span class="sap-model-pill" data-sap-model-badge title="Aktif Gemini modeli">🤖 ${escapeHtml(activeModel)}</span>
+              <span class="sap-admin-note">🔒 API ayarları Admin Paneli’nden yönetilir</span>
             </div>
           </header>
-
-          <div class="sap-api-drawer" data-sap-api-drawer style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-              <strong style="font-size: 0.88rem; color: var(--accent-cyan, #00f2fe);">🔑 Google Gemini API Anahtarı (localStorage)</strong>
-              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-size: 0.76rem; color: var(--accent-gold, #f59e0b); text-decoration: none;">Google AI Studio'dan Ücretsiz Anahtar Al ↗</a>
-            </div>
-            <p style="font-size: 0.77rem; color: var(--text-secondary, #94a3b8); margin: 6px 0 0;">
-              Anahtarınız yalnızca tarayıcınızda (<code>dijital_seyyah_gemini_api_key</code>) saklanır. Otomatik model yedekleme sırası: <code>gemini-flash-lite-latest</code> → <code>gemini-3.5-flash-lite</code> → <code>gemini-3.8-flash</code>.
-            </p>
-            <div class="sap-api-row">
-              <input type="password" class="sap-input" data-sap-key-input style="flex: 1; min-width: 220px;" placeholder="AIza... (Kişisel Gemini API anahtarı)" value="${escapeHtml(getStoredGeminiKey())}" />
-              <button type="button" class="sap-action-btn" data-sap-key-save>Kaydet</button>
-              <button type="button" class="sap-ghost-btn" data-sap-key-clear>Temizle</button>
-            </div>
-          </div>
 
           <form class="sap-form-card" data-sap-form>
             <div class="sap-form-grid">
@@ -1620,8 +1625,8 @@
               <span class="sap-context-note">
                 ${
                   hasKey
-                    ? '🟢 Canlı Gemini AI + gerçek gezilmiş/gezilmemiş il bağlamı aktif.'
-                    : '⚡ API anahtarı yoksa anında çevrimdışı 81 il planı üretilir.'
+                    ? `🟢 Canlı Gemini AI (${escapeHtml(activeModel)}) + gerçek gezilmiş/gezilmemiş il bağlamı aktif.`
+                    : '⚡ Çevrimdışı 81 il plan motoru hazır (API ayarları Admin Paneli’nden yönetilir).'
                 }
               </span>
               <button type="submit" class="sap-generate-btn" data-sap-submit ${uiState.isGenerating ? 'disabled' : ''}>
@@ -1736,40 +1741,8 @@
       const form = container.querySelector('[data-sap-form]');
       const startSelect = container.querySelector('[data-sap-start-city]');
       const noteInput = container.querySelector('[data-sap-extra-note]');
-      const apiDrawer = container.querySelector('[data-sap-api-drawer]');
-      const keyToggleBtn = container.querySelector('[data-sap-key-toggle]');
-      const openKeyBtn = container.querySelector('[data-sap-open-key]');
-      const keyInput = container.querySelector('[data-sap-key-input]');
-      const keySaveBtn = container.querySelector('[data-sap-key-save]');
-      const keyClearBtn = container.querySelector('[data-sap-key-clear]');
       const copyBtn = container.querySelector('[data-sap-copy]');
       const downloadBtn = container.querySelector('[data-sap-download]');
-
-      function toggleDrawer(forceOpen) {
-        if (!apiDrawer) return;
-        const hidden = apiDrawer.style.display === 'none';
-        apiDrawer.style.display = forceOpen === true ? 'block' : hidden ? 'block' : 'none';
-        if (apiDrawer.style.display === 'block' && keyInput) keyInput.focus();
-      }
-
-      if (keyToggleBtn) keyToggleBtn.addEventListener('click', () => toggleDrawer());
-      if (openKeyBtn) openKeyBtn.addEventListener('click', () => toggleDrawer(true));
-
-      if (keySaveBtn && keyInput) {
-        keySaveBtn.addEventListener('click', () => {
-          setStoredGeminiKey(keyInput.value);
-          notify('🔑 Gemini API anahtarı kaydedildi!');
-          renderView();
-        });
-      }
-
-      if (keyClearBtn && keyInput) {
-        keyClearBtn.addEventListener('click', () => {
-          setStoredGeminiKey('');
-          notify('🗑️ Gemini API anahtarı temizlendi.');
-          renderView();
-        });
-      }
 
       if (startSelect) {
         startSelect.addEventListener('change', (e) => {

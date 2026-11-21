@@ -30,7 +30,6 @@
   let _initialized = false;
   let _isOpen = false;
   let _isLoading = false;
-  let _showKeyForm = false;
   let _activeModel = DEFAULT_MODEL;
   let _lastContextSignature = '';
   let _messages = [];
@@ -117,17 +116,6 @@
     } catch (e) {
       return '';
     }
-  }
-
-  function setStoredApiKey(key) {
-    try {
-      const clean = String(key || '').trim();
-      if (clean) {
-        localStorage.setItem(GEMINI_KEY_STORAGE, clean);
-      } else {
-        localStorage.removeItem(GEMINI_KEY_STORAGE);
-      }
-    } catch (e) {}
   }
 
   function isRetiredModel(modelName) {
@@ -863,43 +851,39 @@
         transform: translateY(-1px);
       }
 
-      .sc-btn-ghost {
-        padding: 6px 11px;
+      /* Error Bubble & Retry Action */
+      .sc-msg-row.model.is-error .sc-bubble {
+        background: rgba(127, 29, 29, 0.28);
+        border-color: rgba(248, 113, 113, 0.42);
+        color: #fee2e2;
+      }
+
+      .sc-error-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 9px;
+      }
+
+      .sc-retry-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 11px;
         border-radius: 9px;
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        background: rgba(255, 255, 255, 0.06);
-        color: #e2e8f0;
+        border: 1px solid rgba(248, 113, 113, 0.45);
+        background: rgba(239, 68, 68, 0.16);
+        color: #fecaca;
         font-size: 0.74rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.18s ease;
       }
 
-      .sc-btn-ghost:hover {
-        border-color: rgba(0, 242, 254, 0.45);
-        background: rgba(0, 242, 254, 0.12);
-      }
-
-      .sc-key-form {
-        display: flex;
-        gap: 6px;
-        margin-top: 2px;
-      }
-
-      .sc-key-input {
-        flex: 1;
-        min-width: 0;
-        padding: 7px 10px;
-        border-radius: 9px;
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        background: rgba(10, 15, 29, 0.85);
-        color: #f8fafc;
-        font-size: 0.75rem;
-        outline: none;
-      }
-
-      .sc-key-input:focus {
-        border-color: rgba(0, 242, 254, 0.65);
+      .sc-retry-btn:hover {
+        background: rgba(239, 68, 68, 0.28);
+        border-color: rgba(248, 113, 113, 0.72);
+        transform: translateY(-1px);
       }
 
       /* Contextual Chips */
@@ -948,6 +932,7 @@
         flex: 1;
         min-height: 38px;
         max-height: 92px;
+        overflow-y: auto;
         resize: none;
         padding: 9px 12px;
         border-radius: 13px;
@@ -1113,16 +1098,21 @@
         color: #334155;
       }
 
-      body.light-theme .sc-btn-ghost {
-        background: rgba(15, 23, 42, 0.05);
-        border-color: rgba(15, 23, 42, 0.14);
-        color: #1e293b;
+      body.light-theme .sc-msg-row.model.is-error .sc-bubble {
+        background: #fef2f2;
+        border-color: rgba(220, 38, 38, 0.3);
+        color: #7f1d1d;
       }
 
-      body.light-theme .sc-key-input {
-        background: #ffffff;
-        border-color: rgba(15, 23, 42, 0.18);
-        color: #0f172a;
+      body.light-theme .sc-retry-btn {
+        background: rgba(220, 38, 38, 0.1);
+        border-color: rgba(220, 38, 38, 0.35);
+        color: #b91c1c;
+      }
+
+      body.light-theme .sc-retry-btn:hover {
+        background: rgba(220, 38, 38, 0.18);
+        border-color: rgba(220, 38, 38, 0.55);
       }
 
       body.light-theme .sc-chips {
@@ -1248,25 +1238,31 @@
     }
   }
 
+  function scrollMessagesToBottom() {
+    if (!_messagesEl) return;
+    requestAnimationFrame(() => {
+      if (!_messagesEl) return;
+      if (typeof _messagesEl.scrollTo === 'function') {
+        _messagesEl.scrollTo({
+          top: _messagesEl.scrollHeight,
+          behavior: 'smooth'
+        });
+      } else {
+        _messagesEl.scrollTop = _messagesEl.scrollHeight;
+      }
+    });
+  }
+
   function renderNoKeyCardHtml() {
     return `
       <div class="sc-nokey-card" data-sc-nokey-box>
-        <div class="sc-nokey-title">🔑 Gemini API Anahtarı Gerekli</div>
+        <div class="sc-nokey-title">🔒 Gemini API Yapılandırması Bekleniyor</div>
         <div class="sc-nokey-desc">
-          Canlı Gemini AI yanıtları için tarayıcıda saklanan ücretsiz API anahtarını ekleyebilir veya tam danışman ekranından yapılandırabilirsin.
+          Canlı Gemini AI sohbeti için henüz bir API anahtarı tanımlanmamış. API ayarları yalnızca <strong>Admin Paneli</strong> üzerinden güvenle yapılandırılır; dilersen tam danışman ekranını açabilirsin.
         </div>
         <div class="sc-nokey-actions">
           <button type="button" class="sc-btn-primary" data-sc-open-advisor>Tam Danışmanı Aç</button>
-          <button type="button" class="sc-btn-ghost" data-sc-toggle-key-form>${_showKeyForm ? 'Gizle' : 'Anahtar Yapılandır'}</button>
         </div>
-        ${
-          _showKeyForm
-            ? `<form class="sc-key-form" data-sc-key-form>
-                 <input type="password" class="sc-key-input" data-sc-key-input placeholder="AIza... Gemini API Anahtarı" autocomplete="off" />
-                 <button type="submit" class="sc-btn-primary">Kaydet</button>
-               </form>`
-            : ''
-        }
       </div>
     `;
   }
@@ -1318,15 +1314,22 @@
               </div>`
             : '';
 
+        const retryHtml = m.isError
+          ? `<div class="sc-error-actions">
+               <button type="button" class="sc-retry-btn" data-sc-retry="${m.id}">🔄 Tekrar Dene</button>
+             </div>`
+          : '';
+
         return `
-          <div class="sc-msg-row model">
+          <div class="sc-msg-row model${m.isError ? ' is-error' : ''}">
             <div class="sc-bubble">
               <div>${formatReplyHtml(m.text)}</div>
               ${pillsHtml}
+              ${retryHtml}
             </div>
             <div class="sc-msg-meta">
               <span>${esc(m.time || '')}${m.model ? ` • ${esc(m.model)}` : ''}</span>
-              <button type="button" class="sc-copy-btn" data-sc-copy="${m.id}">📋 Kopyala</button>
+              ${m.isError ? '' : `<button type="button" class="sc-copy-btn" data-sc-copy="${m.id}">📋 Kopyala</button>`}
             </div>
           </div>
         `;
@@ -1339,7 +1342,7 @@
         : '';
 
     _messagesEl.innerHTML = itemsHtml + missingKeyBanner;
-    _messagesEl.scrollTop = _messagesEl.scrollHeight;
+    scrollMessagesToBottom();
   }
 
   function syncContextIfChanged() {
@@ -1427,7 +1430,6 @@
   function clearConversation() {
     const activeCity = getActiveCityContext();
     _messages = [createWelcomeMessage(activeCity)];
-    _showKeyForm = false;
     renderMessages();
     toast('Copilot sohbeti temizlendi');
   }
@@ -1541,6 +1543,18 @@
         };
         if (idx >= 0) _messages[idx] = replyMsg;
         else _messages.push(replyMsg);
+      } else {
+        const emptyErrMsg = {
+          id: loadingId,
+          role: 'model',
+          isStatus: true,
+          isError: true,
+          retryPrompt: clean,
+          time: nowTimeLabel(),
+          text: '⚠️ Gemini boş veya geçersiz bir yanıt döndürdü.'
+        };
+        if (idx >= 0) _messages[idx] = emptyErrMsg;
+        else _messages.push(emptyErrMsg);
       }
     } catch (err) {
       const idx = _messages.findIndex((m) => m.id === loadingId);
@@ -1548,6 +1562,8 @@
         id: loadingId,
         role: 'model',
         isStatus: true,
+        isError: true,
+        retryPrompt: clean,
         time: nowTimeLabel(),
         text: `⚠️ Gemini isteği tamamlanamadı: **${err && err.message ? err.message : 'Bilinmeyen hata'}**`
       };
@@ -1558,6 +1574,37 @@
       if (_sendBtn) _sendBtn.disabled = false;
       renderMessages();
     }
+  }
+
+  function retryMessageById(msgId) {
+    if (_isLoading) return;
+    const errIdx = _messages.findIndex((m) => m.id === msgId);
+    if (errIdx < 0) return;
+
+    const errMsg = _messages[errIdx];
+    let promptToRetry = (errMsg.retryPrompt || '').trim();
+    if (!promptToRetry) {
+      for (let i = errIdx - 1; i >= 0; i--) {
+        if (_messages[i].role === 'user' && _messages[i].text) {
+          promptToRetry = _messages[i].text.trim();
+          break;
+        }
+      }
+    }
+    if (!promptToRetry) return;
+
+    if (
+      errIdx === _messages.length - 1 &&
+      errIdx > 0 &&
+      _messages[errIdx - 1].role === 'user' &&
+      _messages[errIdx - 1].text.trim() === promptToRetry
+    ) {
+      _messages.splice(errIdx - 1, 2);
+    } else {
+      _messages.splice(errIdx, 1);
+    }
+
+    sendPrompt(promptToRetry);
   }
 
   // ---------------------------------------------------------------------------
@@ -1619,49 +1666,33 @@
         return;
       }
 
-      if (e.target.closest('[data-sc-toggle-key-form]')) {
-        _showKeyForm = !_showKeyForm;
-        renderMessages();
-        if (_showKeyForm) {
-          const inp = _messagesEl.querySelector('[data-sc-key-input]');
-          if (inp) inp.focus();
-        }
+      const retryBtn = e.target.closest('[data-sc-retry]');
+      if (retryBtn) {
+        const id = Number(retryBtn.getAttribute('data-sc-retry'));
+        retryMessageById(id);
       }
-    });
-
-    _messagesEl.addEventListener('submit', (e) => {
-      const keyForm = e.target.closest('[data-sc-key-form]');
-      if (!keyForm) return;
-      e.preventDefault();
-      const inp = keyForm.querySelector('[data-sc-key-input]');
-      const val = inp ? inp.value.trim() : '';
-      if (!val) {
-        toast('Lütfen geçerli bir Gemini API anahtarı girin.');
-        return;
-      }
-      setStoredApiKey(val);
-      _showKeyForm = false;
-      _activeModel = getStoredModel();
-      updateHeaderBadge();
-      renderMessages();
-      toast('🔑 Gemini API anahtarı kaydedildi!');
     });
 
     const composerForm = _drawerEl.querySelector('[data-sc-form]');
-    composerForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!_inputEl) return;
+
+    function submitComposer() {
+      if (!_inputEl || _isLoading) return;
       const val = _inputEl.value;
-      if (!val.trim() || _isLoading) return;
+      if (!val.trim()) return;
       _inputEl.value = '';
       _inputEl.style.height = 'auto';
       sendPrompt(val);
+    }
+
+    composerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitComposer();
     });
 
     _inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
-        composerForm.requestSubmit ? composerForm.requestSubmit() : composerForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        submitComposer();
       }
     });
 

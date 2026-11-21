@@ -1,0 +1,1253 @@
+/* ==========================================================================
+   ANADOLU SEYAHATNAMESİ — WAVE 5 MASTERPIECE LAYER
+   1. Deep Light-Theme & Dark-Theme Visual Parity Audit (Wave 3 & Wave 4)
+   2. Crisp :focus-visible Keyboard Accessibility Outlines
+   3. Refined Micro-Typography (tabular-nums & text-wrap: balance)
+   4. Complete @media print Editorial Paper Stylesheet
+   Guardrails: NEVER overrides .cmd-overlay display property.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. THEME PARITY TOKENS & .glass-card REFINEMENTS
+   -------------------------------------------------------------------------- */
+:root {
+  --text-muted: #8b9bb4;
+}
+
+html body.light-theme {
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --accent-cyan: #0369a1;
+  --accent-gold: #b45309;
+  --accent-emerald: #047857;
+  --accent-purple: #6d28d9;
+}
+
+html body:not(.light-theme) .glass-card {
+  background: linear-gradient(160deg, rgba(19, 28, 48, 0.78) 0%, rgba(10, 16, 30, 0.86) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+html body.light-theme .glass-card {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%);
+  border-color: rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+}
+
+html body.light-theme .glass-card::before {
+  background: radial-gradient(
+    420px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(2, 132, 199, 0.08),
+    rgba(5, 150, 105, 0.04) 38%,
+    transparent 70%
+  );
+}
+
+html body.light-theme .glass-card::after {
+  background: radial-gradient(
+    280px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(2, 132, 199, 0.35),
+    rgba(5, 150, 105, 0.14) 45%,
+    transparent 72%
+  );
+}
+
+html body.light-theme .feature-hub-title,
+html body.light-theme .stat-card-header {
+  color: #0f172a;
+}
+
+html body.light-theme .feature-hub-desc,
+html body.light-theme .stat-card-desc {
+  color: #334155;
+}
+
+/* Header Ambient Popover Parity */
+html body.light-theme .ambient-stop-mini {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.32);
+  color: #b91c1c;
+}
+
+html body.light-theme .ambient-stop-mini:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+html body.light-theme .ambient-preset-tag {
+  background: rgba(15, 23, 42, 0.08);
+  color: #334155;
+}
+
+html body.light-theme .ambient-preset-btn.active .ambient-preset-tag {
+  background: rgba(5, 150, 105, 0.18);
+  color: #065f46;
+}
+
+/* --------------------------------------------------------------------------
+   2. WAVE 3 & WAVE 4 COMPONENT PARITY AUDIT (DARK & LIGHT)
+   High-specificity selectors ensure consistent override of runtime <style>
+   -------------------------------------------------------------------------- */
+
+/* --- 2A. .anadolu-stories-bar --- */
+html body:not(.light-theme) .anadolu-stories-bar {
+  background: linear-gradient(155deg, rgba(16, 24, 42, 0.86) 0%, rgba(11, 17, 31, 0.9) 100%);
+  border-color: rgba(255, 255, 255, 0.11);
+}
+
+html body:not(.light-theme) .anadolu-stories-bar .asr-bar-title,
+html body:not(.light-theme) .anadolu-stories-bar .asr-ring-title {
+  color: #f8fafc;
+}
+
+html body:not(.light-theme) .anadolu-stories-bar .asr-bar-hint,
+html body:not(.light-theme) .anadolu-stories-bar .asr-ring-meta {
+  color: #cbd5e1;
+}
+
+html body:not(.light-theme) .anadolu-stories-bar .asr-bar-badge {
+  color: #67e8f9;
+  background: rgba(0, 242, 254, 0.14);
+  border-color: rgba(0, 242, 254, 0.34);
+}
+
+html body.light-theme .anadolu-stories-bar {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.11);
+  box-shadow: 0 12px 28px -12px rgba(15, 23, 42, 0.14);
+}
+
+html body.light-theme .anadolu-stories-bar .asr-bar-title,
+html body.light-theme .anadolu-stories-bar .asr-ring-title {
+  color: #0f172a;
+}
+
+html body.light-theme .anadolu-stories-bar .asr-bar-hint,
+html body.light-theme .anadolu-stories-bar .asr-ring-meta {
+  color: #475569;
+}
+
+html body.light-theme .anadolu-stories-bar .asr-bar-badge {
+  color: #0369a1;
+  background: rgba(2, 132, 199, 0.11);
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+html body.light-theme .anadolu-stories-bar .asr-ring-btn.is-seen .asr-ring-outer {
+  background: rgba(100, 116, 139, 0.36);
+}
+
+/* --- 2B. .ai-city-concierge-box --- */
+html body:not(.light-theme) .ai-city-concierge-box {
+  background: linear-gradient(135deg, rgba(13, 21, 38, 0.92) 0%, rgba(24, 34, 56, 0.84) 100%);
+  border-color: rgba(0, 242, 254, 0.3);
+}
+
+html body:not(.light-theme) .ai-city-concierge-box .aicc-title {
+  color: #f8fafc;
+}
+
+html body:not(.light-theme) .ai-city-concierge-box .aicc-subtitle,
+html body:not(.light-theme) .ai-city-concierge-box .aicc-md-para,
+html body:not(.light-theme) .ai-city-concierge-box .aicc-md-list {
+  color: #cbd5e1;
+}
+
+html body:not(.light-theme) .ai-city-concierge-box .aicc-model-pill {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #e2e8f0;
+}
+
+html body.light-theme .ai-city-concierge-box {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(241, 245, 249, 0.94) 100%);
+  border-color: rgba(2, 132, 199, 0.3);
+  box-shadow: 0 14px 30px -10px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-orb {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(124, 58, 237, 0.14));
+  border-color: rgba(2, 132, 199, 0.34);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.14);
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-title {
+  color: #0f172a;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-subtitle {
+  color: #334155;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-badge {
+  background: rgba(2, 132, 199, 0.11);
+  color: #0369a1;
+  border-color: rgba(2, 132, 199, 0.32);
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-badge.is-missing {
+  background: rgba(245, 158, 11, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.38);
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-btn {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-btn:hover:not(:disabled),
+html body.light-theme .ai-city-concierge-box .aicc-btn[data-accent="cyan"].is-active {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: #0284c7;
+  color: #0c4a6e;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-btn[data-accent="purple"]:hover:not(:disabled),
+html body.light-theme .ai-city-concierge-box .aicc-btn[data-accent="purple"].is-active {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: #7c3aed;
+  color: #4c1d95;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-btn[data-accent="emerald"]:hover:not(:disabled),
+html body.light-theme .ai-city-concierge-box .aicc-btn[data-accent="emerald"].is-active {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #059669;
+  color: #064e3b;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-btn[data-accent="gold"]:hover:not(:disabled),
+html body.light-theme .ai-city-concierge-box .aicc-btn[data-accent="gold"].is-active {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: #d97706;
+  color: #78350f;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-result-panel {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-result-head {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-result-title,
+html body.light-theme .ai-city-concierge-box .aicc-typing-label {
+  color: #0369a1;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-model-pill {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #334155;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-tool-btn {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #0f172a;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-tool-btn:hover {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0369a1;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-tool-btn.is-journal {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: rgba(5, 150, 105, 0.36);
+  color: #065f46;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-result-body,
+html body.light-theme .ai-city-concierge-box .aicc-md-para strong,
+html body.light-theme .ai-city-concierge-box .aicc-md-list strong {
+  color: #0f172a;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-md-heading {
+  color: #b45309;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-md-para,
+html body.light-theme .ai-city-concierge-box .aicc-md-list {
+  color: #334155;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-md-quote {
+  background: rgba(124, 58, 237, 0.08);
+  border-left-color: #6d28d9;
+  color: #1e293b;
+}
+
+html body.light-theme .ai-city-concierge-box .aicc-notice {
+  background: #fffbeb;
+  border-color: rgba(217, 119, 6, 0.38);
+  color: #1e293b;
+}
+
+/* --- 2C. .live-weather-pill --- */
+html body:not(.light-theme) .live-weather-pill {
+  background: rgba(15, 23, 42, 0.82);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+html body:not(.light-theme) .live-weather-pill-temp {
+  color: #22d3ee;
+}
+
+html body:not(.light-theme) .live-weather-pill-label {
+  color: #f8fafc;
+}
+
+html body:not(.light-theme) .live-weather-pill-metrics {
+  color: #cbd5e1;
+}
+
+html body.light-theme .live-weather-pill {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(15, 23, 42, 0.13);
+  color: #0f172a;
+  box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.1);
+}
+
+html body.light-theme .live-weather-pill-temp {
+  color: #0369a1;
+}
+
+html body.light-theme .live-weather-pill-label {
+  color: #0f172a;
+}
+
+html body.light-theme .live-weather-pill-metrics {
+  color: #334155;
+}
+
+html body.light-theme .live-weather-pill-sep {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+/* --- 2D. .voice-narrator-bar --- */
+html body:not(.light-theme) .voice-narrator-bar {
+  background: rgba(11, 17, 32, 0.9);
+  border-color: rgba(0, 242, 254, 0.28);
+}
+
+html body:not(.light-theme) .voice-narrator-bar .vn-title {
+  color: #f8fafc;
+}
+
+html body:not(.light-theme) .voice-narrator-bar .vn-status,
+html body:not(.light-theme) .voice-narrator-bar .vn-speed-btn {
+  color: #cbd5e1;
+}
+
+html body:not(.light-theme) .voice-narrator-bar .vn-speed-btn.active {
+  color: #67e8f9;
+}
+
+html body.light-theme .voice-narrator-bar {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(2, 132, 199, 0.28);
+  box-shadow: 0 10px 26px -8px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html body.light-theme .voice-narrator-bar .vn-title {
+  color: #0f172a;
+}
+
+html body.light-theme .voice-narrator-bar .vn-status {
+  color: #475569;
+}
+
+html body.light-theme .voice-narrator-bar .vn-btn {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+html body.light-theme .voice-narrator-bar .vn-btn:hover:not(:disabled) {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0c4a6e;
+}
+
+html body.light-theme .voice-narrator-bar .vn-btn-play {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(5, 150, 105, 0.12));
+  border-color: rgba(2, 132, 199, 0.38);
+  color: #0f172a;
+}
+
+html body.light-theme .voice-narrator-bar .vn-speed-group {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.13);
+}
+
+html body.light-theme .voice-narrator-bar .vn-speed-btn {
+  color: #334155;
+}
+
+html body.light-theme .voice-narrator-bar .vn-speed-btn.active {
+  background: rgba(2, 132, 199, 0.16);
+  color: #0369a1;
+  box-shadow: inset 0 0 0 1px rgba(2, 132, 199, 0.35);
+}
+
+html body.light-theme .voice-narrator-bar .vn-btn-focus.active {
+  background: rgba(5, 150, 105, 0.15);
+  border-color: #059669;
+  color: #065f46;
+}
+
+/* --- 2E. .seyyah-share-card-bar --- */
+html body:not(.light-theme) .seyyah-share-card-bar {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(17, 29, 52, 0.84) 100%);
+  border-color: rgba(251, 191, 36, 0.32);
+}
+
+html body:not(.light-theme) .seyyah-share-card-bar .seyyah-share-card-badge {
+  color: #fde68a;
+}
+
+html body:not(.light-theme) .seyyah-share-card-bar .seyyah-share-card-hint {
+  color: #cbd5e1;
+}
+
+html body.light-theme .seyyah-share-card-bar {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.94) 100%);
+  border-color: rgba(217, 119, 6, 0.35);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+html body.light-theme .seyyah-share-card-bar .seyyah-share-card-badge {
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(217, 119, 6, 0.38);
+}
+
+html body.light-theme .seyyah-share-card-bar .seyyah-share-card-hint {
+  color: #334155;
+}
+
+html body.light-theme .seyyah-share-card-bar .seyyah-share-card-cta {
+  color: #04101c;
+}
+
+/* --- 2F. .sc-drawer (Floating AI Copilot) --- */
+html body:not(.light-theme) .sc-drawer {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(0, 242, 254, 0.08), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.09), transparent 45%),
+    rgba(10, 15, 29, 0.94);
+  color: #f8fafc;
+}
+
+html body:not(.light-theme) .sc-drawer .sc-context-bar {
+  color: #cbd5e1;
+}
+
+html body:not(.light-theme) .sc-drawer .sc-context-sub,
+html body:not(.light-theme) .sc-drawer .sc-msg-meta,
+html body:not(.light-theme) .sc-drawer .sc-copy-btn {
+  color: #94a3b8;
+}
+
+html body:not(.light-theme) .sc-drawer .sc-input::placeholder {
+  color: #94a3b8;
+}
+
+html body.light-theme .sc-drawer {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(2, 132, 199, 0.07), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(124, 58, 237, 0.07), transparent 45%),
+    rgba(255, 255, 255, 0.97);
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+html body.light-theme .sc-drawer .sc-title {
+  color: #0f172a;
+}
+
+html body.light-theme .sc-drawer .sc-model-badge {
+  color: #0369a1;
+  background: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.28);
+}
+
+html body.light-theme .sc-drawer .sc-icon-btn {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #1e293b;
+}
+
+html body.light-theme .sc-drawer .sc-icon-btn:hover {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: rgba(2, 132, 199, 0.4);
+  color: #0369a1;
+}
+
+html body.light-theme .sc-drawer .sc-context-bar {
+  background: #f1f5f9;
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+  color: #334155;
+}
+
+html body.light-theme .sc-drawer .sc-context-pill {
+  color: #0f172a;
+}
+
+html body.light-theme .sc-drawer .sc-context-pill strong {
+  color: #0369a1;
+}
+
+html body.light-theme .sc-drawer .sc-context-sub,
+html body.light-theme .sc-drawer .sc-msg-meta {
+  color: #475569;
+}
+
+html body.light-theme .sc-drawer .sc-msg-row.user .sc-bubble {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(124, 58, 237, 0.12));
+  border-color: rgba(2, 132, 199, 0.32);
+  color: #0f172a;
+}
+
+html body.light-theme .sc-drawer .sc-msg-row.model .sc-bubble {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+html body.light-theme .sc-drawer .sc-bubble strong {
+  color: #0369a1;
+}
+
+html body.light-theme .sc-drawer .sc-province-pill {
+  color: #0369a1;
+  background: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+html body.light-theme .sc-drawer .sc-copy-btn {
+  color: #475569;
+}
+
+html body.light-theme .sc-drawer .sc-copy-btn:hover {
+  color: #0369a1;
+  background: rgba(2, 132, 199, 0.1);
+}
+
+html body.light-theme .sc-drawer .sc-nokey-card {
+  background: #fffbeb;
+  border-color: rgba(217, 119, 6, 0.38);
+}
+
+html body.light-theme .sc-drawer .sc-nokey-title {
+  color: #92400e;
+}
+
+html body.light-theme .sc-drawer .sc-nokey-desc {
+  color: #1e293b;
+}
+
+html body.light-theme .sc-drawer .sc-chip {
+  background: rgba(124, 58, 237, 0.09);
+  border-color: rgba(124, 58, 237, 0.28);
+  color: #5b21b6;
+}
+
+html body.light-theme .sc-drawer .sc-chip:hover {
+  background: rgba(2, 132, 199, 0.13);
+  border-color: rgba(2, 132, 199, 0.45);
+  color: #0f172a;
+}
+
+html body.light-theme .sc-drawer .sc-input {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+}
+
+html body.light-theme .sc-drawer .sc-input::placeholder {
+  color: #64748b;
+}
+
+/* --- 2G. #seyyah-quick-dock --- */
+html body:not(.light-theme) #seyyah-quick-dock {
+  background: rgba(11, 17, 32, 0.86);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+html body:not(.light-theme) #seyyah-quick-dock .seyyah-dock-toggle {
+  color: #cbd5e1;
+}
+
+html body.light-theme #seyyah-quick-dock {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow:
+    0 14px 36px rgba(15, 23, 42, 0.14),
+    0 0 20px rgba(2, 132, 199, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+html body.light-theme #seyyah-quick-dock .seyyah-dock-btn {
+  background: rgba(15, 23, 42, 0.05);
+  color: #0f172a;
+}
+
+html body.light-theme #seyyah-quick-dock .seyyah-dock-toggle {
+  color: #334155;
+}
+
+html body.light-theme #seyyah-quick-dock .seyyah-dock-btn[data-tooltip]::before {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+/* --- 2H. .sap-form-card & .sap-result-card (Smart Route AI) --- */
+html body:not(.light-theme) .sap-shell .sap-subtitle,
+html body:not(.light-theme) .sap-shell .sap-label-hint,
+html body:not(.light-theme) .sap-shell .sap-pill-sub,
+html body:not(.light-theme) .sap-shell .sap-context-note,
+html body:not(.light-theme) .sap-shell .sap-card-meta,
+html body:not(.light-theme) .sap-shell .sap-provinces-title {
+  color: #cbd5e1;
+}
+
+html body:not(.light-theme) .sap-shell .sap-model-pill,
+html body:not(.light-theme) .sap-shell .sap-admin-note {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+
+html body.light-theme .sap-shell .sap-hero,
+html body.light-theme .sap-shell .sap-form-card,
+html body.light-theme .sap-shell .sap-result-card,
+html body.light-theme .sap-shell .sap-api-drawer,
+html body.light-theme .sap-shell .sap-loading-box {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+
+html body.light-theme .sap-shell .sap-title {
+  color: #0f172a;
+}
+
+html body.light-theme .sap-shell .sap-subtitle,
+html body.light-theme .sap-shell .sap-label-hint,
+html body.light-theme .sap-shell .sap-pill-sub,
+html body.light-theme .sap-shell .sap-context-note,
+html body.light-theme .sap-shell .sap-card-meta,
+html body.light-theme .sap-shell .sap-provinces-title {
+  color: #475569;
+}
+
+html body.light-theme .sap-shell .sap-status-pill {
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.34);
+  color: #065f46;
+}
+
+html body.light-theme .sap-shell .sap-status-pill.is-offline {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(217, 119, 6, 0.38);
+  color: #92400e;
+}
+
+html body.light-theme .sap-shell .sap-model-pill,
+html body.light-theme .sap-shell .sap-admin-note {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #334155;
+}
+
+html body.light-theme .sap-shell .sap-select,
+html body.light-theme .sap-shell .sap-input,
+html body.light-theme .sap-shell .sap-ghost-btn {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+}
+
+html body.light-theme .sap-shell .sap-pill-btn,
+html body.light-theme .sap-shell .sap-city-card {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.13);
+  color: #0f172a;
+}
+
+html body.light-theme .sap-shell .sap-pill-btn:hover,
+html body.light-theme .sap-shell .sap-city-card:hover {
+  background: #f0f9ff;
+  border-color: #0284c7;
+}
+
+html body.light-theme .sap-shell .sap-pill-btn.active {
+  background: rgba(2, 132, 199, 0.13);
+  border-color: #0284c7;
+  color: #0f172a;
+}
+
+html body.light-theme .sap-shell .sap-result-header,
+html body.light-theme .sap-shell .sap-provinces-section,
+html body.light-theme .sap-shell .sap-md-hr {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+html body.light-theme .sap-shell .sap-meta-badge {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #1e293b;
+}
+
+html body.light-theme .sap-shell .sap-meta-badge.live {
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.35);
+  color: #065f46;
+}
+
+html body.light-theme .sap-shell .sap-meta-badge.offline {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #92400e;
+}
+
+html body.light-theme .sap-shell .sap-action-btn {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.34);
+  color: #0369a1;
+}
+
+html body.light-theme .sap-shell .sap-action-btn:hover {
+  background: rgba(2, 132, 199, 0.18);
+}
+
+html body.light-theme .sap-shell .sap-action-btn.gold {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(217, 119, 6, 0.38);
+  color: #92400e;
+}
+
+html body.light-theme .sap-shell .sap-action-btn.gold:hover {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+html body.light-theme .sap-shell .sap-markdown {
+  color: #0f172a;
+}
+
+html body.light-theme .sap-shell .sap-md-h2,
+html body.light-theme .sap-shell .sap-label,
+html body.light-theme .sap-shell .sap-card-km {
+  color: #0369a1;
+}
+
+html body.light-theme .sap-shell .sap-md-h3 {
+  color: #b45309;
+}
+
+html body.light-theme .sap-shell .sap-md-quote {
+  background: rgba(245, 158, 11, 0.12);
+  border-left-color: #d97706;
+  color: #78350f;
+}
+
+html body.light-theme .sap-shell .sap-markdown code {
+  background: rgba(2, 132, 199, 0.1);
+  color: #0369a1;
+}
+
+html body.light-theme .sap-shell .sap-offline-banner {
+  background: #fffbeb;
+  border-color: rgba(217, 119, 6, 0.38);
+  color: #78350f;
+}
+
+/* --- 2I. .adm-layout (Admin Panel) --- */
+html body:not(.light-theme) .adm-wrap .adm-kpi-sub,
+html body:not(.light-theme) .adm-wrap .adm-field label {
+  color: #cbd5e1;
+}
+
+html body:not(.light-theme) .adm-wrap .adm-nav-item {
+  color: #cbd5e1;
+}
+
+html body:not(.light-theme) .adm-wrap .adm-pill-mini {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+html body.light-theme .adm-wrap .adm-auth-card,
+html body.light-theme .adm-wrap .adm-rail,
+html body.light-theme .adm-wrap .adm-hero-bar,
+html body.light-theme .adm-wrap .adm-kpi-card,
+html body.light-theme .adm-wrap .adm-panel-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+  box-shadow: 0 12px 30px -10px rgba(15, 23, 42, 0.1);
+}
+
+html body.light-theme .adm-wrap .adm-auth-title {
+  background: linear-gradient(135deg, #0f172a 0%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html body.light-theme .adm-wrap .adm-auth-badge {
+  background: rgba(2, 132, 199, 0.11);
+  border-color: rgba(2, 132, 199, 0.32);
+  color: #0369a1;
+}
+
+html body.light-theme .adm-wrap #adm-auth-status {
+  color: #b91c1c !important;
+}
+
+html body.light-theme .adm-wrap .adm-profile {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.22);
+}
+
+html body.light-theme .adm-wrap .adm-nav-item {
+  color: #334155;
+}
+
+html body.light-theme .adm-wrap .adm-nav-item:hover {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0f172a;
+}
+
+html body.light-theme .adm-wrap .adm-nav-item.active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.15), rgba(37, 99, 235, 0.12));
+  border-color: rgba(2, 132, 199, 0.42);
+  color: #0369a1;
+}
+
+html body.light-theme .adm-wrap .adm-pill-mini {
+  background: rgba(15, 23, 42, 0.08);
+  color: #334155;
+}
+
+html body.light-theme .adm-wrap .adm-nav-item.active .adm-pill-mini {
+  background: rgba(2, 132, 199, 0.18);
+  color: #0369a1;
+}
+
+html body.light-theme .adm-wrap .adm-kpi-num {
+  color: #0f172a;
+}
+
+html body.light-theme .adm-wrap .adm-kpi-num[style*="fbbf24"] {
+  color: #b45309 !important;
+}
+
+html body.light-theme .adm-wrap .adm-kpi-sub,
+html body.light-theme .adm-wrap .adm-field label {
+  color: #475569;
+}
+
+html body.light-theme .adm-wrap .adm-reg-bar {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+html body.light-theme .adm-wrap .adm-input,
+html body.light-theme .adm-wrap .adm-textarea {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+}
+
+html body.light-theme .adm-wrap .adm-city-row,
+html body.light-theme .adm-wrap .adm-route-item {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+}
+
+html body.light-theme .adm-wrap .adm-city-row:hover {
+  background: #f0f9ff;
+  border-color: rgba(2, 132, 199, 0.42);
+}
+
+html body.light-theme .adm-wrap .adm-city-row.active {
+  background: rgba(2, 132, 199, 0.14);
+  border-color: #0284c7;
+  color: #0c4a6e;
+}
+
+html body.light-theme .adm-wrap #adm-gem-test-out {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #1e293b !important;
+}
+
+/* Override light-pink/mint inline styles inside Admin Panel on light theme */
+html body.light-theme .adm-wrap button[style*="fca5a5"] {
+  color: #b91c1c !important;
+  border-color: rgba(185, 28, 28, 0.34) !important;
+}
+
+html body.light-theme .adm-wrap button[style*="6ee7b7"],
+html body.light-theme .adm-wrap label[style*="6ee7b7"] {
+  color: #047857 !important;
+  border-color: rgba(5, 150, 105, 0.42) !important;
+}
+
+/* Dashboard V3 Light/Dark micro-label contrast parity */
+html body.light-theme .dv3-exp-metric-lbl,
+html body.light-theme .dv3-group-count {
+  color: #475569;
+}
+
+html body:not(.light-theme) .dv3-exp-metric-lbl,
+html body:not(.light-theme) .dv3-group-count,
+html body:not(.light-theme) .dv3-launch-tag {
+  color: #cbd5e1;
+}
+
+/* --------------------------------------------------------------------------
+   3. CRISP :focus-visible KEYBOARD ACCESSIBILITY OUTLINES
+   -------------------------------------------------------------------------- */
+html body button:focus-visible,
+html body a:focus-visible,
+html body input:focus-visible,
+html body select:focus-visible,
+html body textarea:focus-visible,
+html body summary:focus-visible,
+html body [role="button"]:focus-visible,
+html body [tabindex]:not([tabindex="-1"]):focus-visible,
+html body .glass-card:focus-visible,
+html body .city-item:focus-visible,
+html body .city-card:focus-visible,
+html body .bento-card:focus-visible,
+html body .studio-hub-card:focus-visible,
+html body .feature-hub-card:focus-visible,
+html body .dv3-city-card:focus-visible,
+html body .dv3-stop-pill:focus-visible,
+html body .dv3-launch-pill:focus-visible,
+html body .sap-city-card:focus-visible,
+html body .sap-pill-btn:focus-visible,
+html body .sap-select:focus-visible,
+html body .sap-input:focus-visible,
+html body .adm-city-row:focus-visible,
+html body .adm-nav-item:focus-visible,
+html body .adm-input:focus-visible,
+html body .adm-textarea:focus-visible,
+html body .asr-ring-btn:focus-visible,
+html body .asr-ctrl-btn:focus-visible,
+html body .asr-cta-btn:focus-visible,
+html body .aicc-btn:focus-visible,
+html body .aicc-tool-btn:focus-visible,
+html body .sc-orb-btn:focus-visible,
+html body .sc-icon-btn:focus-visible,
+html body .sc-chip:focus-visible,
+html body .sc-province-pill:focus-visible,
+html body .sc-send-btn:focus-visible,
+html body .sc-input:focus-visible,
+html body .sc-key-input:focus-visible,
+html body .vn-btn:focus-visible,
+html body .vn-speed-btn:focus-visible,
+html body .seyyah-share-card-cta:focus-visible,
+html body #seyyah-quick-dock .seyyah-dock-btn:focus-visible,
+html body #seyyah-quick-dock .seyyah-dock-toggle:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   4. REFINED MICRO-TYPOGRAPHY (tabular-nums & text-wrap: balance)
+   -------------------------------------------------------------------------- */
+/* Tabular numerals on KPI counters, plate badges, and stats */
+.header-progress-pct,
+#stats-count,
+.stat-card-value,
+.city-plate,
+.plate-tile,
+.cmd-plate-badge,
+.asr-plate-badge,
+.dv3-plate-chip,
+.dv3-exp-metric-val,
+.sap-card-plate,
+.sap-card-km,
+.adm-kpi-num,
+.adm-pill-mini,
+.live-weather-pill-temp,
+.live-weather-pill-metric,
+.ana-plate-num,
+.ana-stat-val,
+.ana-fact-val,
+.ana-region-nums,
+.bp-kpi-val,
+.bp-slider-val,
+.bp-donut-center-val,
+.radar-stat-val,
+.radar-thumb-plate,
+.radar-filter-count,
+.dg-pill.plate,
+.dg-summary-score,
+.aq-plate-num,
+.aq-stat-value,
+.lib-timer-readout,
+.lib-mini-stat-val,
+.lib-card-plate,
+.sp-stat-val,
+.sp-empty-plate,
+.sp-pill-count,
+.sp-page-counter,
+.unesco-plate-chip,
+.unesco-kpi-val,
+.unesco-filter-count,
+.unesco-progress-stat,
+.rd-plate-badge,
+.rd-kpi-value,
+.rd-tab-pct,
+.compare-stat-val,
+.pomodoro-time,
+.packing-tele-value,
+.packing-cat-stat,
+.vn-speed-btn {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Balanced headings across modules & city views */
+h1,
+h2,
+h3,
+h4,
+.section-title,
+.city-hero-title,
+.hero-banner-visual h2,
+.logo-text h1,
+.asr-bar-title,
+.asr-city-name,
+.aicc-title,
+.sap-title,
+.sap-md-h1,
+.sap-md-h2,
+.sap-md-h3,
+.adm-auth-title,
+.dv3-title,
+.dv3-exp-heading,
+.dv3-group-title,
+.feature-hub-title,
+.sc-title {
+  text-wrap: balance;
+}
+
+/* --------------------------------------------------------------------------
+   5. COMPLETE @media print STYLESHEET (INK ON WHITE PAPER)
+   -------------------------------------------------------------------------- */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  :root,
+  body,
+  body.light-theme {
+    --bg-primary: #ffffff !important;
+    --bg-secondary: #ffffff !important;
+    --bg-card: #ffffff !important;
+    --bg-glass: #ffffff !important;
+    --text-primary: #0f172a !important;
+    --text-secondary: #1e293b !important;
+    --text-muted: #334155 !important;
+    --accent-cyan: #0369a1 !important;
+    --accent-blue: #1d4ed8 !important;
+    --accent-emerald: #047857 !important;
+    --accent-gold: #92400e !important;
+    --accent-purple: #6d28d9 !important;
+    --border-glass: #cbd5e1 !important;
+    --border-glow: #94a3b8 !important;
+    --shadow-subtle: none !important;
+    --shadow-glow: none !important;
+  }
+
+  /* Hide navigation chrome, floating widgets, and modals */
+  body::before,
+  header,
+  header.glass,
+  aside.sidebar,
+  #city-sidebar,
+  .sidebar-backdrop,
+  .module-nav-strip,
+  nav.module-nav-strip,
+  #seyyah-copilot-root,
+  .sc-orb-btn,
+  .sc-drawer,
+  #seyyah-quick-dock,
+  .modal-overlay:not(.cmd-overlay),
+  #map-modal,
+  #quote-modal,
+  #lightbox-modal,
+  #seyyah-story-modal,
+  .seyyah-shortcuts-overlay,
+  .shortcuts-modal,
+  .toast-container,
+  #toast-container,
+  #seyyah-ambient-canvas,
+  .seyyah-scroll-progress-track,
+  .viewport-scroll-progress,
+  .seyyah-back-to-top,
+  .back-to-top-fab,
+  .ambient-popover,
+  .ana-tooltip,
+  .voice-narrator-bar,
+  .seyyah-share-card-bar {
+    display: none !important;
+  }
+
+  /* Keep .cmd-overlay unreachable without altering its display property */
+  .cmd-overlay {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Unlock full-page flow so multi-page content never clips at 100vh */
+  html,
+  body,
+  .app-container,
+  .main-layout,
+  .content-viewport,
+  #viewport-content {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #0f172a !important;
+    animation: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #viewport-content > * {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Strip dark glass, blur & shadows inside printed viewport */
+  .content-viewport *,
+  .content-viewport *::before,
+  .content-viewport *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  .content-viewport .glass-card,
+  .content-viewport .detail-card,
+  .content-viewport .stat-card,
+  .content-viewport .landmark-item,
+  .content-viewport .neighbor-card,
+  .content-viewport .literary-quote-item,
+  .content-viewport .feature-hub-card,
+  .content-viewport .anadolu-stories-bar,
+  .content-viewport .ai-city-concierge-box,
+  .content-viewport .aicc-result-panel,
+  .content-viewport .live-weather-pill,
+  .content-viewport .sap-hero,
+  .content-viewport .sap-form-card,
+  .content-viewport .sap-result-card,
+  .content-viewport .sap-city-card,
+  .content-viewport .adm-rail,
+  .content-viewport .adm-hero-bar,
+  .content-viewport .adm-kpi-card,
+  .content-viewport .adm-panel-card,
+  .content-viewport .adm-auth-card,
+  .content-viewport .dv3-expedition-card,
+  .content-viewport .dv3-group-card,
+  .content-viewport .dv3-exp-metric,
+  .content-viewport .dv3-stepper-trail {
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    transform: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure gradient-clipped headings print as solid high-contrast ink */
+  .content-viewport h1,
+  .content-viewport h2,
+  .content-viewport h3,
+  .content-viewport h4,
+  .content-viewport .sap-md-h1,
+  .content-viewport .adm-auth-title,
+  .content-viewport .hero-banner-visual h2 {
+    background: none !important;
+    -webkit-background-clip: border-box !important;
+    -webkit-text-fill-color: #0f172a !important;
+    color: #0f172a !important;
+    text-shadow: none !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .content-viewport p,
+  .content-viewport li,
+  .content-viewport span,
+  .content-viewport strong,
+  .content-viewport blockquote {
+    color: #0f172a !important;
+    text-shadow: none !important;
+  }
+
+  /* Keep hero banners readable on paper without dark photo overlap */
+  .content-viewport .hero-banner-visual {
+    background: #f8fafc !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .content-viewport .city-hero {
+    height: auto !important;
+    min-height: 160px !important;
+    border: 1px solid #94a3b8 !important;
+  }
+
+  .content-viewport .city-hero-overlay {
+    background: rgba(15, 23, 42, 0.72) !important;
+  }
+
+  .content-viewport .city-hero .city-hero-title,
+  .content-viewport .city-hero .city-hero-badges span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  .content-viewport img {
+    max-width: 100% !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

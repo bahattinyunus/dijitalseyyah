@@ -311,6 +311,70 @@
         run: () => safeCall('openView', 'aiPlanner')
       },
       {
+        id: 'action-pomodoro',
+        type: 'action',
+        icon: '🍅',
+        title: 'Kütüphane Odak & Pomodoro Stüdyosu',
+        subtitle: '81 İl Halk Kütüphanesi eşliğinde 25/50 dk derin çalışma zamanlayıcısı',
+        category: 'Üretkenlik',
+        keywords: 'pomodoro odak kutuphane zamanlayici timer calisma 25 50 dk',
+        run: () => safeCall('openView', 'pomodoro')
+      },
+      {
+        id: 'action-achievements',
+        type: 'action',
+        icon: '🏆',
+        title: 'Rütbe & Başarım Galerisi',
+        subtitle: '23 veri tabanlı rozet, XP barı ve Cihan Seyyahı rütbe merdiveni',
+        category: 'Keşif',
+        keywords: 'basarim rozet rutbe xp kupa odul cihan seyyahi',
+        run: () => safeCall('openView', 'achievements')
+      },
+      {
+        id: 'action-bucket-list',
+        type: 'action',
+        icon: '🎯',
+        title: 'Anadolu Bucket List & Sefer Hedefleri',
+        subtitle: '7 bölgeden 24 küratörlü ikonik görev ve kişisel hedef takipçisi',
+        category: 'Planlama',
+        keywords: 'bucket list hedefler gorevler yapilacaklar checklist anadolu',
+        run: () => safeCall('openView', 'bucketList')
+      },
+      {
+        id: 'action-photo-wall',
+        type: 'action',
+        icon: '🖼️',
+        title: '162 Kare Mozaik Duvarı',
+        subtitle: 'Pinterest/Masonry düzende tüm 162 il fotoğrafı, karıştır & slayt modu',
+        category: 'Görünüm',
+        keywords: 'mozaik duvar masonry 162 fotograf galeri slayt karistir',
+        run: () => safeCall('openView', 'photoWall')
+      },
+      {
+        id: 'action-deep-stats',
+        type: 'action',
+        icon: '📈',
+        title: 'İleri Analitik & 81/81 Tahmin Stüdyosu',
+        subtitle: '7 bölge SVG Radar grafiği, koordinat haritası ve bitiş tarihi simülatörü',
+        category: 'Analiz',
+        keywords: 'analitik radar grafik istatistik tahmin 81 kyk tasarruf',
+        run: () => safeCall('openView', 'deepStats')
+      },
+      {
+        id: 'action-pro-shortcuts',
+        type: 'action',
+        icon: '⌨️',
+        title: 'Klavye Kısayolları & Güvenli Veri Yedeği',
+        subtitle: 'Tüm kısayolları gör ve kişisel verilerini JSON olarak yedekle/yükle',
+        category: 'Sistem',
+        keywords: 'kisayol klavye yedek backup json export import pro',
+        run: () => {
+          if (window.SEYYAH_MODULES && window.SEYYAH_MODULES.proTools && typeof window.SEYYAH_MODULES.proTools.openShortcutsModal === 'function') {
+            window.SEYYAH_MODULES.proTools.openShortcutsModal();
+          }
+        }
+      },
+      {
         id: 'action-unesco',
         type: 'action',
         icon: '🏛️',
