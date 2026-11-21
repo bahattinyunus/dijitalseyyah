@@ -272,7 +272,8 @@
       advisor: mods.advisor,
       unesco: mods.unesco,
       distanceGame: mods.distanceGame,
-      regions: mods.regions
+      regions: mods.regions,
+      admin: mods.admin
     };
 
     const targetMod = modMap[normalized];
@@ -306,7 +307,7 @@
     } else if ([
       '#compare', '#gastronomy', '#libraries', '#library', '#quiz', '#analytics', '#journal',
       '#atlas', '#packing', '#postcard', '#timeline', '#sound', '#seasons', '#landmarks', '#reader', '#budget',
-      '#cinematicTour', '#passport', '#radar', '#advisor', '#unesco', '#distanceGame', '#regions'
+      '#cinematicTour', '#passport', '#radar', '#advisor', '#unesco', '#distanceGame', '#regions', '#admin'
     ].includes(h)) {
       openView(h.slice(1), false);
       return true;
@@ -327,6 +328,10 @@
         `;
       }
       return;
+    }
+
+    if (window.SEYYAH_MODULES && window.SEYYAH_MODULES.admin && typeof window.SEYYAH_MODULES.admin.applyOverrides === 'function') {
+      window.SEYYAH_MODULES.admin.applyOverrides(state.data, state);
     }
 
     renderHeaderStats();
@@ -2157,6 +2162,11 @@
       exportMarkdownBook();
       showToast('📚 ANADOLU_SEYAHATNAMESI.md indirildi!');
     });
+
+    const btnAdmin = document.getElementById('btn-admin');
+    if (btnAdmin) {
+      btnAdmin.addEventListener('click', () => openView('admin'));
+    }
 
     // Module Navigation Strip
     document.querySelectorAll('.module-nav-btn[data-view]').forEach(btn => {

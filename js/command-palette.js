@@ -301,6 +301,16 @@
         run: () => safeCall('openView', 'advisor')
       },
       {
+        id: 'action-admin',
+        type: 'action',
+        icon: '🔐',
+        title: 'Admin Paneli',
+        subtitle: 'PIN kilidi, 81 il düzenleyici, rota yönetimi, Gemini API & GitHub commit',
+        category: 'Yönetim',
+        keywords: 'admin yonetim panel ayarlar github gemini kilit pin duzenle',
+        run: () => safeCall('openView', 'admin')
+      },
+      {
         id: 'action-unesco',
         type: 'action',
         icon: '🏛️',
