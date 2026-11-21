@@ -301,6 +301,16 @@
         run: () => safeCall('openView', 'advisor')
       },
       {
+        id: 'action-ai-planner',
+        type: 'action',
+        icon: '🧠',
+        title: 'AI Sefer Mühendisi (Planlayıcı)',
+        subtitle: 'Gemini AI ile gün, bütçe ve odağa göre kişiselleştirilmiş sefer planı üret',
+        category: 'Asistan',
+        keywords: 'ai planlayici sefer muhendisi gemini 5 gun rota butce kyk',
+        run: () => safeCall('openView', 'aiPlanner')
+      },
+      {
         id: 'action-unesco',
         type: 'action',
         icon: '🏛️',

@@ -1,0 +1,694 @@
+/* ==========================================================================
+   ANADOLU SEYAHATNAMESİ — NEXT-GEN V4: LUXURY OBSIDIAN & KINETIC GLASS
+   Awwwards SOTD Visual Elevation Layer
+   Supports Dark Obsidian (default) & Alabaster Polish (body.light-theme)
+   Preserves: .cmd-overlay hidden state, modal z-index hierarchy, <=960px layout
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. V4 DESIGN TOKENS (OBSIDIAN & ALABASTER)
+   -------------------------------------------------------------------------- */
+:root {
+  --bg-primary: #060913;
+  --bg-secondary: #0c1222;
+  --bg-card: rgba(15, 22, 39, 0.72);
+  --bg-glass: rgba(9, 14, 28, 0.8);
+
+  --border-glass: rgba(255, 255, 255, 0.09);
+  --border-glow: rgba(0, 242, 254, 0.42);
+
+  --shadow-subtle: 0 14px 36px -12px rgba(0, 0, 0, 0.72);
+  --shadow-glow: 0 18px 42px -12px rgba(0, 0, 0, 0.75), 0 0 26px rgba(0, 242, 254, 0.18);
+
+  --v4-specular-top: rgba(255, 255, 255, 0.13);
+  --v4-specular-hover: rgba(255, 255, 255, 0.22);
+  --v4-ease-kinetic: cubic-bezier(0.16, 1, 0.3, 1);
+  --v4-nav-fade: 28px;
+}
+
+body.light-theme {
+  --bg-primary: #f6f8fc;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-glass: rgba(255, 255, 255, 0.86);
+
+  --border-glass: rgba(15, 23, 42, 0.09);
+  --border-glow: rgba(2, 132, 199, 0.38);
+
+  --shadow-subtle: 0 10px 28px -8px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 18px 36px -10px rgba(2, 132, 199, 0.16), 0 6px 14px -6px rgba(15, 23, 42, 0.06);
+
+  --v4-specular-top: rgba(255, 255, 255, 0.95);
+  --v4-specular-hover: rgba(255, 255, 255, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. KEYFRAMES — AURORA DRIFT & PAGE ENTRY
+   -------------------------------------------------------------------------- */
+@keyframes v4ObsidianAurora {
+  0% {
+    background-position: 0% 0%, 100% 100%, 50% 20%, 20% 80%;
+    opacity: 0.88;
+  }
+  50% {
+    background-position: 18% 12%, 82% 86%, 62% 35%, 35% 65%;
+    opacity: 1;
+  }
+  100% {
+    background-position: 6% 22%, 92% 72%, 38% 14%, 15% 88%;
+    opacity: 0.92;
+  }
+}
+
+@keyframes v4PageEntry {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. AMBIENT OBSIDIAN AURORA & ALABASTER POLISH LAYER
+   -------------------------------------------------------------------------- */
+body {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 0%, rgba(14, 24, 48, 0.72) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 55% at 85% 100%, rgba(10, 22, 38, 0.65) 0%, transparent 72%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(620px circle at 12% 14%, rgba(0, 242, 254, 0.065), transparent 62%),
+    radial-gradient(560px circle at 88% 82%, rgba(16, 185, 129, 0.055), transparent 64%),
+    radial-gradient(520px circle at 54% 18%, rgba(79, 172, 254, 0.05), transparent 65%),
+    radial-gradient(440px circle at 24% 84%, rgba(245, 158, 11, 0.028), transparent 66%);
+  background-size: 140% 140%, 140% 140%, 135% 135%, 135% 135%;
+  background-repeat: no-repeat;
+  animation: v4ObsidianAurora 26s ease-in-out infinite alternate;
+  will-change: background-position, opacity;
+}
+
+body.light-theme {
+  background-color: #f6f8fc;
+  background-image:
+    radial-gradient(ellipse 85% 55% at 10% 0%, rgba(224, 242, 254, 0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 75% 55% at 90% 100%, rgba(209, 250, 229, 0.42) 0%, transparent 68%);
+}
+
+body.light-theme::before {
+  background-image:
+    radial-gradient(600px circle at 14% 12%, rgba(2, 132, 199, 0.06), transparent 62%),
+    radial-gradient(540px circle at 86% 84%, rgba(5, 150, 105, 0.05), transparent 64%),
+    radial-gradient(480px circle at 52% 22%, rgba(124, 58, 237, 0.032), transparent 66%),
+    radial-gradient(420px circle at 22% 82%, rgba(217, 119, 6, 0.025), transparent 66%);
+}
+
+/* --------------------------------------------------------------------------
+   4. ULTRA-THIN CUSTOM SCROLLBARS (6px CYAN / SLATE)
+   -------------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.34) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 242, 254, 0.42) 0%, rgba(100, 116, 139, 0.5) 100%);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(0, 242, 254, 0.82) 0%, rgba(79, 172, 254, 0.7) 100%);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+body.light-theme * {
+  scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
+}
+
+body.light-theme *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(2, 132, 199, 0.38) 0%, rgba(100, 116, 139, 0.42) 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+body.light-theme *::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(2, 132, 199, 0.72) 0%, rgba(37, 99, 235, 0.6) 100%);
+}
+
+/* Preserve hidden scrollbar on horizontal module strip */
+.module-nav-strip {
+  scrollbar-width: none;
+}
+
+.module-nav-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   5. HEADER GLASS BLUR, SPOTLIGHT GLOW & MODULE NAV STRIP FADE EDGES
+   -------------------------------------------------------------------------- */
+header.glass {
+  background: rgba(7, 11, 22, 0.76);
+  backdrop-filter: blur(24px) saturate(165%);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
+    0 12px 32px -14px rgba(0, 0, 0, 0.75);
+}
+
+body.light-theme header.glass {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 10px 26px -14px rgba(15, 23, 42, 0.12);
+}
+
+/* Spotlight Search Button */
+.header-spotlight-btn {
+  background: rgba(15, 23, 42, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 14px -4px rgba(0, 0, 0, 0.45);
+  transition:
+    transform 0.28s var(--v4-ease-kinetic),
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.28s var(--v4-ease-kinetic),
+    color 0.25s ease;
+}
+
+.header-spotlight-btn svg {
+  color: var(--accent-cyan);
+  opacity: 0.85;
+  transition: transform 0.25s var(--v4-ease-kinetic), opacity 0.25s ease, filter 0.25s ease;
+}
+
+.header-spotlight-btn:hover,
+.header-spotlight-btn:focus-visible {
+  background: rgba(20, 30, 52, 0.92);
+  border-color: rgba(0, 242, 254, 0.7);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 1px rgba(0, 242, 254, 0.24),
+    0 0 26px rgba(0, 242, 254, 0.28),
+    0 10px 24px -8px rgba(0, 0, 0, 0.65);
+}
+
+.header-spotlight-btn:hover svg,
+.header-spotlight-btn:focus-visible svg {
+  opacity: 1;
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 6px rgba(0, 242, 254, 0.65));
+}
+
+.header-spotlight-btn:hover .cmd-kbd {
+  border-color: rgba(0, 242, 254, 0.45);
+  color: var(--accent-cyan);
+}
+
+body.light-theme .header-spotlight-btn {
+  background: rgba(248, 250, 252, 0.92);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 3px 10px -4px rgba(15, 23, 42, 0.08);
+  color: #475569;
+}
+
+body.light-theme .header-spotlight-btn:hover,
+body.light-theme .header-spotlight-btn:focus-visible {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.58);
+  color: #0f172a;
+  box-shadow:
+    0 0 0 1px rgba(2, 132, 199, 0.18),
+    0 0 22px rgba(2, 132, 199, 0.18),
+    0 8px 20px -8px rgba(15, 23, 42, 0.14);
+}
+
+/* Module Nav Strip with Smooth Scroll Edge Fade */
+.module-nav-strip {
+  background: rgba(8, 13, 25, 0.72);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 var(--v4-nav-fade),
+    #000 calc(100% - var(--v4-nav-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 var(--v4-nav-fade),
+    #000 calc(100% - var(--v4-nav-fade)),
+    transparent 100%
+  );
+}
+
+body.light-theme .module-nav-strip {
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   6. SPECULAR 1px GLASS BORDERS, SHADOWS & KINETIC HOVER TRANSITIONS
+   -------------------------------------------------------------------------- */
+.glass-card {
+  background: linear-gradient(160deg, rgba(20, 29, 49, 0.74) 0%, rgba(11, 17, 31, 0.8) 100%);
+  border: 1px solid var(--border-glass);
+  box-shadow:
+    inset 0 1px 0 var(--v4-specular-top),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    var(--shadow-subtle);
+  transition:
+    transform 0.34s var(--v4-ease-kinetic),
+    border-color 0.28s ease,
+    box-shadow 0.34s var(--v4-ease-kinetic),
+    background 0.28s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 var(--v4-specular-hover),
+    0 20px 44px -14px rgba(0, 0, 0, 0.78),
+    0 0 26px rgba(0, 242, 254, 0.16);
+}
+
+.detail-card {
+  background: linear-gradient(165deg, rgba(18, 26, 46, 0.78) 0%, rgba(10, 15, 28, 0.84) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 var(--v4-specular-top),
+    0 16px 38px -14px rgba(0, 0, 0, 0.72);
+  transition:
+    transform 0.34s var(--v4-ease-kinetic),
+    border-color 0.28s ease,
+    box-shadow 0.34s var(--v4-ease-kinetic);
+}
+
+.detail-card:hover {
+  border-color: rgba(0, 242, 254, 0.34);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 var(--v4-specular-hover),
+    0 22px 46px -14px rgba(0, 0, 0, 0.78),
+    0 0 22px rgba(0, 242, 254, 0.12);
+}
+
+/* Sidebar City Item */
+.city-item {
+  background: rgba(16, 24, 42, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    transform 0.26s var(--v4-ease-kinetic),
+    background 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.26s var(--v4-ease-kinetic);
+}
+
+.city-item:hover {
+  background: rgba(28, 40, 66, 0.78);
+  border-color: rgba(0, 242, 254, 0.42);
+  transform: translateX(4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 8px 22px -8px rgba(0, 0, 0, 0.65),
+    0 0 16px rgba(0, 242, 254, 0.12);
+}
+
+.city-item.active {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.14) 0%, rgba(79, 172, 254, 0.09) 100%);
+  border-color: rgba(0, 242, 254, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 20px rgba(0, 242, 254, 0.16);
+}
+
+/* Module Nav Pills */
+.module-nav-btn {
+  background: rgba(18, 27, 47, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition:
+    transform 0.26s var(--v4-ease-kinetic),
+    background 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.26s var(--v4-ease-kinetic),
+    color 0.22s ease;
+}
+
+.module-nav-btn:hover {
+  background: rgba(30, 44, 72, 0.85);
+  border-color: rgba(0, 242, 254, 0.48);
+  color: #ffffff;
+  transform: translateY(-1.5px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 6px 18px -4px rgba(0, 242, 254, 0.22);
+}
+
+.module-nav-btn.active {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.24) 0%, rgba(79, 172, 254, 0.24) 100%);
+  border-color: rgba(0, 242, 254, 0.82);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 0 22px rgba(0, 242, 254, 0.3);
+}
+
+/* Primary & Outline Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #22f5ff 0%, var(--accent-cyan) 45%, var(--accent-blue) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 6px 20px -4px rgba(0, 242, 254, 0.38);
+  transition:
+    transform 0.26s var(--v4-ease-kinetic),
+    box-shadow 0.28s var(--v4-ease-kinetic),
+    filter 0.24s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    0 10px 28px -4px rgba(0, 242, 254, 0.55),
+    0 0 20px rgba(79, 172, 254, 0.32);
+}
+
+.btn-outline {
+  background: rgba(18, 27, 46, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 12px -4px rgba(0, 0, 0, 0.45);
+  transition:
+    transform 0.26s var(--v4-ease-kinetic),
+    background 0.24s ease,
+    border-color 0.24s ease,
+    color 0.22s ease,
+    box-shadow 0.26s var(--v4-ease-kinetic);
+}
+
+.btn-outline:hover {
+  background: rgba(30, 44, 72, 0.86);
+  border-color: rgba(0, 242, 254, 0.62);
+  color: var(--accent-cyan);
+  transform: translateY(-1.5px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 8px 20px -6px rgba(0, 242, 254, 0.22);
+}
+
+/* Light Theme Alabaster Card, Sidebar, Button & Nav Refinements */
+body.light-theme aside.sidebar {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-right-color: rgba(15, 23, 42, 0.08);
+}
+
+body.light-theme .glass-card,
+body.light-theme .detail-card {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  border-color: rgba(15, 23, 42, 0.09);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 10px 28px -8px rgba(15, 23, 42, 0.08),
+    0 2px 6px -2px rgba(15, 23, 42, 0.04);
+}
+
+body.light-theme .glass-card:hover,
+body.light-theme .detail-card:hover {
+  border-color: rgba(2, 132, 199, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 18px 38px -10px rgba(2, 132, 199, 0.16),
+    0 6px 14px -6px rgba(15, 23, 42, 0.06);
+}
+
+body.light-theme .city-item {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 2px 8px -3px rgba(15, 23, 42, 0.05);
+}
+
+body.light-theme .city-item:hover {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.42);
+  box-shadow:
+    0 8px 20px -6px rgba(2, 132, 199, 0.14),
+    0 2px 6px -2px rgba(15, 23, 42, 0.05);
+}
+
+body.light-theme .city-item.active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.1) 0%, rgba(37, 99, 235, 0.07) 100%);
+  border-color: rgba(2, 132, 199, 0.55);
+  box-shadow: 0 6px 18px -6px rgba(2, 132, 199, 0.18);
+}
+
+body.light-theme .module-nav-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 2px 6px -2px rgba(15, 23, 42, 0.05);
+}
+
+body.light-theme .module-nav-btn:hover {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.45);
+  color: #0284c7;
+  box-shadow: 0 6px 16px -4px rgba(2, 132, 199, 0.16);
+}
+
+body.light-theme .module-nav-btn.active {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 8px 20px -4px rgba(2, 132, 199, 0.34);
+}
+
+body.light-theme .btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 6px 18px -4px rgba(2, 132, 199, 0.35);
+}
+
+body.light-theme .btn-primary:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 10px 24px -4px rgba(2, 132, 199, 0.45);
+}
+
+body.light-theme .btn-outline {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #1e293b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 2px 8px -3px rgba(15, 23, 42, 0.06);
+}
+
+body.light-theme .btn-outline:hover {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.5);
+  color: #0284c7;
+  box-shadow: 0 6px 16px -4px rgba(2, 132, 199, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   7. CITY DETAIL HERO BANNER PRESENTATION
+   -------------------------------------------------------------------------- */
+.city-hero {
+  height: 300px;
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 26px 56px -18px rgba(0, 0, 0, 0.82);
+  isolation: isolate;
+}
+
+.city-hero-overlay {
+  background:
+    radial-gradient(ellipse 95% 75% at 55% 32%, transparent 28%, rgba(5, 8, 17, 0.62) 100%),
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 17, 0.36) 0%,
+      rgba(5, 8, 17, 0.12) 34%,
+      rgba(5, 8, 17, 0.62) 68%,
+      rgba(5, 8, 17, 0.96) 100%
+    );
+}
+
+.city-hero-content {
+  gap: 12px;
+}
+
+.city-hero-title {
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.72);
+}
+
+.city-hero-badges {
+  gap: 8px;
+}
+
+.city-hero-badges .tag-badge,
+.city-hero-badges .city-status-badge {
+  padding: 5px 13px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-heading);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 4px 14px rgba(0, 0, 0, 0.36);
+}
+
+.city-hero-badges .tag-badge {
+  background: rgba(9, 14, 28, 0.72);
+  border: 1px solid rgba(0, 242, 254, 0.42);
+  color: #a5f3fc;
+}
+
+.city-hero-badges .city-status-badge.visited {
+  background: rgba(6, 78, 59, 0.78);
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  color: #a7f3d0;
+}
+
+.city-hero-badges .city-status-badge.unvisited {
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #e2e8f0;
+}
+
+/* Keep light-theme hero overlay & pills high-contrast against dark imagery */
+body.light-theme .city-hero {
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 22px 48px -16px rgba(15, 23, 42, 0.28);
+}
+
+/* --------------------------------------------------------------------------
+   8. SMOOTH PAGE-ENTRY KEYFRAME FOR #viewport-content CHILDREN
+   -------------------------------------------------------------------------- */
+#viewport-content > * {
+  animation: v4PageEntry 380ms var(--v4-ease-kinetic) both;
+}
+
+#viewport-content > .view-fade-in {
+  animation: v4PageEntry 380ms var(--v4-ease-kinetic) both;
+  animation-delay: var(--seyyah-stagger, 0ms);
+}
+
+/* --------------------------------------------------------------------------
+   9. RESPONSIVE PRESERVATION (<= 960px & <= 540px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  :root {
+    --v4-nav-fade: 16px;
+  }
+
+  .module-nav-strip {
+    padding: 9px 14px;
+  }
+
+  aside.sidebar {
+    background: rgba(10, 15, 29, 0.96);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+  }
+
+  body.light-theme aside.sidebar {
+    background: rgba(255, 255, 255, 0.97);
+  }
+}
+
+@media (max-width: 540px) {
+  :root {
+    --v4-nav-fade: 12px;
+  }
+
+  .city-hero {
+    height: 220px;
+    padding: 18px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   10. ACCESSIBILITY — REDUCED MOTION
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none !important;
+  }
+
+  #viewport-content > *,
+  #viewport-content > .view-fade-in {
+    animation: none !important;
+  }
+
+  .glass-card,
+  .detail-card,
+  .city-item,
+  .module-nav-btn,
+  .btn-primary,
+  .btn-outline,
+  .header-spotlight-btn {
+    transition-duration: 0.01ms !important;
+  }
+}

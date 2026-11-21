@@ -273,6 +273,7 @@
       unesco: mods.unesco,
       distanceGame: mods.distanceGame,
       regions: mods.regions,
+      aiPlanner: mods.aiPlanner,
       admin: mods.admin
     };
 
@@ -312,7 +313,7 @@
     } else if ([
       '#compare', '#gastronomy', '#libraries', '#library', '#quiz', '#analytics', '#journal',
       '#atlas', '#packing', '#postcard', '#timeline', '#sound', '#seasons', '#landmarks', '#reader', '#budget',
-      '#cinematicTour', '#passport', '#radar', '#advisor', '#unesco', '#distanceGame', '#regions', '#admin'
+      '#cinematicTour', '#passport', '#radar', '#advisor', '#unesco', '#distanceGame', '#regions', '#aiPlanner', '#admin'
     ].includes(h)) {
       openView(h.slice(1), false);
       return true;
@@ -359,6 +360,12 @@
     if (mods.ambientMotion && typeof mods.ambientMotion.init === 'function') {
       mods.ambientMotion.init(ctx);
     }
+    // Wave 4 Next-Gen AI & Luxury UX Enhancer Modules
+    ['floatingCopilot', 'aiCityConcierge', 'liveWeather', 'interactive3d', 'voiceNarrator', 'storyReels', 'quickDock', 'shareCard'].forEach(modKey => {
+      if (mods[modKey] && typeof mods[modKey].init === 'function') {
+        try { mods[modKey].init(ctx); } catch (e) { console.warn('[Seyyah] Module init error:', modKey, e); }
+      }
+    });
   }
 
   // Update active nav highlight
