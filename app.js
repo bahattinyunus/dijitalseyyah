@@ -292,6 +292,11 @@
 
   function routeFromHash() {
     const h = window.location.hash || '';
+    const p = (window.location.pathname || '').replace(/\/+$/, '');
+    if (p.endsWith('/admin')) {
+      openView('admin', true);
+      return true;
+    }
     if (h.startsWith('#city/')) {
       const key = decodeURIComponent(h.slice('#city/'.length));
       if (state.data && state.data.provinces[key]) {
