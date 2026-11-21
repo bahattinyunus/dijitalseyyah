@@ -614,12 +614,13 @@ ${footer}
               </select>
             </div>
             <div class="adm-field">
-              <label>Gemini API Anahtarı (Tarayıcıda Saklanır)</label>
-              <input type="password" id="adm-gem-key" class="adm-input" placeholder="AQ.... veya AIza..." value="${escapeHtml(curGeminiKey)}" />
+              <label>Gemini API Anahtarı ${curGeminiKey ? '<span style="color:var(--accent-emerald);">(✅ Kayıtlı — DOM\'da gizli)</span>' : ''}</label>
+              <input type="password" id="adm-gem-key" class="adm-input" placeholder="${curGeminiKey ? '•••••••• (Değiştirmek için yeni anahtar yazın)' : 'AQ.... veya AIza...'}" value="" autocomplete="off" />
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <button type="button" class="btn btn-primary" id="adm-gem-save">💾 Kaydet</button>
               <button type="button" class="btn btn-outline" id="adm-gem-test">🧪 Canlı Test Et</button>
+              ${curGeminiKey ? '<button type="button" class="btn btn-outline" id="adm-gem-clear" style="color:#fca5a5;">🗑️ Sil</button>' : ''}
             </div>
             <div id="adm-gem-test-out" style="font-size:0.82rem;padding:10px 12px;border-radius:10px;background:rgba(7,12,24,0.55);border:1px solid var(--border-glass);min-height:40px;color:var(--text-secondary);">
               Test sonucunu görmek için <strong>Canlı Test Et</strong> butonuna basın.
@@ -644,8 +645,8 @@ ${footer}
               <input type="text" id="adm-gh-branch" class="adm-input" value="${escapeHtml(ghCfg.branch || 'main')}" />
             </div>
             <div class="adm-field">
-              <label>GitHub PAT Token</label>
-              <input type="password" id="adm-gh-token" class="adm-input" placeholder="ghp_... veya github_pat_..." value="${escapeHtml(ghCfg.token || '')}" />
+              <label>GitHub PAT Token ${ghCfg.token ? '<span style="color:var(--accent-emerald);">(✅ Kayıtlı — DOM\'da gizli)</span>' : ''}</label>
+              <input type="password" id="adm-gh-token" class="adm-input" placeholder="${ghCfg.token ? '•••••••• (Değiştirmek için yeni token yazın)' : 'ghp_... veya github_pat_...'}" value="" autocomplete="off" />
             </div>
             <button type="button" class="btn btn-primary" id="adm-gh-save">💾 GitHub Ayarlarını Kaydet</button>
           </div>
@@ -927,12 +928,19 @@ ${footer}
       const gemSave = document.getElementById('adm-gem-save');
       if (gemSave) {
         gemSave.addEventListener('click', () => {
-          const key = document.getElementById('adm-gem-key').value.trim();
+          const typedKey = document.getElementById('adm-gem-key').value.trim();
           const model = document.getElementById('adm-gem-model').value;
-          if (key) localStorage.setItem(KEYS.geminiKey, key);
-          else localStorage.removeItem(KEYS.geminiKey);
+          if (typedKey) localStorage.setItem(KEYS.geminiKey, typedKey);
           localStorage.setItem(KEYS.geminiModel, model);
-          toast('✅ Gemini AI ayarları kaydedildi');
+          toast('✅ Gemini AI ayarları kaydedildi (anahtar DOM\'da gizli)');
+          render(container, ctx);
+        });
+      }
+      const gemClear = document.getElementById('adm-gem-clear');
+      if (gemClear) {
+        gemClear.addEventListener('click', () => {
+          localStorage.removeItem(KEYS.geminiKey);
+          toast('🗑️ Gemini API anahtarı temizlendi');
           render(container, ctx);
         });
       }
@@ -940,7 +948,7 @@ ${footer}
       if (gemTest) {
         gemTest.addEventListener('click', async () => {
           const out = document.getElementById('adm-gem-test-out');
-          const key = document.getElementById('adm-gem-key').value.trim();
+          const key = document.getElementById('adm-gem-key').value.trim() || (localStorage.getItem(KEYS.geminiKey) || '').trim();
           const model = document.getElementById('adm-gem-model').value;
           if (!key) {
             if (out) out.innerHTML = '<span style="color:#fbbf24;">⚠️ Önce Gemini API anahtarını girin.</span>';
@@ -970,13 +978,15 @@ ${footer}
       const ghSave = document.getElementById('adm-gh-save');
       if (ghSave) {
         ghSave.addEventListener('click', () => {
+          const typedTok = document.getElementById('adm-gh-token').value.trim();
           writeJson(KEYS.ghConfig, {
             owner: document.getElementById('adm-gh-owner').value.trim() || ALLOWED_OWNER,
             repo: document.getElementById('adm-gh-repo').value.trim() || TARGET_REPO,
             branch: document.getElementById('adm-gh-branch').value.trim() || 'main',
-            token: document.getElementById('adm-gh-token').value.trim()
+            token: typedTok || ghCfg.token || ''
           });
           toast('✅ GitHub ayarları tarayıcınıza kaydedildi');
+          render(container, ctx);
         });
       }
     }

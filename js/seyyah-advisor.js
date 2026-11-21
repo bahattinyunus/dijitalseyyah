@@ -1643,31 +1643,8 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
             </div>
           </div>
           <div class="sa-header-actions">
-            <span class="sa-stat-pill" data-sa-engine-badge>${getStoredGeminiKey() ? '🟢 Gemini AI (Kişisel)' : '✨ Gemini AI + Çevrimdışı'}</span>
-            <button type="button" class="sa-clear-btn" data-sa-gemini-toggle>🔑 Gemini API</button>
+            <span class="sa-stat-pill" data-sa-engine-badge>${getStoredGeminiKey() ? '🟢 Gemini AI Aktif' : '✨ Seyyah Akıllı Motor'}</span>
             <button type="button" class="sa-clear-btn" data-sa-clear>🗑️ Temizle</button>
-          </div>
-        </div>
-
-        <div class="sa-gemini-drawer" data-sa-gemini-drawer style="display: none; padding: 14px 16px; border-radius: 12px; background: rgba(15,23,42,0.75); border: 1px solid rgba(0,242,254,0.28); margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-            <strong style="font-size: 0.88rem; color: var(--accent-cyan);">🔑 Gemini AI Bağlantı Ayarları</strong>
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-size: 0.76rem; color: var(--accent-gold); text-decoration: none;">Google AI Studio'dan Anahtar Al ↗</a>
-          </div>
-          <p style="font-size: 0.76rem; color: var(--text-secondary); margin: 0 0 10px 0; line-height: 1.45;">
-            Canlı sitede Netlify ortam değişkeni (<code>GEMINI_API_KEY</code>) otomatik kullanılır. Kendi tarayıcınızda test etmek veya kendi Gemini Pro / AI Studio anahtarınızı kullanmak için aşağıya girebilirsiniz (anahtar yalnızca tarayıcınızda <code>localStorage</code> içinde saklanır, sunucuya/GitHub'a gönderilmez).
-          </p>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <select data-sa-model-select class="region-select" style="width: 245px; padding: 7px 10px; font-size: 0.8rem;">
-              <option value="gemini-flash-lite-latest" ${getStoredGeminiModel() === 'gemini-flash-lite-latest' ? 'selected' : ''}>⚡ gemini-flash-lite-latest (Önerilen)</option>
-              <option value="gemini-3.5-flash-lite" ${getStoredGeminiModel() === 'gemini-3.5-flash-lite' ? 'selected' : ''}>🚀 gemini-3.5-flash-lite</option>
-              <option value="gemini-3.8-flash" ${getStoredGeminiModel() === 'gemini-3.8-flash' ? 'selected' : ''}>✨ gemini-3.8-flash (Yeni Nesil)</option>
-              <option value="gemini-flash-latest" ${getStoredGeminiModel() === 'gemini-flash-latest' ? 'selected' : ''}>🌟 gemini-flash-latest</option>
-              <option value="gemini-pro-latest" ${getStoredGeminiModel() === 'gemini-pro-latest' ? 'selected' : ''}>🧠 gemini-pro-latest (Derin)</option>
-            </select>
-            <input type="password" data-sa-key-input class="sa-input" style="flex: 1; min-width: 200px; padding: 7px 12px; font-size: 0.8rem;" placeholder="AIza... (Opsiyonel kişisel Gemini API anahtarı)" value="${escapeHtml(getStoredGeminiKey())}" />
-            <button type="button" class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8rem;" data-sa-key-save>Kaydet</button>
-            <button type="button" class="btn btn-outline" style="padding: 7px 12px; font-size: 0.8rem;" data-sa-key-clear>Sil</button>
           </div>
         </div>
 
