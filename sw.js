@@ -6,7 +6,7 @@
      - Cache-first for static assets (CSS, SVG, images, fonts, manifest)
    ========================================================================== */
 
-const CACHE_VERSION = 'dijital-seyyah-v10';
+const CACHE_VERSION = 'dijital-seyyah-v11';
 
 const PRECACHE_ASSETS = [
   './',

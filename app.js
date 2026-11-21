@@ -39,9 +39,9 @@
       .replace(/\*(.+?)\*/g, '<em>$1</em>');
   }
 
-  // Soundscape Presets (Warm Acoustic Synthesis)
+  // Soundscape Presets (Real Sufi Ney Recording + Warm Acoustic Nature Synthesis)
   const SOUNDSCAPES = [
-    { id: 'ney', label: 'Ney & Rast Nefes' },
+    { id: 'ney', label: 'Tasavvufi Ney Taksimi' },
     { id: 'rain', label: 'Kütüphane Yağmuru' },
     { id: 'wind', label: 'Anadolu Bozkır Esintisi' },
     { id: 'waves', label: 'Ege & Karadeniz Dalgaları' }
@@ -90,6 +90,7 @@
     soundVolume: 0.55,
     audioCtx: null,
     audioMasterGain: null,
+    audioElement: null,
     audioNodes: [],
     audioTimers: [],
     currentQuote: null,
@@ -1638,6 +1639,9 @@
 
   function setAmbientVolume(val01) {
     state.soundVolume = Math.max(0, Math.min(1, val01));
+    if (state.audioElement) {
+      state.audioElement.volume = state.soundVolume;
+    }
     if (state.audioMasterGain && state.audioCtx) {
       state.audioMasterGain.gain.setTargetAtTime(state.soundVolume * 0.22, state.audioCtx.currentTime, 0.08);
     }
@@ -1647,6 +1651,39 @@
 
   function startAmbientPreset(preset) {
     try {
+      // Real recorded Turkish Sufi Ney Taksimi (assets/ney_tasavvuf.mp3)
+      if (preset.id === 'ney') {
+        const audio = new Audio('assets/ney_tasavvuf.mp3');
+        audio.loop = true;
+        audio.preload = 'auto';
+        audio.volume = 0.01;
+        state.audioElement = audio;
+
+        const playPromise = audio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(() => {
+            // Smooth fade-in to target volume
+            const targetVol = state.soundVolume;
+            const steps = 16;
+            let step = 0;
+            const fadeId = setInterval(() => {
+              if (!state.audioElement || state.audioElement !== audio) {
+                clearInterval(fadeId);
+                return;
+              }
+              step += 1;
+              audio.volume = Math.min(targetVol, (step / steps) * targetVol);
+              if (step >= steps) clearInterval(fadeId);
+            }, 35);
+            state.audioTimers.push(fadeId);
+          }).catch((err) => {
+            console.warn('Ney MP3 oynatılamadı:', err);
+          });
+        }
+        updateAmbientButton();
+        return;
+      }
+
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!state.audioCtx) state.audioCtx = new AudioCtx();
       if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
@@ -1900,8 +1937,17 @@
 
   function stopAmbientSound(resetIndex = true) {
     if (state.audioTimers && state.audioTimers.length) {
-      state.audioTimers.forEach(t => clearTimeout(t));
+      state.audioTimers.forEach(t => { clearTimeout(t); clearInterval(t); });
       state.audioTimers = [];
+    }
+    if (state.audioElement) {
+      const el = state.audioElement;
+      state.audioElement = null;
+      try {
+        el.pause();
+        el.currentTime = 0;
+        el.src = '';
+      } catch (e) {}
     }
     const oldNodes = state.audioNodes || [];
     const oldGain = state.audioMasterGain;
