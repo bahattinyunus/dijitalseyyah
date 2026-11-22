@@ -35,5 +35,21 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/og-cover.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Dijital Seyyah — 7 Bölge ve 81 İl Anadolu Seyahatnamesi"
+    },
+    {
+      "src": "assets/visuals/irfan-hero.jpg",
+      "sizes": "1400x764",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Anadolu İrfan Atlası ve Tefekkür Stüdyoları"
+    }
   ]
 }

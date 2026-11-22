@@ -21,9 +21,9 @@
   <img src="https://img.shields.io/badge/Yapay_Zekâ-Gemini_AI_Streaming-a855f7?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini AI">
   <img src="https://img.shields.io/badge/Keşif-48.1%25-brightgreen?style=for-the-badge&logo=target&logoColor=white" alt="Coverage">
   <img src="https://img.shields.io/badge/Bölgeler-6%2F7-blue?style=for-the-badge&logo=map&logoColor=white" alt="Regions">
-  <img src="https://img.shields.io/badge/Görsel_Arşivi-162_Fotoğraf_(81×2)-f59e0b?style=for-the-badge&logo=unsplash&logoColor=04121d" alt="Photos">
-  <img src="https://img.shields.io/badge/Stüdyolar-45+_İnteraktif_Modül-10b981?style=for-the-badge" alt="Modules">
-  <img src="https://img.shields.io/badge/Testler-20%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
+  <img src="https://img.shields.io/badge/Görsel_Arşivi-173+_Özgün_Görsel-f59e0b?style=for-the-badge&logo=unsplash&logoColor=04121d" alt="Photos">
+  <img src="https://img.shields.io/badge/Stüdyolar-48+_İnteraktif_Modül-10b981?style=for-the-badge" alt="Modules">
+  <img src="https://img.shields.io/badge/Testler-25%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <a href="LICENSE"><img src="https://img.shields.io/badge/Lisans-MIT-6366f1?style=for-the-badge" alt="License"></a>
 </p>
@@ -137,9 +137,67 @@
 
 ---
 
-## 🖼️ Anadolu'dan Görsel Kesitler (7 Bölge Menzil Galerisi)
+## 🖼️ 7 Bölge Panoramik Dosyaları & Anadolu Görsel Galerisi
 
-81 ilin tamamı (`81 / 81`) 2'şer yüksek çözünürlüklü görsele (**162 fotoğraf**: `banner.jpg` + `gallery.jpg`) ve zenginleştirilmiş seyahatname dosyasına sahiptir. Türkiye'nin 7 coğrafi bölgesinden seçilmiş kareler:
+81 ilin tamamı (`81 / 81`) birbirinden tamamen benzersiz 2'şer yüksek çözünürlüklü görsele (**162 özgün il fotoğrafı**: `banner.jpg` + `gallery.jpg`), **7 bölgeye özel 16:9 sinematik kapak görseline** ve her bölge klasöründe görsel mozaikli bölge dosyalarına sahiptir:
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="01_Marmara/README.md"><img src="assets/regions/01_Marmara.jpg" alt="Marmara Bölgesi" style="border-radius: 10px;" /></a><br/>
+      <strong><a href="01_Marmara/README.md">🏰 Marmara Bölgesi</a></strong><br/>
+      <sub>Payitahtlar, Boğazlar & 11 İl Dosyası</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="02_Ege/README.md"><img src="assets/regions/02_Ege.jpg" alt="Ege Bölgesi" style="border-radius: 10px;" /></a><br/>
+      <strong><a href="02_Ege/README.md">🌊 Ege Bölgesi</a></strong><br/>
+      <sub>Antik Mermerler, Zeytin & 8 İl Dosyası</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="03_Akdeniz/README.md"><img src="assets/regions/03_Akdeniz.jpg" alt="Akdeniz Bölgesi" style="border-radius: 10px;" /></a><br/>
+      <strong><a href="03_Akdeniz/README.md">☀️ Akdeniz Bölgesi</a></strong><br/>
+      <sub>Toroslar, Turkuaz Koylar & 8 İl Dosyası</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <a href="04_IcAnadolu/README.md"><img src="assets/regions/04_IcAnadolu.jpg" alt="İç Anadolu Bölgesi" style="border-radius: 10px;" /></a><br/>
+      <strong><a href="04_IcAnadolu/README.md">🌾 İç Anadolu Bölgesi</a></strong><br/>
+      <sub>Kapadokya, İrfan Havzası & 13 İl Dosyası</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="05_Karadeniz/README.md"><img src="assets/regions/05_Karadeniz.jpg" alt="Karadeniz Bölgesi" style="border-radius: 10px;" /></a><br/>
+      <strong><a href="05_Karadeniz/README.md">🌲 Karadeniz Bölgesi</a></strong><br/>
+      <sub>Sisli Yaylalar, Taş Köprüler & 18 İl Dosyası</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="06_DoguAnadolu/README.md"><img src="assets/regions/06_DoguAnadolu.jpg" alt="Doğu Anadolu Bölgesi" style="border-radius: 10px;" /></a><br/>
+      <strong><a href="06_DoguAnadolu/README.md">🏔️ Doğu Anadolu Bölgesi</a></strong><br/>
+      <sub>Ağrı Zirvesi, Kadim Kaleler & 14 İl Dosyası</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <a href="07_GuneydoguAnadolu/README.md"><img src="assets/regions/07_GuneydoguAnadolu.jpg" alt="Güneydoğu Anadolu Bölgesi" style="border-radius: 10px;" /></a><br/>
+      <strong><a href="07_GuneydoguAnadolu/README.md">🏜️ Güneydoğu Anadolu</a></strong><br/>
+      <sub>Mezopotamya (0/9) Özel Sefer & 9 İl Dosyası</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://bahattinyunus.github.io/dijitalseyyah/#irfanAtlas"><img src="assets/visuals/irfan-hero.jpg" alt="İrfan ve Tefekkür Stüdyoları" style="border-radius: 10px;" /></a><br/>
+      <strong>🕌 İrfan & Tefekkür Külliyatı</strong><br/>
+      <sub>Selçuklu Hendesesi, Halvet & Hikmet Meclisi</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://bahattinyunus.github.io/dijitalseyyah/#gastronomy"><img src="assets/visuals/gastronomy-hero.jpg" alt="Anadolu Lezzet Atlası" style="border-radius: 10px;" /></a><br/>
+      <strong>🍽️ Anadolu Lezzet & Kütüphane Atlası</strong><br/>
+      <sub>300+ Yöresel Lezzet & 81 Kütüphane Ofisi</sub>
+    </td>
+  </tr>
+</table>
+
+<details>
+<summary><b>📸 7 Bölgeden Seçilmiş İl Kareleri (Açmak için tıklayın)</b></summary>
+<br/>
 
 <table>
   <tr>
@@ -185,6 +243,8 @@
     </td>
   </tr>
 </table>
+
+</details>
 
 ---
 

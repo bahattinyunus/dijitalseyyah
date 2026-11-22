@@ -326,9 +326,85 @@
       renderCitiesList();
       els.viewportContent.scrollTop = 0;
       targetMod.render(els.viewportContent, getModuleCtx());
+      injectStudioVisualBanner(els.viewportContent, normalized);
       return;
     }
     renderDashboard(updateHash);
+  }
+
+  // Bespoke 16:9 Editorial Visual Hero Banners for Flagship Studios
+  const STUDIO_VISUAL_BANNERS = {
+    gastronomy: {
+      img: 'assets/visuals/gastronomy-hero.jpg',
+      eyebrow: '🍽️ Anadolu Mutfak & Sofra Mirası',
+      title: '81 İlin Yöresel Lezzet Atlası',
+      sub: 'Bakır tepsilerden taş fırınlara, 300+ otantik Anadolu lezzeti ve coğrafi tat rehberi.'
+    },
+    aiChef: {
+      img: 'assets/visuals/gastronomy-hero.jpg',
+      eyebrow: '👨‍🍳 AI Anadolu Gurme Şefi',
+      title: 'Bölge ve Öğüne Özel Sofra Rotası',
+      sub: 'Geleneksel mutfak kültürümüzü yapay zekâ ve 81 il bilgi grafiğiyle keşfedin.'
+    },
+    libraries: {
+      img: 'assets/visuals/library-nomad-hero.jpg',
+      eyebrow: '📚 81 İl Halk Kütüphanesi Ofisleri',
+      title: 'Yolda İlim, Kod ve Tefekkür Mesaisi',
+      sub: 'Her menzilde 4 saat derin çalışma disiplini için seçilmiş kütüphane sığınakları.'
+    },
+    pomodoro: {
+      img: 'assets/visuals/library-nomad-hero.jpg',
+      eyebrow: '🍅 Kütüphane Odak Stüdyosu',
+      title: 'Derin Çalışma & Okuma Seansı',
+      sub: 'Anadolu kütüphanelerinin sükûnetinde 25/50 dakikalık verimli üretim döngüleri.'
+    },
+    irfanAtlas: {
+      img: 'assets/visuals/irfan-hero.jpg',
+      eyebrow: '🕌 Anadolu İrfan & Gönül Coğrafyası',
+      title: 'Selçuklu Hendesesi ve 24 Gönül Sultanı',
+      sub: 'Mevlânâ, Yunus Emre, Hacı Bayram-ı Velî ve Anadolu\'nun manevi mimarları.'
+    },
+    sevenValleys: {
+      img: 'assets/visuals/irfan-hero.jpg',
+      eyebrow: '🕊️ Ferîdüddin Attâr • Mantıku\'t-Tayr',
+      title: 'Yedi Vadi ve İçsel Sefer Merhaleleri',
+      sub: 'Talep\'ten Fakr u Fenâ\'ya uzanan manevi yolculuğun 81 il haritası.'
+    },
+    halvet: {
+      img: 'assets/visuals/irfan-hero.jpg',
+      eyebrow: '🕯️ Halvet der Encümen',
+      title: 'Sükûnet, Nefes ve Ney Tefekkür Odası',
+      sub: 'Kalabalıklar içinde içsel dinginliği koruyan kadim tefekkür durağı.'
+    },
+    mesopotamia: {
+      img: 'assets/regions/07_GuneydoguAnadolu.jpg',
+      eyebrow: '🏜️ Mezopotamya Özel Seferi (0/9)',
+      title: 'Güneydoğu Anadolu 9 İl Büyük Koridoru',
+      sub: 'Gaziantep\'ten Mardin\'e, Göbeklitepe\'den Hasankeyf\'e 45 günlük kadim medeniyet hattı.'
+    },
+    regions: {
+      img: 'assets/og-cover.jpg',
+      eyebrow: '🌍 Türkiye\'nin 7 Coğrafi Bölgesi',
+      title: 'Yedi İklim, 81 İl Derin Keşif Dosyaları',
+      sub: 'Marmara\'dan Mezopotamya\'ya her bölgenin panoramik vitrini ve keşif karnesi.'
+    }
+  };
+
+  function injectStudioVisualBanner(viewport, viewKey) {
+    const meta = STUDIO_VISUAL_BANNERS[viewKey];
+    if (!meta || !viewport) return;
+    if (viewport.querySelector('.seyyah-studio-visual-banner')) return;
+    const banner = document.createElement('div');
+    banner.className = 'seyyah-studio-visual-banner';
+    banner.innerHTML = `
+      <img src="${escapeHtml(meta.img)}" alt="${escapeHtml(meta.title)}" loading="eager" />
+      <div class="seyyah-studio-visual-overlay">
+        <span class="seyyah-studio-visual-eyebrow">${escapeHtml(meta.eyebrow)}</span>
+        <div class="seyyah-studio-visual-title">${escapeHtml(meta.title)}</div>
+        <div class="seyyah-studio-visual-sub">${escapeHtml(meta.sub)}</div>
+      </div>
+    `;
+    viewport.insertBefore(banner, viewport.firstChild);
   }
 
   function routeFromHash() {
@@ -718,20 +794,28 @@
 
     const regionsHtml = Object.entries(state.data.regions).map(([code, rInfo]) => {
       const rStat = s.regional_breakdown[code] || { visited: 0, total: 0, percentage: 0 };
+      const regImg = `assets/regions/${code}.jpg`;
       return `
-        <div class="glass-card region-card" data-region-code="${escapeHtml(code)}" style="cursor: pointer;">
-          <div class="region-card-top">
-            <div class="region-card-title">${rInfo.icon} ${escapeHtml(rInfo.name)}</div>
-            <div class="region-card-pct">%${rStat.percentage}</div>
+        <div class="glass-card region-card region-card-has-visual" data-region-code="${escapeHtml(code)}" style="cursor: pointer;">
+          <div class="region-card-visual-wrap">
+            <img class="region-card-visual-img" src="${escapeHtml(regImg)}" alt="${escapeHtml(rInfo.name)}" loading="lazy" onerror="this.parentElement.style.display='none'" />
+            <div class="region-card-visual-scrim"></div>
+            <span class="region-card-visual-pct" style="border-color: ${rInfo.color}; color: #fff;">%${rStat.percentage}</span>
           </div>
-          <div class="mini-progress-bar" style="width: 100%; height: 6px;">
-            <div class="mini-progress-fill" style="width: ${rStat.percentage}%; background: ${rInfo.color};"></div>
+          <div class="region-card-content">
+            <div class="region-card-top">
+              <div class="region-card-title">${rInfo.icon} ${escapeHtml(rInfo.name)}</div>
+              <div class="region-card-pct">%${rStat.percentage}</div>
+            </div>
+            <div class="mini-progress-bar" style="width: 100%; height: 6px;">
+              <div class="mini-progress-fill" style="width: ${rStat.percentage}%; background: ${rInfo.color};"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+              <span>${rStat.visited} / ${rStat.total} İl Ziyaret Edildi</span>
+              <span style="color: ${rInfo.color};">İlleri Filtrele ➔</span>
+            </div>
+            <div class="region-card-desc">${escapeHtml(rInfo.desc)}</div>
           </div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
-            <span>${rStat.visited} / ${rStat.total} İl Ziyaret Edildi</span>
-            <span style="color: ${rInfo.color};">İlleri Filtrele ➔</span>
-          </div>
-          <div class="region-card-desc">${escapeHtml(rInfo.desc)}</div>
         </div>
       `;
     }).join('');
@@ -897,14 +981,26 @@
         </div>
 
         <!-- Nomad & Library Guide -->
-        <div class="glass-card detail-card">
-          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
-            💻 Dijital Seyyahın Çalışma Disiplini
-          </h3>
-          <p style="font-size: 0.86rem; color: var(--text-secondary);">
-            Gündüzün ilk 4 saati şehrin İl Halk Kütüphanesinde yazılım geliştirme, okuma ve araştırma mesaisi yapılır.
-            Öğleden sonra ise şehrin kadim sokakları, camileri ve tabiatı tefekkürle adımlanır. Her menzilde 5 gün kalarak GSB Seyahatsever kervansaraylarında sürdürülebilir keşif sürdürülür.
-          </p>
+        <div class="glass-card detail-card nomad-discipline-card">
+          <div class="nomad-discipline-grid">
+            <div class="nomad-discipline-media">
+              <img src="assets/visuals/library-nomad-hero.jpg" alt="Dijital Seyyah Kütüphane Çalışma Ortamı" loading="lazy" />
+            </div>
+            <div class="nomad-discipline-text">
+              <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                💻 Dijital Seyyahın Çalışma Disiplini
+              </h3>
+              <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.65;">
+                Gündüzün ilk 4 saati şehrin İl Halk Kütüphanesinde yazılım geliştirme, okuma ve araştırma mesaisi yapılır.
+                Öğleden sonra ise şehrin kadim sokakları, camileri ve tabiatı tefekkürle adımlanır. Her menzilde 5 gün kalarak GSB Seyahatsever kervansaraylarında sürdürülebilir keşif sürdürülür.
+              </p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+                <button class="btn btn-outline" data-launch-view="libraries" style="font-size: 0.78rem; padding: 6px 12px;">📚 81 Kütüphane Rehberi</button>
+                <button class="btn btn-outline" data-launch-view="irfanAtlas" style="font-size: 0.78rem; padding: 6px 12px;">🕌 İrfan Atlası</button>
+                <button class="btn btn-outline" data-launch-view="gastronomy" style="font-size: 0.78rem; padding: 6px 12px;">🍽️ Lezzet Atlası</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     `;
