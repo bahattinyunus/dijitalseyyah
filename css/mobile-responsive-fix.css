@@ -373,3 +373,46 @@ body {
     padding: 14px 12px !important;
   }
 }
+
+/* ==========================================================================
+   TOUCH TARGET & ERGONOMIC SPACING POLISH (Coarse Pointers / Mobile)
+   ========================================================================== */
+@media (pointer: coarse), (max-width: 768px) {
+  .btn,
+  .mnav-trigger,
+  .module-nav-btn,
+  .bl-btn,
+  .bl-pill,
+  .bp-action-btn,
+  .bp-preset-btn,
+  .packing-btn,
+  .packing-season-btn,
+  .packing-region-pill,
+  .mzp-primary-btn,
+  .mzp-secondary-btn,
+  .mzp-pill-btn,
+  .mzp-route-load-btn {
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+
+  .bl-check-btn {
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .packing-item,
+  .mzp-readiness-item,
+  .mzp-leg-row,
+  .bp-toggle-row {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .packing-checkbox,
+  .mzp-readiness-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+}

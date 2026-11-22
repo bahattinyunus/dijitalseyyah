@@ -6,7 +6,20 @@
 (function () {
   'use strict';
 
-  const MAX_SEARCH_RESULTS = 14;
+  const MAX_SEARCH_RESULTS = 16;
+  const RECENT_STORAGE_KEY = 'dijital_seyyah_cmd_recent_v1';
+  const MAX_RECENT_ITEMS = 6;
+  const STYLE_ID = 'seyyah-cmd-palette-v3-styles';
+  const ROAD_FACTOR = 1.35;
+  const AVG_SPEED_KMH = 80;
+
+  const CATEGORY_CHIPS = [
+    { id: 'all', label: 'Tümü' },
+    { id: 'provinces', label: '🗺️ İller (81)' },
+    { id: 'ai', label: '✨ Yapay Zekâ' },
+    { id: 'irfan', label: '🕌 İrfan' },
+    { id: 'studio', label: '🛠️ Stüdyo & Araçlar' }
+  ];
 
   // Fallback helpers in case ctx omits them
   function defaultNormalizeTurkish(str) {
@@ -34,18 +47,99 @@
       .replace(/'/g, '&#39;');
   }
 
+  function fallbackHaversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371.0;
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function formatDriveHours(hoursFloat) {
+    if (!Number.isFinite(hoursFloat) || hoursFloat <= 0) return '0 dk';
+    const totalMinutes = Math.round(hoursFloat * 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hours === 0) return `${mins} dk`;
+    if (mins === 0) return `${hours} sa`;
+    return `${hours} sa ${mins} dk`;
+  }
+
   let _ctx = null;
   let _overlay = null;
   let _input = null;
   let _list = null;
   let _countEl = null;
+  let _chipsBar = null;
   let _isOpen = false;
   let _initialized = false;
   let _selectedIndex = 0;
+  let _activeCategory = 'all';
   let _currentItems = [];
   let _actionsIndex = [];
   let _provincesIndex = [];
   let _lastActiveElement = null;
+
+  function loadRecents() {
+    try {
+      const raw = localStorage.getItem(RECENT_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.slice(0, MAX_RECENT_ITEMS) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveRecents(items) {
+    try {
+      localStorage.setItem(
+        RECENT_STORAGE_KEY,
+        JSON.stringify((items || []).slice(0, MAX_RECENT_ITEMS))
+      );
+    } catch (e) {}
+  }
+
+  function recordRecentItem(entry) {
+    if (!entry) return;
+    let recItem = null;
+    if (entry.kind === 'province' && entry.item) {
+      recItem = {
+        kind: 'province',
+        id: `city-${entry.item.key}`,
+        key: entry.item.key
+      };
+    } else if (entry.kind === 'action' && entry.item) {
+      recItem = {
+        kind: 'action',
+        id: entry.item.id
+      };
+    } else if (entry.kind === 'calculator' && entry.calc) {
+      recItem = {
+        kind: 'calculator',
+        id: `calc-${entry.calc.cityA.key}-${entry.calc.cityB.key}`,
+        keyA: entry.calc.cityA.key,
+        keyB: entry.calc.cityB.key
+      };
+    }
+    if (!recItem) return;
+
+    const existing = loadRecents().filter((r) => r && r.id !== recItem.id);
+    existing.unshift(recItem);
+    saveRecents(existing.slice(0, MAX_RECENT_ITEMS));
+  }
+
+  function clearRecents() {
+    try {
+      localStorage.removeItem(RECENT_STORAGE_KEY);
+    } catch (e) {}
+    _selectedIndex = 0;
+    renderList(_input ? _input.value : '');
+  }
 
   function norm(str) {
     if (_ctx && typeof _ctx.normalizeTurkish === 'function') {
@@ -754,6 +848,8 @@
         plate: plateNum,
         plateStr,
         name: city.name || key,
+        lat: Number(city.lat),
+        lng: Number(city.lng),
         region: regionShort,
         regionFull,
         visited: Boolean(city.visited),
@@ -774,6 +870,140 @@
     });
 
     _provincesIndex.sort((a, b) => a.plate - b.plate);
+  }
+
+  function matchActionToChip(action, chipId) {
+    if (!chipId || chipId === 'all') return true;
+    if (chipId === 'provinces') return false;
+    const cat = action.category || '';
+    if (chipId === 'ai') {
+      return cat === 'Yapay Zekâ' || cat === 'Asistan' || action.id.indexOf('action-ai-') === 0 || action.id === 'action-advisor';
+    }
+    if (chipId === 'irfan') {
+      return cat === 'İrfan & Felsefe' || action.id === 'action-quote';
+    }
+    if (chipId === 'studio') {
+      return cat !== 'Yapay Zekâ' && cat !== 'Asistan' && cat !== 'İrfan & Felsefe';
+    }
+    return true;
+  }
+
+  function findProvinceByToken(rawToken) {
+    if (!rawToken) return null;
+    const token = norm(rawToken);
+    if (!token) return null;
+
+    if (/^\d{1,2}$/.test(token)) {
+      const pNum = parseInt(token, 10);
+      if (pNum >= 1 && pNum <= 81) {
+        return _provincesIndex.find((p) => p.plate === pNum) || null;
+      }
+    }
+
+    const exact = _provincesIndex.find((p) => p._normName === token);
+    if (exact) return exact;
+
+    if (token.length >= 2) {
+      const prefixMatches = _provincesIndex.filter((p) => p._normName.startsWith(token));
+      if (prefixMatches.length > 0) {
+        prefixMatches.sort((a, b) => a._normName.length - b._normName.length);
+        return prefixMatches[0];
+      }
+    }
+    return null;
+  }
+
+  function parseDistanceCalculatorQuery(rawQuery) {
+    if (!rawQuery) return null;
+    const str = String(rawQuery).trim();
+    const match = str.match(/^(.+?)\s*(?:->|→|>|-)\s*(.+)$/);
+    if (!match) return null;
+
+    const partA = match[1].trim();
+    const partB = match[2].trim();
+    if (!partA || !partB) return null;
+
+    const cityA = findProvinceByToken(partA);
+    const cityB = findProvinceByToken(partB);
+    if (!cityA || !cityB) return null;
+
+    return buildDistanceCalcItem(cityA, cityB);
+  }
+
+  function buildDistanceCalcItem(cityA, cityB) {
+    if (!cityA || !cityB) return null;
+    const distFn = (_ctx && typeof _ctx.calcDistKm === 'function') ? _ctx.calcDistKm : fallbackHaversineKm;
+    const isSame = cityA.key === cityB.key;
+    const airRaw = (!isSame && Number.isFinite(cityA.lat) && Number.isFinite(cityB.lat))
+      ? distFn(cityA.lat, cityA.lng, cityB.lat, cityB.lng)
+      : 0;
+    const airKm = Math.round(airRaw);
+    const roadKm = Math.round(airRaw * ROAD_FACTOR);
+    const driveHoursFloat = roadKm / AVG_SPEED_KMH;
+    const driveTimeText = isSame ? '0 dk' : formatDriveHours(driveHoursFloat);
+
+    return {
+      kind: 'calculator',
+      group: '📐 Anlık Plaka & Mesafe Hesaplayıcı',
+      score: 999,
+      calc: {
+        cityA,
+        cityB,
+        airKm,
+        roadKm,
+        driveHoursFloat,
+        driveTimeText
+      }
+    };
+  }
+
+  function getRecentEntriesForCategory(chipId) {
+    const recents = loadRecents();
+    if (!recents.length) return [];
+
+    const out = [];
+    for (let i = 0; i < recents.length; i++) {
+      const rec = recents[i];
+      if (!rec) continue;
+      if (rec.kind === 'province' && rec.key) {
+        if (chipId !== 'all' && chipId !== 'provinces') continue;
+        const prov = _provincesIndex.find((p) => p.key === rec.key);
+        if (prov) {
+          out.push({
+            kind: 'province',
+            group: '🕘 Son Gezilen & Arananlar',
+            isRecentGroup: true,
+            item: prov,
+            score: 200 - i
+          });
+        }
+      } else if (rec.kind === 'action' && rec.id) {
+        if (chipId === 'provinces') continue;
+        const act = _actionsIndex.find((a) => a.id === rec.id);
+        if (act && matchActionToChip(act, chipId)) {
+          out.push({
+            kind: 'action',
+            group: '🕘 Son Gezilen & Arananlar',
+            isRecentGroup: true,
+            item: act,
+            score: 200 - i
+          });
+        }
+      } else if (rec.kind === 'calculator' && rec.keyA && rec.keyB) {
+        if (chipId !== 'all' && chipId !== 'provinces' && chipId !== 'studio') continue;
+        const cA = _provincesIndex.find((p) => p.key === rec.keyA);
+        const cB = _provincesIndex.find((p) => p.key === rec.keyB);
+        if (cA && cB) {
+          const calcEntry = buildDistanceCalcItem(cA, cB);
+          if (calcEntry) {
+            calcEntry.group = '🕘 Son Gezilen & Arananlar';
+            calcEntry.isRecentGroup = true;
+            out.push(calcEntry);
+          }
+        }
+      }
+    }
+    return out;
   }
 
   function scoreAction(action, nq, tokens) {
@@ -842,54 +1072,156 @@
     }
 
     const nq = norm(rawQuery);
+    const chipId = _activeCategory || 'all';
+
     if (!nq) {
-      // Empty query: show Quick Actions (all 15) so everything is one click away
-      return _actionsIndex.map((a) => ({
-        kind: 'action',
-        group: 'Hızlı Eylemler',
-        item: a,
-        score: 100
-      }));
-    }
-
-    const tokens = nq.split(/\s+/).filter(Boolean);
-    const matches = [];
-
-    for (let i = 0; i < _actionsIndex.length; i++) {
-      const a = _actionsIndex[i];
-      const score = scoreAction(a, nq, tokens);
-      if (score > 0) {
-        matches.push({
-          kind: 'action',
-          group: 'Hızlı Eylemler',
-          item: a,
-          score
-        });
+      const results = [];
+      const recentEntries = getRecentEntriesForCategory(chipId);
+      if (recentEntries.length) {
+        results.push(...recentEntries);
       }
-    }
 
-    for (let i = 0; i < _provincesIndex.length; i++) {
-      const p = _provincesIndex[i];
-      const { score, matchHint } = scoreProvince(p, nq, tokens);
-      if (score > 0) {
-        matches.push({
+      if (chipId === 'provinces') {
+        const provItems = _provincesIndex.map((p) => ({
           kind: 'province',
           group: '81 İl & Menziller',
           item: p,
-          matchHint,
-          score
+          score: 100
+        }));
+        results.push(...provItems);
+        return results;
+      }
+
+      const filteredActions = _actionsIndex
+        .filter((a) => matchActionToChip(a, chipId))
+        .map((a) => ({
+          kind: 'action',
+          group: 'Hızlı Eylemler',
+          item: a,
+          score: 100
+        }));
+
+      results.push(...filteredActions);
+      return results;
+    }
+
+    const matches = [];
+
+    // 1. Check Quick Math / Plate & Distance Calculator (e.g. "Ankara - Mardin" or "06 - 34" or "İstanbul > Konya")
+    const calcResult = parseDistanceCalculatorQuery(rawQuery);
+    if (calcResult) {
+      matches.push(calcResult);
+    }
+
+    const tokens = nq.split(/\s+/).filter(Boolean);
+
+    // 2. Score Actions if category chip allows
+    if (chipId !== 'provinces') {
+      for (let i = 0; i < _actionsIndex.length; i++) {
+        const a = _actionsIndex[i];
+        if (!matchActionToChip(a, chipId)) continue;
+        const score = scoreAction(a, nq, tokens);
+        if (score > 0) {
+          matches.push({
+            kind: 'action',
+            group: 'Hızlı Eylemler',
+            item: a,
+            score
+          });
+        }
+      }
+    }
+
+    // 3. Score Provinces if category chip allows (or if distance calculator matched both cities, also show the 2 provinces)
+    if (chipId === 'all' || chipId === 'provinces') {
+      for (let i = 0; i < _provincesIndex.length; i++) {
+        const p = _provincesIndex[i];
+        const { score, matchHint } = scoreProvince(p, nq, tokens);
+        if (score > 0) {
+          matches.push({
+            kind: 'province',
+            group: '81 İl & Menziller',
+            item: p,
+            matchHint,
+            score
+          });
+        }
+      }
+    }
+
+    // Also include the 2 matched calculator cities right below the calculator card if not already matched
+    if (calcResult && (chipId === 'all' || chipId === 'provinces')) {
+      const { cityA, cityB } = calcResult.calc;
+      if (!matches.some((m) => m.kind === 'province' && m.item.key === cityA.key)) {
+        matches.push({
+          kind: 'province',
+          group: '81 İl & Menziller',
+          item: cityA,
+          score: 140
+        });
+      }
+      if (cityB.key !== cityA.key && !matches.some((m) => m.kind === 'province' && m.item.key === cityB.key)) {
+        matches.push({
+          kind: 'province',
+          group: '81 İl & Menziller',
+          item: cityB,
+          score: 139
         });
       }
     }
 
     matches.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
-      if (a.kind !== b.kind) return a.kind === 'province' ? -1 : 1;
-      if (a.kind === 'province') return a.item.plate - b.item.plate;
-      return a.item.title.localeCompare(b.item.title, 'tr');
+      if (a.kind !== b.kind) {
+        if (a.kind === 'calculator') return -1;
+        if (b.kind === 'calculator') return 1;
+        return a.kind === 'province' ? -1 : 1;
+      }
+      if (a.kind === 'province' && b.kind === 'province') return a.item.plate - b.item.plate;
+      if (a.kind === 'action' && b.kind === 'action') return a.item.title.localeCompare(b.item.title, 'tr');
+      return 0;
     });
 
     return matches.slice(0, MAX_SEARCH_RESULTS);
+  }
+
+  function renderCalculatorRow(entry, index) {
+    const c = entry.calc;
+    const selectedClass = index === _selectedIndex ? ' selected' : '';
+    const sameRegion = c.cityA.region === c.cityB.region;
+    const regionBadge = sameRegion
+      ? `${c.cityA.region} İçi`
+      : `${c.cityA.region} ➔ ${c.cityB.region}`;
+
+    return `
+      <div class="cmd-item cmd-calc-card${selectedClass}" role="option" id="cmd-opt-${index}" data-cmd-index="${index}" aria-selected="${index === _selectedIndex ? 'true' : 'false'}">
+        <div class="cmd-calc-top">
+          <div class="cmd-calc-route">
+            <span class="cmd-plate-badge">${esc(c.cityA.plateStr)}</span>
+            <strong class="cmd-calc-city">${esc(c.cityA.name)}</strong>
+            <span class="cmd-calc-arrow" aria-hidden="true">⇄</span>
+            <span class="cmd-plate-badge">${esc(c.cityB.plateStr)}</span>
+            <strong class="cmd-calc-city">${esc(c.cityB.name)}</strong>
+            <span class="cmd-pill cmd-pill-region">${esc(regionBadge)}</span>
+          </div>
+          <span class="cmd-calc-compare-cta">⚖️ Karşılaştırma Stüdyosunda Aç <kbd class="cmd-kbd">↵</kbd></span>
+        </div>
+        <div class="cmd-calc-metrics">
+          <div class="cmd-calc-metric">
+            <span class="cmd-calc-metric-lbl">🦅 Kuş Uçuşu</span>
+            <span class="cmd-calc-metric-val cyan">${c.airKm.toLocaleString('tr-TR')} km</span>
+          </div>
+          <div class="cmd-calc-metric">
+            <span class="cmd-calc-metric-lbl">🛣️ Karayolu (~1.35x)</span>
+            <span class="cmd-calc-metric-val gold">~${c.roadKm.toLocaleString('tr-TR')} km</span>
+          </div>
+          <div class="cmd-calc-metric">
+            <span class="cmd-calc-metric-lbl">🚗 Tahmini Sürüş</span>
+            <span class="cmd-calc-metric-val emerald">${esc(c.driveTimeText)}</span>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function renderActionRow(entry, index) {
@@ -938,6 +1270,30 @@
     `;
   }
 
+  function syncCategoryChipsUI() {
+    if (!_chipsBar) return;
+    _chipsBar.querySelectorAll('.cmd-cat-chip').forEach((btn) => {
+      const cid = btn.getAttribute('data-cmd-cat');
+      const isActive = cid === _activeCategory;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+  }
+
+  function setCategory(catId) {
+    const valid = CATEGORY_CHIPS.some((c) => c.id === catId);
+    _activeCategory = valid ? catId : 'all';
+    _selectedIndex = 0;
+    syncCategoryChipsUI();
+    renderList(_input ? _input.value : '');
+  }
+
+  function cycleCategory(dir) {
+    const idx = CATEGORY_CHIPS.findIndex((c) => c.id === _activeCategory);
+    const nextIdx = ((idx + dir) % CATEGORY_CHIPS.length + CATEGORY_CHIPS.length) % CATEGORY_CHIPS.length;
+    setCategory(CATEGORY_CHIPS[nextIdx].id);
+  }
+
   function renderList(query) {
     if (!_list) return;
 
@@ -958,7 +1314,7 @@
         <div class="cmd-empty">
           <div class="cmd-empty-icon">🧭</div>
           <div class="cmd-empty-title">"${esc(query)}" için sonuç bulunamadı</div>
-          <div class="cmd-empty-sub">İl adı, plaka kodu (ör. 06), bölge, yöresel lezzet, tarihi eser veya kütüphane adı deneyin.</div>
+          <div class="cmd-empty-sub">İl adı, plaka kodu (ör. 06), mesafe hesabı (Ankara - Mardin veya 06 - 34), lezzet veya stüdyo deneyin.</div>
         </div>
       `;
       if (_input) _input.removeAttribute('aria-activedescendant');
@@ -971,13 +1327,27 @@
 
     for (let i = 0; i < _currentItems.length; i++) {
       const entry = _currentItems[i];
-      if (!qTrim && entry.group !== lastGroup) {
+      const shouldShowGroupHeader = (!qTrim || entry.kind === 'calculator') && entry.group !== lastGroup;
+      if (shouldShowGroupHeader) {
         lastGroup = entry.group;
-        html += `<div class="cmd-group-label">${esc(entry.group)}</div>`;
+        if (entry.isRecentGroup) {
+          html += `
+            <div class="cmd-group-label cmd-group-label-row">
+              <span>${esc(entry.group)}</span>
+              <button type="button" class="cmd-clear-recent-btn" data-cmd-clear-recent="1" title="Son aramaları ve gezilen görünümleri temizle">Temizle</button>
+            </div>
+          `;
+        } else {
+          html += `<div class="cmd-group-label">${esc(entry.group)}</div>`;
+        }
       }
-      html += entry.kind === 'province'
-        ? renderProvinceRow(entry, i)
-        : renderActionRow(entry, i);
+      if (entry.kind === 'calculator') {
+        html += renderCalculatorRow(entry, i);
+      } else if (entry.kind === 'province') {
+        html += renderProvinceRow(entry, i);
+      } else {
+        html += renderActionRow(entry, i);
+      }
     }
 
     _list.innerHTML = html;
@@ -1010,26 +1380,261 @@
     }
   }
 
+  function openCitiesInCompareStudio(cityA, cityB) {
+    if (!cityA || !cityB) return;
+    if (_ctx && _ctx.state) {
+      _ctx.state.compareCityA = cityA.key;
+      _ctx.state.compareCityB = cityB.key;
+    }
+    safeCall('openView', 'compare');
+    setTimeout(() => {
+      const selA = document.getElementById('compare-select-a');
+      const selB = document.getElementById('compare-select-b');
+      if (selA && selA.value !== cityA.key) {
+        selA.value = cityA.key;
+        selA.dispatchEvent(new Event('change'));
+      }
+      if (selB && selB.value !== cityB.key) {
+        selB.value = cityB.key;
+        selB.dispatchEvent(new Event('change'));
+      }
+    }, 30);
+  }
+
   function executeItem(index) {
     const entry = _currentItems[index];
     if (!entry) return;
 
+    recordRecentItem(entry);
     close();
 
-    if (entry.kind === 'province') {
+    if (entry.kind === 'calculator' && entry.calc) {
+      openCitiesInCompareStudio(entry.calc.cityA, entry.calc.cityB);
+    } else if (entry.kind === 'province') {
       safeCall('selectCity', entry.item.key);
     } else if (entry.kind === 'action' && typeof entry.item.run === 'function') {
       entry.item.run();
     }
   }
 
+  function injectStyles() {
+    if (typeof document === 'undefined' || !document.head) return;
+    if (document.getElementById(STYLE_ID)) return;
+
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+      .cmd-subbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        background: rgba(15, 23, 42, 0.55);
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .cmd-subbar::-webkit-scrollbar {
+        display: none;
+      }
+      .cmd-cat-chips {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+      }
+      .cmd-cat-chip {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(30, 41, 59, 0.65);
+        color: var(--text-secondary, #94a3b8);
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+      .cmd-cat-chip:hover {
+        color: var(--text-primary, #f8fafc);
+        border-color: rgba(0, 242, 254, 0.42);
+        background: rgba(30, 41, 59, 0.92);
+      }
+      .cmd-cat-chip.active {
+        color: #ffffff;
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.24) 0%, rgba(79, 172, 254, 0.24) 100%);
+        border-color: var(--accent-cyan, #00f2fe);
+        box-shadow: 0 0 14px rgba(0, 242, 254, 0.2);
+      }
+      .cmd-tab-hint {
+        font-size: 0.68rem;
+        color: var(--text-muted, #64748b);
+        white-space: nowrap;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .cmd-group-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .cmd-clear-recent-btn {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary, #94a3b8);
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 2px 9px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.16s ease;
+      }
+      .cmd-clear-recent-btn:hover {
+        color: #f8fafc;
+        border-color: rgba(239, 68, 68, 0.55);
+        background: rgba(239, 68, 68, 0.18);
+      }
+      .cmd-calc-card {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 13px 15px !important;
+        border-radius: 14px !important;
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.12) 0%, rgba(245, 158, 11, 0.1) 100%) !important;
+        border: 1px solid rgba(0, 242, 254, 0.38) !important;
+      }
+      .cmd-calc-card.selected,
+      .cmd-calc-card:hover {
+        border-color: var(--accent-cyan, #00f2fe) !important;
+        box-shadow: 0 8px 24px -8px rgba(0, 242, 254, 0.28) !important;
+      }
+      .cmd-calc-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .cmd-calc-route {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .cmd-calc-city {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.96rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+      }
+      .cmd-calc-arrow {
+        color: var(--accent-cyan, #00f2fe);
+        font-weight: 800;
+      }
+      .cmd-calc-compare-cta {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--accent-cyan, #00f2fe);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .cmd-calc-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .cmd-calc-metric {
+        background: rgba(15, 23, 42, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 7px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .cmd-calc-metric-lbl {
+        font-size: 0.67rem;
+        color: var(--text-secondary, #94a3b8);
+      }
+      .cmd-calc-metric-val {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.92rem;
+        font-weight: 800;
+      }
+      .cmd-calc-metric-val.cyan { color: var(--accent-cyan, #00f2fe); }
+      .cmd-calc-metric-val.gold { color: var(--accent-gold, #f59e0b); }
+      .cmd-calc-metric-val.emerald { color: var(--accent-emerald, #10b981); }
+
+      body.light-theme .cmd-subbar {
+        background: rgba(241, 245, 249, 0.92);
+        border-bottom-color: rgba(15, 23, 42, 0.09);
+      }
+      body.light-theme .cmd-cat-chip {
+        background: #ffffff;
+        border-color: rgba(15, 23, 42, 0.12);
+        color: #475569;
+      }
+      body.light-theme .cmd-cat-chip:hover {
+        color: #0f172a;
+        border-color: #0284c7;
+      }
+      body.light-theme .cmd-cat-chip.active {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+        border-color: #0284c7;
+        color: #ffffff;
+      }
+      body.light-theme .cmd-clear-recent-btn {
+        background: rgba(15, 23, 42, 0.05);
+        border-color: rgba(15, 23, 42, 0.14);
+        color: #475569;
+      }
+      body.light-theme .cmd-calc-card {
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(245, 158, 11, 0.1) 100%) !important;
+        border-color: rgba(2, 132, 199, 0.38) !important;
+      }
+      body.light-theme .cmd-calc-city {
+        color: #0f172a;
+      }
+      body.light-theme .cmd-calc-compare-cta {
+        color: #0369a1;
+      }
+      body.light-theme .cmd-calc-metric {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+      @media (max-width: 560px) {
+        .cmd-calc-metrics {
+          grid-template-columns: 1fr;
+        }
+        .cmd-tab-hint {
+          display: none;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function injectDOM() {
+    injectStyles();
     let existing = document.getElementById('cmd-palette-overlay');
     if (existing) {
       _overlay = existing;
       _input = existing.querySelector('#cmd-palette-input');
       _list = existing.querySelector('#cmd-palette-list');
       _countEl = existing.querySelector('#cmd-palette-count');
+      _chipsBar = existing.querySelector('#cmd-palette-chips');
       return;
     }
 
@@ -1041,6 +1646,11 @@
     overlay.setAttribute('aria-label', 'Hızlı Komut ve Şehir Arama');
     overlay.setAttribute('aria-hidden', 'true');
 
+    const chipsHtml = CATEGORY_CHIPS.map((c) => {
+      const isAct = c.id === _activeCategory;
+      return `<button type="button" class="cmd-cat-chip${isAct ? ' active' : ''}" role="tab" aria-selected="${isAct ? 'true' : 'false'}" data-cmd-cat="${esc(c.id)}">${esc(c.label)}</button>`;
+    }).join('');
+
     overlay.innerHTML = `
       <div class="cmd-box" role="document">
         <div class="cmd-input-wrap">
@@ -1051,7 +1661,7 @@
             type="text"
             autocomplete="off"
             spellcheck="false"
-            placeholder="Şehir, plaka (06), lezzet, kütüphane veya eylem ara..."
+            placeholder="Şehir, plaka (06), mesafe (Ankara - Mardin / 06 - 34) veya stüdyo ara..."
             role="combobox"
             aria-expanded="true"
             aria-controls="cmd-palette-list"
@@ -1060,10 +1670,17 @@
           <span id="cmd-palette-count" class="cmd-count"></span>
           <kbd class="cmd-kbd">ESC</kbd>
         </div>
+        <div class="cmd-subbar">
+          <div id="cmd-palette-chips" class="cmd-cat-chips" role="tablist" aria-label="Kategori Filtreleri">
+            ${chipsHtml}
+          </div>
+          <span class="cmd-tab-hint"><kbd class="cmd-kbd">Tab</kbd> Kategori</span>
+        </div>
         <div id="cmd-palette-list" class="cmd-list" role="listbox" aria-label="Arama sonuçları"></div>
         <div class="cmd-footer">
           <div class="cmd-footer-hints">
             <span><kbd class="cmd-kbd">↑</kbd><kbd class="cmd-kbd">↓</kbd> Gezin</span>
+            <span><kbd class="cmd-kbd">Tab</kbd> Filtre</span>
             <span><kbd class="cmd-kbd">↵</kbd> Aç</span>
             <span><kbd class="cmd-kbd">ESC</kbd> Kapat</span>
           </div>
@@ -1077,6 +1694,7 @@
     _input = overlay.querySelector('#cmd-palette-input');
     _list = overlay.querySelector('#cmd-palette-list');
     _countEl = overlay.querySelector('#cmd-palette-count');
+    _chipsBar = overlay.querySelector('#cmd-palette-chips');
 
     // Close when clicking backdrop
     overlay.addEventListener('click', (e) => {
@@ -1084,6 +1702,17 @@
         close();
       }
     });
+
+    // Category chip clicks
+    if (_chipsBar) {
+      _chipsBar.addEventListener('click', (e) => {
+        const chipBtn = e.target.closest('.cmd-cat-chip[data-cmd-cat]');
+        if (!chipBtn) return;
+        const catId = chipBtn.getAttribute('data-cmd-cat');
+        setCategory(catId);
+        if (_input) _input.focus();
+      });
+    }
 
     // Live filtering
     if (_input) {
@@ -1093,9 +1722,16 @@
       });
     }
 
-    // Delegate hover & click on list items
+    // Delegate hover & click on list items + clear recents button
     if (_list) {
       _list.addEventListener('click', (e) => {
+        const clearBtn = e.target.closest('[data-cmd-clear-recent]');
+        if (clearBtn) {
+          e.stopPropagation();
+          clearRecents();
+          if (_input) _input.focus();
+          return;
+        }
         const itemEl = e.target.closest('.cmd-item');
         if (!itemEl) return;
         const idx = Number(itemEl.getAttribute('data-cmd-index'));
@@ -1136,6 +1772,9 @@
       e.preventDefault();
       e.stopPropagation();
       close();
+    } else if (key === 'Tab') {
+      e.preventDefault();
+      cycleCategory(e.shiftKey ? -1 : 1);
     } else if (key === 'ArrowDown') {
       e.preventDefault();
       updateSelection(_selectedIndex + 1, true);
@@ -1162,6 +1801,8 @@
     _lastActiveElement = document.activeElement;
     _isOpen = true;
     _selectedIndex = 0;
+    _activeCategory = 'all';
+    syncCategoryChipsUI();
 
     if (_input) {
       _input.value = '';

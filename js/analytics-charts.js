@@ -596,6 +596,62 @@
         color: #34d399;
       }
 
+      .ana-export-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .ana-export-btn {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.16), rgba(16, 185, 129, 0.18));
+        border: 1px solid rgba(0, 242, 254, 0.42);
+        color: var(--text-primary, #f8fafc);
+        border-radius: 9999px;
+        padding: 5px 13px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .ana-export-btn:hover {
+        border-color: var(--accent-cyan, #00f2fe);
+        box-shadow: 0 4px 14px rgba(0, 242, 254, 0.2);
+        transform: translateY(-1px);
+      }
+
+      .ana-export-choices {
+        display: none;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .ana-export-choices.is-open {
+        display: inline-flex;
+      }
+
+      .ana-export-opt {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(16, 185, 129, 0.45);
+        color: #34d399;
+        border-radius: 9999px;
+        padding: 4px 11px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .ana-export-opt:hover {
+        background: rgba(16, 185, 129, 0.22);
+        color: #ffffff;
+      }
+
       .ana-plate-matrix-wrap {
         position: relative;
       }
@@ -928,6 +984,23 @@
         background: rgba(15, 23, 42, 0.04);
       }
 
+      body.light-theme .ana-export-btn {
+        background: linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(5, 150, 105, 0.12));
+        border-color: rgba(2, 132, 199, 0.35);
+        color: #0f172a;
+      }
+
+      body.light-theme .ana-export-opt {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(5, 150, 105, 0.45);
+        color: #047857;
+      }
+
+      body.light-theme .ana-export-opt:hover {
+        background: #059669;
+        color: #ffffff;
+      }
+
       @media (max-width: 980px) {
         .ana-top-grid,
         .ana-bottom-grid {
@@ -982,6 +1055,7 @@
     }
 
     const favorites = state.favorites instanceof Set ? state.favorites : new Set(Array.isArray(state.favorites) ? state.favorites : []);
+    const showToast = typeof safeCtx.showToast === 'function' ? safeCtx.showToast : function () {};
 
     // Normalize provinces list sorted by plate 01 -> 81
     const provincesList = Object.entries(data.provinces)
@@ -1076,6 +1150,8 @@
       })
       .join('');
 
+    const favoritesCount = provincesList.filter((c) => favorites.has(c.key)).length;
+
     const plateTilesHtml = provincesList
       .map((city) => {
         const plateStr = formatPlate(city.plate);
@@ -1089,6 +1165,7 @@
             data-city-key="${escapeHtml(city.key)}"
             data-region-code="${escapeHtml(city.region_code)}"
             data-visited="${city.visited ? '1' : '0'}"
+            data-favorite="${isFav ? '1' : '0'}"
             data-plate="${escapeHtml(plateStr)}"
             data-name="${escapeHtml(city.name)}"
             data-region="${escapeHtml(city.region)}"
@@ -1303,8 +1380,9 @@
             </div>
             <div class="ana-plate-controls" id="ana-plate-filters">
               <button type="button" class="ana-filter-btn is-active" data-plate-filter="all">Tümü (${totalCities})</button>
-              <button type="button" class="ana-filter-btn" data-plate-filter="visited">✅ Gezildi (${visitedCount})</button>
-              <button type="button" class="ana-filter-btn" data-plate-filter="unvisited">🧭 Planlanan (${remainingCount})</button>
+              <button type="button" class="ana-filter-btn" data-plate-filter="visited">✅ Gezilen (${visitedCount})</button>
+              <button type="button" class="ana-filter-btn" data-plate-filter="unvisited">⏳ Bekleyen (${remainingCount})</button>
+              <button type="button" class="ana-filter-btn" data-plate-filter="favorites">⭐ Favoriler (${favoritesCount})</button>
             </div>
           </div>
 
@@ -1317,10 +1395,19 @@
           <div class="ana-plate-legend">
             <div class="ana-legend-items">
               <span class="ana-legend-swatch"><span class="ana-swatch-box ana-swatch-visited"></span> Gezilen İl (${visitedCount})</span>
-              <span class="ana-legend-swatch"><span class="ana-swatch-box ana-swatch-unvisited"></span> Planlanan İl (${remainingCount})</span>
-              <span class="ana-legend-swatch"><span style="color:var(--accent-gold, #f59e0b);">★</span> Favori İl</span>
+              <span class="ana-legend-swatch"><span class="ana-swatch-box ana-swatch-unvisited"></span> Bekleyen İl (${remainingCount})</span>
+              <span class="ana-legend-swatch"><span style="color:var(--accent-gold, #f59e0b);">★</span> Favori İl (${favoritesCount})</span>
             </div>
-            <span id="ana-active-filter-label">Gösterilen: 81 İl (9×9 Matris)</span>
+            <div class="ana-export-wrap">
+              <button type="button" class="ana-export-btn" id="ana-export-toggle" aria-expanded="false">
+                📥 81 Plaka Durum Tablosunu CSV / Markdown İndir
+              </button>
+              <div class="ana-export-choices" id="ana-export-choices">
+                <button type="button" class="ana-export-opt" data-ana-export="csv">📄 CSV (.csv)</button>
+                <button type="button" class="ana-export-opt" data-ana-export="md">📝 Markdown (.md)</button>
+              </div>
+              <span id="ana-active-filter-label">Gösterilen: ${totalCities} İl (9×9 Matris)</span>
+            </div>
           </div>
         </div>
 
@@ -1397,11 +1484,13 @@
 
       tiles.forEach((tile) => {
         const isVisited = tile.getAttribute('data-visited') === '1';
+        const isFav = tile.getAttribute('data-favorite') === '1';
         const regionCode = tile.getAttribute('data-region-code');
         const statusOk =
           activeStatusFilter === 'all' ||
           (activeStatusFilter === 'visited' && isVisited) ||
-          (activeStatusFilter === 'unvisited' && !isVisited);
+          (activeStatusFilter === 'unvisited' && !isVisited) ||
+          (activeStatusFilter === 'favorites' && isFav);
         const regionOk = !activeRegionCode || regionCode === activeRegionCode;
 
         const visible = statusOk && regionOk;
@@ -1420,11 +1509,85 @@
           const regionObj = regionRows.find((r) => r.code === activeRegionCode);
           const parts = [];
           if (regionObj) parts.push(regionObj.name);
-          if (activeStatusFilter === 'visited') parts.push('Gezildi');
-          if (activeStatusFilter === 'unvisited') parts.push('Planlanan');
+          if (activeStatusFilter === 'visited') parts.push('Gezilen');
+          if (activeStatusFilter === 'unvisited') parts.push('Bekleyen');
+          if (activeStatusFilter === 'favorites') parts.push('Favoriler');
           activeFilterLabel.textContent = `Vurgulanan: ${matched} İl (${parts.join(' • ')})`;
         }
       }
+    }
+
+    // Export 81-Plate Status Table as CSV or Markdown
+    function triggerTextDownload(content, filename, mimeType) {
+      try {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (_) {
+        showToast('Dosya indirme işlemi tarayıcı tarafından engellendi.');
+      }
+    }
+
+    function exportPlateTable(format) {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      if (format === 'csv') {
+        const csvEscape = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+        const header = ['Plaka', 'İl', 'Bölge', 'Durum', 'Favori', 'Enlem', 'Boylam'].join(',');
+        const rows = provincesList.map((c) => [
+          csvEscape(formatPlate(c.plate)),
+          csvEscape(c.name),
+          csvEscape(c.region),
+          csvEscape(c.visited ? 'Gezilen' : 'Bekleyen'),
+          csvEscape(favorites.has(c.key) ? 'Evet' : 'Hayır'),
+          Number.isFinite(c.lat) ? c.lat.toFixed(4) : '',
+          Number.isFinite(c.lng) ? c.lng.toFixed(4) : ''
+        ].join(','));
+        const csvContent = '\uFEFF' + [header].concat(rows).join('\n');
+        triggerTextDownload(csvContent, `anadolu-81-plaka-durum-${dateStr}.csv`, 'text/csv;charset=utf-8;');
+        showToast('📥 81 Plaka Durum Tablosu CSV olarak indirildi!');
+      } else {
+        const mdLines = [
+          '# Anadolu Seyahatnamesi — 81 Plaka Durum Tablosu',
+          '',
+          `- **Tarih:** ${dateStr}`,
+          `- **İlerleme:** ${visitedCount} / ${totalCities} İl (%${progressPct.toFixed(1)})`,
+          `- **Favoriler:** ${favoritesCount} İl`,
+          '',
+          '| Plaka | İl | Bölge | Durum | Favori |',
+          '| :---: | :--- | :--- | :---: | :---: |'
+        ];
+        provincesList.forEach((c) => {
+          const safePipe = (s) => String(s || '').replace(/\|/g, '\\|');
+          mdLines.push(
+            `| ${formatPlate(c.plate)} | ${safePipe(c.name)} | ${safePipe(c.region)} | ${c.visited ? '✅ Gezilen' : '⏳ Bekleyen'} | ${favorites.has(c.key) ? '⭐' : '—'} |`
+          );
+        });
+        triggerTextDownload(mdLines.join('\n') + '\n', `anadolu-81-plaka-durum-${dateStr}.md`, 'text/markdown;charset=utf-8;');
+        showToast('📝 81 Plaka Durum Tablosu Markdown (.md) olarak indirildi!');
+      }
+    }
+
+    const exportToggleBtn = container.querySelector('#ana-export-toggle');
+    const exportChoicesEl = container.querySelector('#ana-export-choices');
+    if (exportToggleBtn && exportChoicesEl) {
+      exportToggleBtn.addEventListener('click', () => {
+        const nextOpen = !exportChoicesEl.classList.contains('is-open');
+        exportChoicesEl.classList.toggle('is-open', nextOpen);
+        exportToggleBtn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+      });
+      exportChoicesEl.addEventListener('click', (e) => {
+        const opt = e.target.closest('[data-ana-export]');
+        if (!opt) return;
+        exportPlateTable(opt.getAttribute('data-ana-export'));
+        exportChoicesEl.classList.remove('is-open');
+        exportToggleBtn.setAttribute('aria-expanded', 'false');
+      });
     }
 
     // Status Filter Buttons

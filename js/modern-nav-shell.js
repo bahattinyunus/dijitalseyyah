@@ -134,13 +134,57 @@
     }
   ];
 
-  // Fast lookup: view -> group
+  // Fast lookup: view -> group & item
   const VIEW_TO_GROUP = new Map();
+  const VIEW_TO_ITEM = new Map();
+  let TOTAL_MODULES_COUNT = 0;
   NAV_GROUPS.forEach((group) => {
+    TOTAL_MODULES_COUNT += group.items.length;
     group.items.forEach((item) => {
       VIEW_TO_GROUP.set(item.view, group);
+      if (!VIEW_TO_ITEM.has(item.view)) {
+        VIEW_TO_ITEM.set(item.view, item);
+      }
     });
   });
+
+  function normTr(str) {
+    if (!str) return '';
+    if (_ctx && typeof _ctx.normalizeTurkish === 'function') {
+      return _ctx.normalizeTurkish(str);
+    }
+    return String(str)
+      .replace(/İ/g, 'i')
+      .replace(/I/g, 'ı')
+      .toLowerCase()
+      .replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ş/g, 's')
+      .replace(/ü/g, 'u')
+      .trim();
+  }
+
+  function getLiveStats() {
+    const data = (_ctx && _ctx.data) || (_ctx && _ctx.state && _ctx.state.data) || (typeof TRAVEL_DATA !== 'undefined' ? TRAVEL_DATA : null);
+    const provinces = (data && data.provinces) || {};
+    const entries = Object.values(provinces);
+    const totalProvinces = entries.length || 81;
+    const visitedProvinces = entries.length ? entries.filter((p) => p && p.visited).length : 39;
+
+    const customRoute =
+      (_ctx && _ctx.state && Array.isArray(_ctx.state.customRouteCities) && _ctx.state.customRouteCities) ||
+      (data && Array.isArray(data.custom_route) && data.custom_route) ||
+      [];
+    const routeStopCount = customRoute.length || 10;
+
+    return {
+      visitedProvinces,
+      totalProvinces,
+      routeStopCount
+    };
+  }
 
   let _ctx = null;
   let _navEl = null;
@@ -366,6 +410,33 @@
       .mnav-trigger-icon {
         font-size: 0.95rem;
         line-height: 1;
+      }
+
+      .mnav-live-counter {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1px 6px;
+        border-radius: 9999px;
+        font-size: 0.63rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        line-height: 1.35;
+        color: #67e8f9;
+        background: rgba(0, 242, 254, 0.12);
+        border: 1px solid rgba(0, 242, 254, 0.28);
+      }
+
+      .mnav-live-counter.is-route {
+        color: #6ee7b7;
+        background: rgba(16, 185, 129, 0.14);
+        border-color: rgba(16, 185, 129, 0.32);
+      }
+
+      .mnav-trigger.is-active .mnav-live-counter {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.34);
       }
 
       .mnav-active-dot {
@@ -618,6 +689,113 @@
         text-overflow: ellipsis;
       }
 
+      .mnav-item.is-hidden {
+        display: none;
+      }
+
+      /* Portal Quick Filter Input (for large groups: 6+ items) */
+      .mnav-portal-search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .mnav-portal-search-icon {
+        position: absolute;
+        left: 10px;
+        font-size: 0.78rem;
+        opacity: 0.68;
+        pointer-events: none;
+      }
+
+      .mnav-portal-search {
+        width: 100%;
+        padding: 7px 12px 7px 30px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        background: rgba(15, 23, 42, 0.68);
+        color: #f8fafc;
+        font-family: inherit;
+        font-size: 0.78rem;
+        outline: none;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      }
+
+      .mnav-portal-search::placeholder {
+        color: #64748b;
+      }
+
+      .mnav-portal-search:focus {
+        border-color: rgba(0, 242, 254, 0.56);
+        background: rgba(15, 23, 42, 0.92);
+        box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.14);
+      }
+
+      .mnav-empty {
+        display: none;
+        padding: 16px 10px;
+        text-align: center;
+        font-size: 0.78rem;
+        color: #94a3b8;
+      }
+
+      .mnav-empty.is-visible {
+        display: block;
+      }
+
+      /* Portal Footer Bar with ⌘K Command Palette Trigger */
+      .mnav-portal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 9px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .mnav-portal-footer-meta {
+        font-size: 0.7rem;
+        color: #94a3b8;
+      }
+
+      .mnav-cmd-trigger {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 242, 254, 0.3);
+        background: rgba(0, 242, 254, 0.1);
+        color: #67e8f9;
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .mnav-cmd-trigger:hover,
+      .mnav-cmd-trigger:focus-visible {
+        outline: none;
+        background: rgba(0, 242, 254, 0.2);
+        border-color: rgba(0, 242, 254, 0.62);
+        color: #ffffff;
+      }
+
+      .mnav-cmd-kbd {
+        font-family: inherit;
+        font-size: 0.66rem;
+        font-weight: 800;
+        padding: 1px 5px;
+        border-radius: 5px;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #e2e8f0;
+      }
+
       /* ------------------------------------------------------------------
          LIGHT THEME (body.light-theme) OVERRIDES
          ------------------------------------------------------------------ */
@@ -779,6 +957,67 @@
         color: #475569;
       }
 
+      body.light-theme .mnav-live-counter {
+        color: #0369a1;
+        background: rgba(2, 132, 199, 0.11);
+        border-color: rgba(2, 132, 199, 0.28);
+      }
+
+      body.light-theme .mnav-live-counter.is-route {
+        color: #047857;
+        background: rgba(5, 150, 105, 0.11);
+        border-color: rgba(5, 150, 105, 0.28);
+      }
+
+      body.light-theme .mnav-trigger.is-active .mnav-live-counter {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.22);
+        border-color: rgba(255, 255, 255, 0.36);
+      }
+
+      body.light-theme .mnav-portal-search {
+        background: #f8fafc;
+        border-color: rgba(15, 23, 42, 0.13);
+        color: #0f172a;
+      }
+
+      body.light-theme .mnav-portal-search:focus {
+        background: #ffffff;
+        border-color: #0284c7;
+        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.14);
+      }
+
+      body.light-theme .mnav-empty {
+        color: #64748b;
+      }
+
+      body.light-theme .mnav-portal-footer {
+        border-top-color: rgba(15, 23, 42, 0.08);
+      }
+
+      body.light-theme .mnav-portal-footer-meta {
+        color: #64748b;
+      }
+
+      body.light-theme .mnav-cmd-trigger {
+        color: #0369a1;
+        background: rgba(2, 132, 199, 0.09);
+        border-color: rgba(2, 132, 199, 0.28);
+      }
+
+      body.light-theme .mnav-cmd-trigger:hover,
+      body.light-theme .mnav-cmd-trigger:focus-visible {
+        background: rgba(2, 132, 199, 0.17);
+        border-color: #0284c7;
+        color: #0c4a6e;
+      }
+
+      body.light-theme .mnav-cmd-kbd {
+        background: #ffffff;
+        border-color: rgba(15, 23, 42, 0.16);
+        color: #334155;
+      }
+
       /* ------------------------------------------------------------------
          MOBILE & RESPONSIVE POLISH
          ------------------------------------------------------------------ */
@@ -823,6 +1062,7 @@
     if (!_navEl) return;
     _navEl.classList.add('mnav-strip');
 
+    const stats = getLiveStats();
     const chevronSvg = `
       <svg class="mnav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polyline points="6 9 12 15 18 9"></polyline>
@@ -831,11 +1071,17 @@
 
     const triggersHtml = NAV_GROUPS.map((group) => {
       const variantClass = group.isAi ? ' is-ai' : group.isIrfan ? ' is-irfan' : '';
-      const badgeHtml = group.isAi
-        ? `<span class="mnav-ai-badge">${esc(group.badge || 'AI')}</span>`
-        : group.isIrfan
-          ? `<span class="mnav-irfan-badge">${esc(group.badge || 'İRFAN')}</span>`
-          : '';
+      let badgeHtml = '';
+      if (group.isAi) {
+        badgeHtml = `<span class="mnav-ai-badge">${esc(group.badge || 'AI')}</span>`;
+      } else if (group.isIrfan) {
+        badgeHtml = `<span class="mnav-irfan-badge">${esc(group.badge || 'İRFAN')}</span>`;
+      } else if (group.id === 'kesif') {
+        badgeHtml = `<span class="mnav-live-counter" data-mnav-live="kesif" title="Gezilen il sayısı">${stats.visitedProvinces}/${stats.totalProvinces}</span>`;
+      } else if (group.id === 'rota-plan') {
+        badgeHtml = `<span class="mnav-live-counter is-route" data-mnav-live="rota-plan" title="Aktif sefer durağı">${stats.routeStopCount} durak</span>`;
+      }
+
       return `
         <button
           type="button"
@@ -855,6 +1101,21 @@
     }).join('');
 
     _navEl.innerHTML = `<div class="mnav-track" role="menubar" aria-label="Kategori Menüleri">${triggersHtml}</div>`;
+  }
+
+  function updateLiveCounters() {
+    if (!_navEl) return;
+    const stats = getLiveStats();
+    const kesifCounter = _navEl.querySelector('[data-mnav-live="kesif"]');
+    if (kesifCounter) {
+      const nextText = `${stats.visitedProvinces}/${stats.totalProvinces}`;
+      if (kesifCounter.textContent !== nextText) kesifCounter.textContent = nextText;
+    }
+    const rotaCounter = _navEl.querySelector('[data-mnav-live="rota-plan"]');
+    if (rotaCounter) {
+      const nextText = `${stats.routeStopCount} durak`;
+      if (rotaCounter.textContent !== nextText) rotaCounter.textContent = nextText;
+    }
   }
 
   function ensurePortal() {
@@ -901,20 +1162,24 @@
   function renderPortalContent(group) {
     if (!_portalEl || !group) return;
     const currentView = getCurrentView();
-    const countText = group.isAi
-      ? `${group.items.length} AI Modülü`
+    const countSuffix = group.isAi
+      ? 'AI Modülü'
       : group.isIrfan
-        ? `${group.items.length} İrfan Modülü`
-        : `${group.items.length} Modül`;
+        ? 'İrfan Modülü'
+        : 'Modül';
+    const countText = `${group.items.length} ${countSuffix}`;
+    const showQuickFilter = group.items.length >= 6;
 
     const itemsHtml = group.items.map((item) => {
       const isActive = currentView === item.view;
+      const searchText = normTr(`${item.title} ${item.subtitle} ${item.view}`);
       return `
         <button
           type="button"
           class="mnav-item${isActive ? ' is-active' : ''}"
           role="menuitem"
           data-mnav-view="${esc(item.view)}"
+          data-mnav-search="${esc(searchText)}"
           ${isActive ? 'aria-current="page"' : ''}
         >
           <span class="mnav-item-icon" aria-hidden="true">${esc(item.icon)}</span>
@@ -935,6 +1200,22 @@
         ? `<span class="mnav-irfan-badge">${esc(group.badge || 'İRFAN')}</span>`
         : '';
 
+    const searchBarHtml = showQuickFilter
+      ? `
+        <div class="mnav-portal-search-wrap">
+          <span class="mnav-portal-search-icon" aria-hidden="true">🔎</span>
+          <input
+            type="search"
+            class="mnav-portal-search"
+            data-mnav-filter-input
+            placeholder="${esc(group.label)} içinde hızlı filtrele..."
+            autocomplete="off"
+            aria-label="${esc(group.label)} içinde ara"
+          />
+        </div>
+      `
+      : '';
+
     _portalEl.classList.toggle('is-ai-panel', Boolean(group.isAi));
     _portalEl.classList.toggle('is-irfan-panel', Boolean(group.isIrfan));
     _portalEl.setAttribute('aria-label', `${group.label} Menüsü`);
@@ -945,10 +1226,58 @@
           <span>${esc(group.label)}</span>
           ${portalBadgeHtml}
         </div>
-        <span class="mnav-portal-count">${esc(countText)}</span>
+        <span class="mnav-portal-count" data-mnav-portal-count data-mnav-total="${group.items.length}" data-mnav-suffix="${esc(countSuffix)}">${esc(countText)}</span>
       </div>
+      ${searchBarHtml}
       <div class="mnav-grid">${itemsHtml}</div>
+      <div class="mnav-empty" data-mnav-empty>Bu aramayla eşleşen modül bulunamadı.</div>
+      <div class="mnav-portal-footer">
+        <span class="mnav-portal-footer-meta">Külliyat: ${TOTAL_MODULES_COUNT} İnteraktif Modül</span>
+        <button type="button" class="mnav-cmd-trigger" data-mnav-cmd-palette="1" title="Komut Paletini Aç (Ctrl+K / ⌘K)">
+          <span class="mnav-cmd-kbd">⌘K</span>
+          <span>Tüm Külliyatta Ara</span>
+        </button>
+      </div>
     `;
+  }
+
+  function filterPortalItems(rawQuery) {
+    if (!_portalEl) return;
+    const normQuery = normTr(rawQuery);
+    const items = _portalEl.querySelectorAll('.mnav-item[data-mnav-view]');
+    let visibleCount = 0;
+
+    items.forEach((btn) => {
+      const hay = btn.getAttribute('data-mnav-search') || '';
+      const match = !normQuery || hay.indexOf(normQuery) !== -1;
+      btn.classList.toggle('is-hidden', !match);
+      if (match) visibleCount += 1;
+    });
+
+    const emptyEl = _portalEl.querySelector('[data-mnav-empty]');
+    if (emptyEl) {
+      emptyEl.classList.toggle('is-visible', visibleCount === 0);
+    }
+
+    const countEl = _portalEl.querySelector('[data-mnav-portal-count]');
+    if (countEl) {
+      const total = Number(countEl.getAttribute('data-mnav-total')) || items.length;
+      const suffix = countEl.getAttribute('data-mnav-suffix') || 'Modül';
+      countEl.textContent = normQuery ? `${visibleCount} / ${total} ${suffix}` : `${total} ${suffix}`;
+    }
+  }
+
+  function openCommandPalette() {
+    closeDropdown(false);
+    if (
+      window.SEYYAH_MODULES &&
+      window.SEYYAH_MODULES.commandPalette &&
+      typeof window.SEYYAH_MODULES.commandPalette.open === 'function'
+    ) {
+      window.SEYYAH_MODULES.commandPalette.open();
+      return;
+    }
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
   }
 
   function openGroup(groupId, triggerBtn) {
@@ -1003,10 +1332,24 @@
       btn.classList.toggle('is-active', gid === activeGroupId);
     });
 
+    updateLiveCounters();
+
     if (_openGroupId && _portalEl && _portalEl.classList.contains('is-open')) {
-      const openGroupObj = NAV_GROUPS.find((g) => g.id === _openGroupId);
-      if (openGroupObj) {
-        renderPortalContent(openGroupObj);
+      const filterInput = _portalEl.querySelector('[data-mnav-filter-input]');
+      const isTypingInFilter = filterInput && document.activeElement === filterInput;
+      if (!isTypingInFilter) {
+        const openGroupObj = NAV_GROUPS.find((g) => g.id === _openGroupId);
+        if (openGroupObj) {
+          const prevQuery = filterInput ? filterInput.value : '';
+          renderPortalContent(openGroupObj);
+          if (prevQuery) {
+            const nextInput = _portalEl.querySelector('[data-mnav-filter-input]');
+            if (nextInput) {
+              nextInput.value = prevQuery;
+              filterPortalItems(prevQuery);
+            }
+          }
+        }
       }
     }
   }
@@ -1069,6 +1412,11 @@
     };
 
     const onPortalClick = (e) => {
+      const cmdBtn = e.target.closest('[data-mnav-cmd-palette]');
+      if (cmdBtn) {
+        openCommandPalette();
+        return;
+      }
       const itemBtn = e.target.closest('.mnav-item[data-mnav-view]');
       if (!itemBtn) return;
       const view = itemBtn.getAttribute('data-mnav-view');
@@ -1079,9 +1427,32 @@
       scheduleSync();
     };
 
+    const onPortalInput = (e) => {
+      const filterInput = e.target && e.target.closest ? e.target.closest('[data-mnav-filter-input]') : null;
+      if (!filterInput) return;
+      filterPortalItems(filterInput.value);
+    };
+
     const onPortalKeyDown = (e) => {
       if (!_openGroupId) return;
-      const items = Array.from(_portalEl.querySelectorAll('.mnav-item'));
+      const isFilterInput =
+        document.activeElement &&
+        document.activeElement.matches &&
+        document.activeElement.matches('[data-mnav-filter-input]');
+
+      const items = Array.from(_portalEl.querySelectorAll('.mnav-item:not(.is-hidden)'));
+
+      if (isFilterInput) {
+        if (e.key === 'ArrowDown' && items.length) {
+          e.preventDefault();
+          items[0].focus();
+        } else if (e.key === 'Enter' && items.length === 1) {
+          e.preventDefault();
+          items[0].click();
+        }
+        return;
+      }
+
       if (!items.length) return;
       const idx = items.indexOf(document.activeElement);
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
@@ -1128,6 +1499,7 @@
     _navEl.addEventListener('keydown', onNavKeyDown);
     _navEl.addEventListener('scroll', onReposition, { passive: true });
     _portalEl.addEventListener('click', onPortalClick);
+    _portalEl.addEventListener('input', onPortalInput);
     _portalEl.addEventListener('keydown', onPortalKeyDown);
     document.addEventListener('click', onDocClick);
     document.addEventListener('keydown', onDocKeyDown);
@@ -1148,6 +1520,7 @@
       _navEl.removeEventListener('keydown', onNavKeyDown);
       _navEl.removeEventListener('scroll', onReposition);
       _portalEl.removeEventListener('click', onPortalClick);
+      _portalEl.removeEventListener('input', onPortalInput);
       _portalEl.removeEventListener('keydown', onPortalKeyDown);
       document.removeEventListener('click', onDocClick);
       document.removeEventListener('keydown', onDocKeyDown);

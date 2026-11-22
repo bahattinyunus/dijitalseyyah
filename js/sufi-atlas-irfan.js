@@ -32,6 +32,59 @@
     { id: 'Şiir & Hikmet', label: 'Şiir & Hikmet', icon: '📜', color: '#a855f7', badgeBg: 'rgba(168, 85, 247, 0.16)' }
   ];
 
+  const CENTURIES = [
+    { id: 'all', label: 'Tüm Asırlar', shortLabel: 'Tümü', icon: '⏳' },
+    { id: 'early', label: 'VII–XII. Yüzyıl (Kurucu Kökler)', shortLabel: '7–12. YY', icon: '🌱' },
+    { id: '13', label: 'XIII. Yüzyıl (Selçuklu & Horasan)', shortLabel: '13. YY', icon: '🕌' },
+    { id: '14_15', label: 'XIV–XV. Yüzyıl (Kuruluş & Fetih)', shortLabel: '14–15. YY', icon: '⚔️' },
+    { id: '16_17', label: 'XVI–XVII. Yüzyıl (Klasik Osmanlı)', shortLabel: '16–17. YY', icon: '📜' },
+    { id: '18_20', label: 'XVIII–XX. Yüzyıl (Modern & Ozanlar)', shortLabel: '18–20. YY', icon: '🪕' }
+  ];
+
+  const SCHOOLS = [
+    { id: 'all', label: 'Tüm Ocak & Ekoller', icon: '🕯️' },
+    { id: 'Mevlevî & Ekberî', label: 'Mevlevî & Ekberî', icon: '🌀' },
+    { id: 'Bayramî & Halvetî', label: 'Bayramî & Halvetî', icon: '🌾' },
+    { id: 'Bektaşî & Horasan', label: 'Bektaşî & Horasan', icon: '🕊️' },
+    { id: 'Ahîlik & Fütüvvet', label: 'Ahîlik & Fütüvvet', icon: '⚖️' },
+    { id: 'Kadirî & Hâlidî', label: 'Kadirî & Hâlidî', icon: '📿' },
+    { id: 'Ozan, Âlim & Seyyah', label: 'Ozan, Âlim & Seyyah', icon: '🔭' }
+  ];
+
+  // Approximate Anatolian coordinates mapped to SVG viewBox (0 0 900 400) for the 24 Gönül Sultanı & Ocaklar
+  const PROVINCE_SVG_COORDS = {
+    '01_Marmara/Edirne': { x: 86, y: 82 },
+    '01_Marmara/Istanbul': { x: 168, y: 112 },
+    '01_Marmara/Bursa': { x: 185, y: 166 },
+    '01_Marmara/Bilecik': { x: 222, y: 174 },
+    '02_Ege/Izmir': { x: 102, y: 248 },
+    '02_Ege/Kutahya': { x: 215, y: 206 },
+    '02_Ege/Usak': { x: 200, y: 234 },
+    '02_Ege/Afyonkarahisar': { x: 245, y: 235 },
+    '03_Akdeniz/Hatay': { x: 525, y: 348 },
+    '04_IcAnadolu/Eskisehir': { x: 254, y: 188 },
+    '04_IcAnadolu/Ankara': { x: 336, y: 174 },
+    '04_IcAnadolu/Konya': { x: 345, y: 278 },
+    '04_IcAnadolu/Karaman': { x: 368, y: 316 },
+    '04_IcAnadolu/Aksaray': { x: 406, y: 248 },
+    '04_IcAnadolu/Nevsehir': { x: 438, y: 238 },
+    '04_IcAnadolu/Kirsehir': { x: 416, y: 204 },
+    '04_IcAnadolu/Kayseri': { x: 482, y: 238 },
+    '04_IcAnadolu/Sivas': { x: 544, y: 188 },
+    '05_Karadeniz/Bolu': { x: 276, y: 134 },
+    '05_Karadeniz/Kastamonu': { x: 376, y: 104 },
+    '05_Karadeniz/Samsun': { x: 486, y: 102 },
+    '05_Karadeniz/Bayburt': { x: 678, y: 146 },
+    '06_DoguAnadolu/Malatya': { x: 588, y: 246 },
+    '06_DoguAnadolu/Erzincan': { x: 632, y: 178 },
+    '06_DoguAnadolu/Erzurum': { x: 724, y: 162 },
+    '06_DoguAnadolu/Kars': { x: 804, y: 134 },
+    '06_DoguAnadolu/Hakkari': { x: 834, y: 292 },
+    '07_GuneydoguAnadolu/Gaziantep': { x: 556, y: 312 },
+    '07_GuneydoguAnadolu/Diyarbakir': { x: 676, y: 276 },
+    '07_GuneydoguAnadolu/Siirt': { x: 754, y: 274 }
+  };
+
   const THEME_META = {};
   THEMES.forEach(function (t) {
     THEME_META[t.id] = t;
@@ -540,6 +593,86 @@
     return 'Anadolu İrfan Çağı';
   }
 
+  function classifyCenturyBucket(eraStr, textStr) {
+    const s = String(eraStr || '') + ' ' + String(textStr || '');
+    if (/\b(XIX|XX|XVIII|18\.|19\.|20\.|17\d\d|18\d\d|19\d\d)\b/i.test(s)) return '18_20';
+    if (/\b(XVI|XVII|16\.|17\.|15\d\d|16\d\d)\b/i.test(s)) return '16_17';
+    if (/\b(XIV|XV|14\.|15\.|13\d\d|14\d\d)\b/i.test(s)) return '14_15';
+    if (/\b(XIII|13\.|12\d\d)\b/i.test(s)) return '13';
+    if (/\b(VII|VIII|IX|X|XI|XII|7\.|8\.|9\.|10\.|11\.|12\.|576|11\d\d)\b/i.test(s)) return 'early';
+    return '13';
+  }
+
+  function classifySchool(item, normFn) {
+    const id = item.id || '';
+    if (id === 'mevlana-celaleddin-rumi' || id === 'muhyiddin-ibnul-arabi' || id === 'sadreddin-konevi') {
+      return 'Mevlevî & Ekberî';
+    }
+    if (id === 'haci-bayram-veli' || id === 'aksemseddin' || id === 'somuncu-baba' || id === 'aziz-mahmud-hudayi' || id === 'niyazi-i-misri' || id === 'seyh-saban-i-veli' || id === 'emir-sultan') {
+      return 'Bayramî & Halvetî';
+    }
+    if (id === 'haci-bektas-veli' || id === 'yunus-emre') {
+      return 'Bektaşî & Horasan';
+    }
+    if (id === 'ahi-evran' || id === 'seyh-edebali' || id === 'ebu-eyyub-el-ensari') {
+      return 'Ahîlik & Fütüvvet';
+    }
+    if (id === 'abdulkadir-geylani-izleri' || id === 'esrefoglu-rumi' || id === 'mevlana-halid-bagdadi-izleri' || id === 'veysel-karani') {
+      return 'Kadirî & Hâlidî';
+    }
+    if (id === 'erzurumlu-ibrahim-hakki' || id === 'dede-korkut' || id === 'asik-veysel' || id === 'fuzuli-nesimi-izleri' || id === 'evliya-celebi') {
+      return 'Ozan, Âlim & Seyyah';
+    }
+    const hay = normFn((item.name || '') + ' ' + (item.coreTeaching || '') + ' ' + (item.theme || ''));
+    if (/mevlana|mevlevi|konevi|arabi|vahdet|sema|mesnevi/.test(hay)) return 'Mevlevî & Ekberî';
+    if (/bayram|halvet|hudayi|celvet|saban|somuncu|aksemseddin/.test(hay)) return 'Bayramî & Halvetî';
+    if (/bektas|horasan|yunus|abdal|dede|pir sultan/.test(hay)) return 'Bektaşî & Horasan';
+    if (/ahi|futuvvet|edebali|esnaf|lonca|ensari|vakif/.test(hay)) return 'Ahîlik & Fütüvvet';
+    if (/kadiri|geylani|halidi|naksibendi|uveysi|esref/.test(hay)) return 'Kadirî & Hâlidî';
+    return 'Ozan, Âlim & Seyyah';
+  }
+
+  function buildOfflineWisdomDialogue(item, userQuestion, normFn) {
+    const q = String(userQuestion || '').trim();
+    const nq = normFn(q);
+    const quote = item.quote || (item.literaryQuotes && item.literaryQuotes[0]) || 'Gönül, hakikatin tecelli ettiği en geniş menzildir.';
+    const teaching = item.coreTeaching || (item.provinceName + ' şehrinin kadim irfan mirası.');
+    const concepts = (item.concepts && item.concepts.length) ? item.concepts.slice(0, 4).join(', ') : item.theme;
+
+    let specificLens = '';
+    if (/yol|sefer|seyahat|goc|seyyah|uzak|gurbet/.test(nq)) {
+      specificLens =
+        '**Yol ve Sefer Nazarından:** ' + item.name + ' geleneğinde yolculuk, sadece bir şehirden diğerine varmak değil; nefsin alışkanlıklarından sıyrılıp **' + item.provinceName + '** ufkunda içsel dinginliğe ulaşmasıdır. ' +
+        (item.nomadWisdom || 'Her yeni menzilde 5 gün sükûnetle konaklamak, gördüğün coğrafyayı tüketen değil ondan hikmet devşiren bir seyyah olmanı sağlar.');
+    } else if (/sabr|zor|sikinti|huzur|kaygi|yorgun|dert|stres/.test(nq)) {
+      specificLens =
+        '**Sabır ve İçsel Sükûnet Nazarından:** Kalbin daraldığı ve yolun ağırlaştığı demlerde **' + item.name + '** bize şunu hatırlatır: Derman çoğu kez derdin içinde gizlidir. ' +
+        '**' + concepts + '** ilkeleriyle nefesini yavaşlatıp, telaşı tevekküle ve disiplinli üretime dönüştürmek gönül aynasını parlatır.';
+    } else if (/ilim|kitap|kutuphane|calis|emek|meslek|kod|uretim/.test(nq)) {
+      specificLens =
+        '**İlim, Emek ve Tefekkür Nazarından:** Anadolu irfanında el kârda, gönül yârda tutulur. **' + item.provinceName + '** İl Halk Kütüphanesi sükûnetinde okunan her satır ve üretilen her temiz eser, **' + item.name + '** öğretisinde kalbî bir ibadet hükmündedir.';
+    } else {
+      specificLens =
+        '**Gönül Sultanının Hikmet Nazarından:** Sorduğun *"' + (q || 'Hakikat ve yol adabı nedir?') + '"* suali, **' + item.name + '** hazretlerinin **' + concepts + '** eksenindeki irfan halkasında şöyle yankılanır: ' +
+        (item.nomadWisdom || OFFLINE_ESSAY_EXTRAS[item.id] || 'İnsan önce kendi iç şehrinin sokaklarını tevazu ve merhametle imar etmelidir.');
+    }
+
+    return [
+      '### 🕯️ ' + item.name + ' Meclisinden Hikmetli Cevap',
+      '*(Sualiniz: "' + (q || 'Bu makamın yolcuya nasihati nedir?') + '")*',
+      '',
+      '> *“' + quote.replace(/^["“]|["”]$/g, '') + '”*',
+      '',
+      '**1. Öğretinin Özü (' + item.provinceName + ' · ' + (item.era || 'Anadolu İrfanı') + '):**',
+      teaching + (item.provinceDetail ? ' ' + item.provinceDetail : ''),
+      '',
+      '2. ' + specificLens,
+      '',
+      '**3. Seyyah İçin Günün Ameli:**',
+      '- Bugün **' + item.provinceName + '** ruhunu yâd ederek zihnini dağıtan meşguliyetlerden 15 dakika halvete çekil ve **' + (item.concepts && item.concepts[0] ? item.concepts[0] : item.theme) + '** kavramını tefekkür et.'
+    ].join('\n');
+  }
+
   function isSameMasterFigure(master, parsedName, normFn) {
     const nMaster = normFn(master.name);
     const nParsed = normFn(parsedName);
@@ -631,12 +764,13 @@
       const lqList = Array.isArray(p.literary_quotes) ? p.literary_quotes.map(cleanInlineMarkdown) : [];
       const reflection = typeof p.reflection === 'string' ? cleanInlineMarkdown(p.reflection) : '';
 
-      masterRecords.push({
+      const recordObj = {
         id: m.id,
         isMaster: true,
         name: m.name,
         subtitle: m.title,
         era: m.era,
+        centuryBucket: classifyCenturyBucket(m.era, m.coreTeaching),
         theme: m.theme,
         concepts: m.concepts.slice(),
         coreTeaching: m.coreTeaching,
@@ -652,7 +786,9 @@
         relatedKeys: (m.relatedKeys || []).filter(function (rk) { return Boolean(provincesMap[rk]); }),
         reflection: reflection,
         literaryQuotes: lqList
-      });
+      };
+      recordObj.school = classifySchool(recordObj, normFn);
+      masterRecords.push(recordObj);
     });
 
     // 2. Aggregate all spiritual_figures from all 81 provinces
@@ -674,12 +810,13 @@
         const theme = classifyTheme(parsed.name, parsed.desc, normFn);
         const era = extractEraFromText(parsed.name, parsed.desc);
 
-        provinceRecords.push({
+        const provRecord = {
           id: 'prov-sf-' + provIdx,
           isMaster: false,
           name: parsed.name,
           subtitle: (p.name || '') + ' Manevî & Kültürel Hafızası',
           era: era,
+          centuryBucket: classifyCenturyBucket(era, parsed.desc),
           theme: theme,
           concepts: [p.name || '', p.region || '', theme].filter(Boolean),
           coreTeaching: parsed.desc || reflection || (p.name + ' şehrinin kadim irfan mirası.'),
@@ -695,7 +832,9 @@
           relatedKeys: [],
           reflection: reflection,
           literaryQuotes: lqList
-        });
+        };
+        provRecord.school = classifySchool(provRecord, normFn);
+        provinceRecords.push(provRecord);
       });
     });
 
@@ -1468,6 +1607,125 @@
         border-color: var(--accent-cyan, #00f2fe);
       }
 
+      /* Interactive SVG Constellation Map & Offline Dialogue Box */
+      .irfan-constellation-box {
+        background: var(--bg-card, rgba(15, 23, 42, 0.8));
+        border: 1px solid rgba(245, 158, 11, 0.28);
+        border-radius: 18px;
+        padding: 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .irfan-constellation-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .irfan-constellation-title {
+        font-family: var(--font-heading, sans-serif);
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .irfan-constellation-svg-wrap {
+        width: 100%;
+        border-radius: 14px;
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 45%, rgba(16, 185, 129, 0.08), rgba(7, 13, 27, 0.92));
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .irfan-constellation-svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: 290px;
+      }
+
+      .irfan-c-node {
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+      }
+
+      .irfan-c-node:hover circle {
+        stroke-width: 3.2;
+        filter: brightness(1.3);
+      }
+
+      .irfan-dialogue-box {
+        margin-top: 10px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(0, 242, 254, 0.26);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .irfan-dialogue-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .irfan-dialogue-input {
+        flex: 1;
+        min-width: 220px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.15));
+        background: rgba(10, 15, 29, 0.8);
+        color: var(--text-primary, #f8fafc);
+        font-size: 0.85rem;
+        outline: none;
+      }
+
+      .irfan-dialogue-input:focus {
+        border-color: var(--accent-cyan, #00f2fe);
+      }
+
+      .irfan-dialogue-ask-btn {
+        cursor: pointer;
+        padding: 9px 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 242, 254, 0.45);
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(16, 185, 129, 0.22));
+        color: var(--text-primary, #f8fafc);
+        font-weight: 700;
+        font-size: 0.82rem;
+      }
+
+      body.light-theme .irfan-constellation-box {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(217, 119, 6, 0.3);
+      }
+
+      body.light-theme .irfan-constellation-svg-wrap {
+        background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-color: rgba(15, 23, 42, 0.14);
+      }
+
+      body.light-theme .irfan-dialogue-box {
+        background: #f8fafc;
+        border-color: rgba(2, 132, 199, 0.28);
+      }
+
+      body.light-theme .irfan-dialogue-input {
+        background: #ffffff;
+        color: #0f172a;
+        border-color: rgba(15, 23, 42, 0.16);
+      }
+
       /* Light Theme Compatibility */
       body.light-theme .irfan-hero {
         background:
@@ -1573,6 +1831,10 @@
       scope: 'all', // 'all' | 'masters' | 'provincial'
       region: 'all',
       theme: 'all',
+      century: 'all',
+      school: 'all',
+      showConstellation: true,
+      selectedMasterId: 'mevlana-celaleddin-rumi',
       search: '',
       modalItem: null,
       streaming: false,
@@ -1600,6 +1862,8 @@
       return base.filter(function (item) {
         if (uiState.region !== 'all' && item.regionCode !== uiState.region) return false;
         if (uiState.theme !== 'all' && item.theme !== uiState.theme) return false;
+        if (uiState.century !== 'all' && item.centuryBucket !== uiState.century) return false;
+        if (uiState.school !== 'all' && item.school !== uiState.school) return false;
         if (q) {
           const blob = norm(
             [
@@ -1607,6 +1871,7 @@
               item.subtitle,
               item.era,
               item.theme,
+              item.school || '',
               item.coreTeaching,
               item.provinceDetail,
               item.quote,
@@ -1701,6 +1966,7 @@
             (item.subtitle ? '<div class="irfan-sage-subtitle">' + esc(item.subtitle) + '</div>' : '') +
             '<div class="irfan-meta-row">' +
               '<span class="irfan-era-badge">⏳ ' + esc(item.era) + '</span>' +
+              (item.school ? '<span class="irfan-era-badge">🕯️ ' + esc(item.school) + '</span>' : '') +
               '<button type="button" class="irfan-province-btn" data-city-key="' + esc(item.provinceKey) + '" title="Şehir detayına git">' +
                 (item.visited ? '<span class="irfan-visited-dot" title="Gezildi"></span>' : '') +
                 '📍 ' + esc(plateLabel + item.provinceName) + ' · ' + esc(item.region) +
@@ -1858,6 +2124,148 @@
       stepReveal();
     }
 
+    function buildConstellationSvgHtml(filteredFigures) {
+      const visibleMasterIds = new Set();
+      filteredFigures.forEach(function (f) {
+        if (f.isMaster) visibleMasterIds.add(f.id);
+      });
+      const masters = catalog.masters;
+      const linesHtml = [];
+      const nodesHtml = [];
+
+      // Draw spiritual transmission & geographic connection lines (Gönül Hatları)
+      masters.forEach(function (m) {
+        const p1 = PROVINCE_SVG_COORDS[m.provinceKey];
+        if (!p1) return;
+        const isActive = visibleMasterIds.size === 0 || visibleMasterIds.has(m.id);
+        (m.relatedKeys || []).forEach(function (rk) {
+          const p2 = PROVINCE_SVG_COORDS[rk];
+          if (!p2) return;
+          linesHtml.push(
+            '<line x1="' + p1.x + '" y1="' + p1.y + '" x2="' + p2.x + '" y2="' + p2.y + '" ' +
+            'stroke="' + (isActive ? 'rgba(245, 158, 11, 0.42)' : 'rgba(148, 163, 184, 0.14)') + '" ' +
+            'stroke-width="' + (isActive ? '1.8' : '1') + '" stroke-dasharray="4 3" />'
+          );
+        });
+      });
+
+      // Group masters by provinceKey to offset slightly if two masters share a city (e.g. Konya, Bursa, Istanbul, Malatya)
+      const cityCountMap = {};
+      masters.forEach(function (m, idx) {
+        const basePos = PROVINCE_SVG_COORDS[m.provinceKey] || { x: 140 + (idx * 28) % 680, y: 120 + (idx * 47) % 180 };
+        const count = cityCountMap[m.provinceKey] || 0;
+        cityCountMap[m.provinceKey] = count + 1;
+        const angle = count * 2.1;
+        const radiusOffset = count === 0 ? 0 : 18;
+        const cx = Math.round(basePos.x + Math.cos(angle) * radiusOffset);
+        const cy = Math.round(basePos.y + Math.sin(angle) * radiusOffset);
+
+        const isVisible = visibleMasterIds.size === 0 || visibleMasterIds.has(m.id);
+        const isSelected = uiState.selectedMasterId === m.id;
+        const tMeta = THEME_META[m.theme] || THEME_META['Tasavvuf & İrfan'];
+        const shortName = m.name.split('(')[0].trim().split(' ').slice(0, 2).join(' ');
+
+        nodesHtml.push(
+          '<g class="irfan-c-node" data-constellation-master="' + esc(m.id) + '" opacity="' + (isVisible ? '1' : '0.28') + '">' +
+            (isSelected
+              ? '<circle cx="' + cx + '" cy="' + cy + '" r="15" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3 2" />'
+              : '') +
+            '<circle cx="' + cx + '" cy="' + cy + '" r="' + (isSelected ? '9' : '7') + '" fill="' + esc(tMeta.color) + '" stroke="#0f172a" stroke-width="2" />' +
+            '<text x="' + cx + '" y="' + (cy - 11) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="currentColor">' +
+              esc(shortName) +
+            '</text>' +
+            '<title>' + esc(m.name + ' — ' + m.provinceName + ' (' + m.era + ' · ' + m.school + ')') + '</title>' +
+          '</g>'
+        );
+      });
+
+      return (
+        '<svg class="irfan-constellation-svg" viewBox="0 0 900 385" role="img" aria-label="Anadolu İrfan Ocakları ve Gönül Hatları Haritası">' +
+          '<defs>' +
+            '<radialGradient id="irfanAnatoliaGlow" cx="50%" cy="50%" r="55%">' +
+              '<stop offset="0%" stop-color="rgba(245, 158, 11, 0.14)" />' +
+              '<stop offset="100%" stop-color="rgba(16, 185, 129, 0)" />' +
+            '</radialGradient>' +
+          '</defs>' +
+          '<rect x="18" y="18" width="864" height="348" rx="22" fill="url(#irfanAnatoliaGlow)" stroke="rgba(245, 158, 11, 0.16)" stroke-width="1" />' +
+          '<path d="M 65 95 Q 190 60 390 88 T 740 110 L 855 170 L 845 310 Q 670 335 510 355 L 330 330 Q 170 325 92 260 Z" fill="rgba(15, 23, 42, 0.25)" stroke="rgba(0, 242, 254, 0.18)" stroke-width="1.5" />' +
+          linesHtml.join('') +
+          nodesHtml.join('') +
+        '</svg>'
+      );
+    }
+
+    async function runWisdomQuestion(item, questionText) {
+      const q = String(questionText || '').trim() || 'Bu gönül sultanının bugünün yolcusuna en büyük hikmet dersi nedir?';
+      const reqId = ++uiState.streamRequestId;
+      uiState.streaming = true;
+      uiState.streamText = '';
+      uiState.streamSource = '⏳ Gönül Sultanı meclisinden hikmet cevabı hazırlanıyor...';
+      updateModalStreamDom();
+
+      const hasAiClient =
+        typeof window !== 'undefined' &&
+        window.SEYYAH_AI &&
+        typeof window.SEYYAH_AI.stream === 'function';
+      const hasKey = hasAiClient && typeof window.SEYYAH_AI.hasKey === 'function' && window.SEYYAH_AI.hasKey();
+
+      if (hasKey) {
+        try {
+          const prompt =
+            'Gönül Sultanı / İrfan Büyüğü: ' + item.name + ' (' + (item.era || '') + ' · ' + item.provinceName + ')\n' +
+            'Ekol / Ocak: ' + (item.school || item.theme) + '\n' +
+            'Öz Öğreti: ' + item.coreTeaching + '\n' +
+            'Vecize: "' + (item.quote || '') + '"\n' +
+            'Seyyahın Suali: "' + q + '"\n\n' +
+            'Lütfen bu gönül sultanının öğretileri, kavramları ve ' + item.provinceName + ' irfan mirası ışığında seyyahın sualine doğrudan, samimi ve hikmetli bir Türkçe ile cevap ver.';
+          const system =
+            'Sen Anadolu irfan geleneğinin ve ' + item.name + ' hazretlerinin öğretilerini temsil eden hikmetli bir mürşitsin. Zarif, derin ve yol gösterici bir dille yanıtla.';
+
+          uiState.streamSource = '✨ Gemini AI Canlı Hikmet Söyleşisi';
+          updateModalStreamDom();
+
+          const res = await window.SEYYAH_AI.stream({
+            prompt: prompt,
+            system: system,
+            temperature: 0.75,
+            maxTokens: 1100,
+            onChunk: function (_delta, fullText) {
+              if (reqId !== uiState.streamRequestId) return;
+              uiState.streamText = fullText;
+              updateModalStreamDom();
+            }
+          });
+          if (reqId !== uiState.streamRequestId) return;
+          if (res && res.text) {
+            uiState.streamText = res.text;
+            uiState.streamSource = '✨ Gemini AI Hikmet Söyleşisi (' + (res.model || 'Canlı') + ')';
+            uiState.streaming = false;
+            updateModalStreamDom();
+            return;
+          }
+        } catch (_e) {}
+      }
+
+      // Offline Wisdom Dialogue Fallback
+      const offlineReply = buildOfflineWisdomDialogue(item, q, norm);
+      uiState.streamSource = '🕯️ Çevrimdışı Hikmet Söyleşisi (' + item.name + ' Külliyatı & ' + item.provinceName + ' Mirası)';
+      const words = offlineReply.split(' ');
+      let idx = 0;
+      function step() {
+        if (reqId !== uiState.streamRequestId) return;
+        idx = Math.min(words.length, idx + 12);
+        uiState.streamText = words.slice(0, idx).join(' ');
+        if (idx >= words.length) {
+          uiState.streaming = false;
+          updateModalStreamDom();
+          return;
+        }
+        updateModalStreamDom();
+        setTimeout(step, 24);
+      }
+      step();
+    }
+
     function openContemplationModal(item) {
       closeModal();
       uiState.modalItem = item;
@@ -1876,6 +2284,7 @@
               '<h3 class="irfan-modal-title">' + esc(item.name) + '</h3>' +
               '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;align-items:center;">' +
                 '<span class="irfan-era-badge">⏳ ' + esc(item.era) + '</span>' +
+                (item.school ? '<span class="irfan-era-badge">🕯️ ' + esc(item.school) + '</span>' : '') +
                 '<button type="button" class="irfan-province-btn" id="irfan-modal-city-btn">' +
                   '📍 ' + esc(plateLabel + item.provinceName) + ' · ' + esc(item.region) +
                 '</button>' +
@@ -1886,10 +2295,17 @@
           '<div class="irfan-modal-body">' +
             '<span class="irfan-stream-status" id="irfan-modal-status">⏳ Hazırlanıyor...</span>' +
             '<div class="irfan-stream-box" id="irfan-modal-stream-box"></div>' +
+            '<div class="irfan-dialogue-box">' +
+              '<div style="font-size:0.8rem;font-weight:700;color:var(--accent-cyan,#00f2fe);">💬 Gönül Sultanına Hikmet Suali Sor (Canlı AI + Çevrimdışı Hikmet Yedekli)</div>' +
+              '<div class="irfan-dialogue-row">' +
+                '<input type="text" id="irfan-modal-question-input" class="irfan-dialogue-input" placeholder="Örn: Yolda sabır ve gönül huzuru nasıl korunur?" />' +
+                '<button type="button" id="irfan-modal-ask-btn" class="irfan-dialogue-ask-btn">🕯️ Hikmet Sor</button>' +
+              '</div>' +
+            '</div>' +
           '</div>' +
           '<div class="irfan-modal-footer">' +
             '<div style="display:flex;flex-wrap:wrap;gap:8px;">' +
-              '<button type="button" class="irfan-action-btn" id="irfan-modal-refresh-btn">🔄 Yeniden Tefekkür Et</button>' +
+              '<button type="button" class="irfan-action-btn" id="irfan-modal-refresh-btn">🔄 Ana Risaleyi Tefekkür Et</button>' +
               '<button type="button" class="irfan-action-btn" id="irfan-modal-copy-btn">📋 Metni Kopyala</button>' +
             '</div>' +
             '<button type="button" class="irfan-province-btn" id="irfan-modal-goto-btn">🗺️ Şehir Sayfasını Aç</button>' +
@@ -1918,6 +2334,22 @@
         });
       }
 
+      const qInput = document.getElementById('irfan-modal-question-input');
+      const askBtn = document.getElementById('irfan-modal-ask-btn');
+      if (askBtn) {
+        askBtn.addEventListener('click', function () {
+          runWisdomQuestion(item, qInput ? qInput.value : '');
+        });
+      }
+      if (qInput) {
+        qInput.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            runWisdomQuestion(item, qInput.value);
+          }
+        });
+      }
+
       const copyBtn = document.getElementById('irfan-modal-copy-btn');
       if (copyBtn) {
         copyBtn.addEventListener('click', function () {
@@ -1939,6 +2371,19 @@
       const counts = getCounts();
       const filteredFigures = filterFigures();
       const filteredReflections = filterReflections();
+
+      const constellationHost = container.querySelector('#irfan-constellation-svg-host');
+      if (constellationHost) {
+        constellationHost.innerHTML = buildConstellationSvgHtml(filteredFigures);
+        constellationHost.querySelectorAll('[data-constellation-master]').forEach(function (node) {
+          node.addEventListener('click', function () {
+            const mId = node.getAttribute('data-constellation-master');
+            uiState.selectedMasterId = mId;
+            const found = catalog.masters.find(function (m) { return m.id === mId; });
+            if (found) openContemplationModal(found);
+          });
+        });
+      }
 
       const resultsCountEl = container.querySelector('#irfan-results-count');
       const gridWrap = container.querySelector('#irfan-content-grid');
@@ -2071,6 +2516,28 @@
               return '<button type="button" class="irfan-chip ' + (t.id === 'all' ? 'theme-active' : '') + '" data-theme="' + esc(t.id) + '">' + esc(t.icon + ' ' + t.label) + '</button>';
             }).join('') +
           '</div>' +
+
+          '<div class="irfan-chip-bar" id="irfan-century-chips">' +
+            '<span class="irfan-chip-label">Asırlar Boyu İrfan:</span>' +
+            CENTURIES.map(function (c) {
+              return '<button type="button" class="irfan-chip ' + (c.id === 'all' ? 'active' : '') + '" data-century="' + esc(c.id) + '">' + esc(c.icon + ' ' + c.label) + '</button>';
+            }).join('') +
+          '</div>' +
+
+          '<div class="irfan-chip-bar" id="irfan-school-chips">' +
+            '<span class="irfan-chip-label">İrfan Ocağı / Ekol:</span>' +
+            SCHOOLS.map(function (s) {
+              return '<button type="button" class="irfan-chip ' + (s.id === 'all' ? 'theme-active' : '') + '" data-school="' + esc(s.id) + '">' + esc(s.icon + ' ' + s.label) + '</button>';
+            }).join('') +
+          '</div>' +
+        '</section>' +
+
+        '<section class="irfan-constellation-box">' +
+          '<div class="irfan-constellation-head">' +
+            '<div class="irfan-constellation-title">🌌 İrfan Ocakları &amp; Gönül Hatları Takımyıldız Haritası (24 Gönül Sultanı)</div>' +
+            '<span style="font-size:0.76rem;color:var(--text-secondary,#94a3b8);">Düğümlere tıklayarak bilgenin tefekkür ve hikmet söyleşisini açabilirsiniz</span>' +
+          '</div>' +
+          '<div class="irfan-constellation-svg-wrap" id="irfan-constellation-svg-host"></div>' +
         '</section>' +
 
         '<section id="irfan-content-grid" class="irfan-grid"></section>' +
@@ -2135,6 +2602,26 @@
       chip.addEventListener('click', function () {
         uiState.theme = chip.getAttribute('data-theme') || 'all';
         container.querySelectorAll('#irfan-theme-chips .irfan-chip').forEach(function (c) {
+          c.classList.toggle('theme-active', c === chip);
+        });
+        updateView();
+      });
+    });
+
+    container.querySelectorAll('#irfan-century-chips .irfan-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        uiState.century = chip.getAttribute('data-century') || 'all';
+        container.querySelectorAll('#irfan-century-chips .irfan-chip').forEach(function (c) {
+          c.classList.toggle('active', c === chip);
+        });
+        updateView();
+      });
+    });
+
+    container.querySelectorAll('#irfan-school-chips .irfan-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        uiState.school = chip.getAttribute('data-school') || 'all';
+        container.querySelectorAll('#irfan-school-chips .irfan-chip').forEach(function (c) {
           c.classList.toggle('theme-active', c === chip);
         });
         updateView();

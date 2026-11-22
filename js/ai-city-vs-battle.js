@@ -20,6 +20,14 @@
     { key: 'butce', icon: '🚌', label: 'Bütçe & Ulaşım' }
   ];
 
+  const RADAR_AXES = [
+    { key: 'tarih', icon: '🏛️', label: 'Tarihi Miras', shortLabel: 'Tarihi Miras' },
+    { key: 'gastronomi', icon: '🍽️', label: 'Gastronomi', shortLabel: 'Gastronomi' },
+    { key: 'irfan', icon: '🕌', label: 'İrfan & Maneviyat', shortLabel: 'İrfan & Maneviyat' },
+    { key: 'doga', icon: '🌲', label: 'Doğa & İklim', shortLabel: 'Doğa & İklim' },
+    { key: 'kutuphane', icon: '📚', label: 'Kütüphane & Göçebe Uyumu', shortLabel: 'Kütüphane & Göçebe' }
+  ];
+
   const REGION_ICONS = {
     '01_Marmara': '🏰',
     '02_Ege': '🌊',
@@ -669,6 +677,156 @@
         transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
+      /* 5-Axis SVG Radar / Spider Comparison Card */
+      .vsbattle-radar-card {
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .vsbattle-radar-layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 410px) minmax(0, 1fr);
+        gap: 20px;
+        align-items: center;
+      }
+
+      .vsbattle-radar-svg-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        background: rgba(15, 23, 42, 0.44);
+        border: 1px solid var(--border-glass);
+      }
+
+      .vsbattle-radar-svg {
+        width: 100%;
+        max-width: 390px;
+        height: auto;
+        overflow: visible;
+      }
+
+      .vsbattle-radar-grid-poly {
+        fill: none;
+        stroke: rgba(148, 163, 184, 0.24);
+        stroke-width: 1;
+      }
+
+      .vsbattle-radar-spoke {
+        stroke: rgba(148, 163, 184, 0.22);
+        stroke-width: 1;
+        stroke-dasharray: 3 3;
+      }
+
+      .vsbattle-radar-axis-label {
+        font-family: var(--font-heading);
+        font-size: 11px;
+        font-weight: 700;
+        fill: #e2e8f0;
+      }
+
+      .vsbattle-radar-ring-label {
+        font-size: 9px;
+        font-weight: 600;
+        fill: #64748b;
+      }
+
+      .vsbattle-radar-poly-a {
+        fill: rgba(0, 242, 254, 0.22);
+        stroke: #00f2fe;
+        stroke-width: 2.3;
+        stroke-linejoin: round;
+      }
+
+      .vsbattle-radar-poly-b {
+        fill: rgba(245, 158, 11, 0.22);
+        stroke: #f59e0b;
+        stroke-width: 2.3;
+        stroke-linejoin: round;
+      }
+
+      .vsbattle-radar-legend {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .vsbattle-radar-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .vsbattle-radar-swatch {
+        width: 11px;
+        height: 11px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+
+      .vsbattle-radar-table {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .vsbattle-radar-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) auto auto;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 13px;
+        border-radius: var(--radius-md);
+        background: rgba(15, 23, 42, 0.42);
+        border: 1px solid var(--border-glass);
+      }
+
+      .vsbattle-radar-row-label {
+        font-size: 0.83rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .vsbattle-radar-pill {
+        font-family: var(--font-heading);
+        font-size: 0.8rem;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        min-width: 58px;
+        text-align: center;
+      }
+
+      .vsbattle-radar-pill.is-a {
+        background: rgba(0, 242, 254, 0.14);
+        border: 1px solid rgba(0, 242, 254, 0.35);
+        color: var(--accent-cyan);
+      }
+
+      .vsbattle-radar-pill.is-b {
+        background: rgba(245, 158, 11, 0.14);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        color: var(--accent-gold);
+      }
+
+      .vsbattle-radar-pill.is-lead {
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.14);
+        transform: scale(1.03);
+      }
+
       /* AI Referee Studio Card */
       .vsbattle-ai-card {
         padding: 22px 24px;
@@ -843,9 +1001,42 @@
       body.light-theme .vsbattle-dist-metric,
       body.light-theme .vsbattle-score-summary,
       body.light-theme .vsbattle-bar-row,
+      body.light-theme .vsbattle-radar-svg-wrap,
+      body.light-theme .vsbattle-radar-row,
       body.light-theme .vsbattle-verdict-box {
         background: rgba(241, 245, 249, 0.88);
         border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      body.light-theme .vsbattle-radar-grid-poly,
+      body.light-theme .vsbattle-radar-spoke {
+        stroke: rgba(15, 23, 42, 0.18);
+      }
+
+      body.light-theme .vsbattle-radar-axis-label {
+        fill: #0f172a;
+      }
+
+      body.light-theme .vsbattle-radar-poly-a {
+        fill: rgba(2, 132, 199, 0.2);
+        stroke: #0284c7;
+      }
+
+      body.light-theme .vsbattle-radar-poly-b {
+        fill: rgba(217, 119, 6, 0.2);
+        stroke: #d97706;
+      }
+
+      body.light-theme .vsbattle-radar-pill.is-a {
+        background: rgba(2, 132, 199, 0.12);
+        border-color: rgba(2, 132, 199, 0.34);
+        color: #0369a1;
+      }
+
+      body.light-theme .vsbattle-radar-pill.is-b {
+        background: rgba(217, 119, 6, 0.12);
+        border-color: rgba(217, 119, 6, 0.34);
+        color: #b45309;
       }
 
       body.light-theme .vsbattle-track {
@@ -872,6 +1063,9 @@
           grid-template-columns: 1fr;
         }
         .vsbattle-arena {
+          grid-template-columns: 1fr;
+        }
+        .vsbattle-radar-layout {
           grid-template-columns: 1fr;
         }
         .vsbattle-center-bridge {
@@ -995,13 +1189,205 @@
     const landmarksCount = Array.isArray(province && province.landmarks) ? province.landmarks.length : 0;
     const specialtiesCount = Array.isArray(province && province.specialties) ? province.specialties.length : 0;
     const richness = computeStudyPlanRichness(province);
+    const radar = computeRadarScores(province, richness.score);
     return {
       landmarks: landmarksCount,
       specialties: specialtiesCount,
       richnessScore: richness.score,
       richnessLabel: richness.label,
-      planDays: richness.planDays
+      planDays: richness.planDays,
+      radar: radar
     };
+  }
+
+  function computeRadarScores(province, richnessScore) {
+    if (!province) {
+      return { tarih: 50, gastronomi: 50, irfan: 50, doga: 50, kutuphane: 50 };
+    }
+    const landmarks = Array.isArray(province.landmarks) ? province.landmarks : [];
+    const specialties = Array.isArray(province.specialties) ? province.specialties : [];
+    const spirituals = Array.isArray(province.spiritual_figures)
+      ? province.spiritual_figures
+      : province.spiritual_figures
+        ? [province.spiritual_figures]
+        : [];
+    const planArr = Array.isArray(province.five_day_plan) ? province.five_day_plan : [];
+    const blob = [
+      province.history || '',
+      province.reflection || '',
+      province.quote || '',
+      landmarks.join(' '),
+      planArr.join(' ')
+    ].join(' ').toLocaleLowerCase('tr');
+
+    // 1. Tarihi Miras (0-100)
+    const historicHits = landmarks.filter(function (l) {
+      return /cami|kale|antik|müze|medrese|köprü|saray|külliy|tapınak|höyük|han|kilise|manastır|türbe|hamam|tiyatro|unesco|sur|konak|çarşı|abide|anıt/i.test(String(l));
+    }).length;
+    const unescoBonus = /unesco|selçuklu|osmanlı|hitit|antik|roma|bizans|urartu/i.test(blob) ? 14 : 4;
+    const historyDepth = Math.min(20, Math.round(String(province.history || '').length / 35));
+    const tarih = Math.max(28, Math.min(99, 34 + landmarks.length * 7 + historicHits * 6 + unescoBonus + historyDepth));
+
+    // 2. Gastronomi (0-100)
+    const gastroRegions = { '07_GuneydoguAnadolu': 14, '03_Akdeniz': 11, '02_Ege': 10, '01_Marmara': 9, '04_IcAnadolu': 9, '05_Karadeniz': 9, '06_DoguAnadolu': 10 };
+    const regionGastroBonus = gastroRegions[province.region_code] || 8;
+    const specBlob = specialties.join(' ').toLocaleLowerCase('tr');
+    const diversityBonus =
+      (/(tatlı|baklava|helva|künefe|kadayıf|dondurma|lokum|sütlaç|hoşmerim|katmer)/i.test(specBlob) ? 6 : 0) +
+      (/(çorba|beyran|tarhana|keşkek|paça|yuvalama)/i.test(specBlob) ? 6 : 0) +
+      (/(kebap|köfte|tandır|pide|mantı|börek|kavurma|ciğer|döner)/i.test(specBlob) ? 6 : 0);
+    const gastronomi = Math.max(30, Math.min(99, 36 + specialties.length * 10 + regionGastroBonus + diversityBonus));
+
+    // 3. İrfan & Maneviyat (0-100)
+    const irfanKeywords = (blob.match(/mevlana|dergâh|dergah|tekke|evliya|ahi|türbe|külliye|tasavvuf|irfan|medrese|yunus|hacı bektaş|somuncu|şems|eyüp|aziz|veli|eren/gi) || []).length;
+    const reflectionDepth = Math.min(18, Math.round(String(province.reflection || '').length / 30));
+    const irfan = Math.max(26, Math.min(99, 30 + spirituals.length * 14 + Math.min(24, irfanKeywords * 5) + reflectionDepth));
+
+    // 4. Doğa & İklim (0-100)
+    const naturalHits = landmarks.filter(function (l) {
+      return /dağ|göl|kanyon|şelale|mağara|yayla|nehir|boğaz|ada|körfez|milli park|krater|vadi|plaj|kuş|orman|obruk|peri|kaplıca|termal|delta|falez|koy|ırmak|zirve/i.test(String(l));
+    }).length;
+    const natureKeywords = (blob.match(/yayla|şelale|kanyon|göl|deniz|sahil|plaj|orman|dağ|milli park|termal|kaplıca|vadi|koy|boğaz/gi) || []).length;
+    const natureRegionBonus =
+      province.region_code === '05_Karadeniz' || province.region_code === '03_Akdeniz' || province.region_code === '02_Ege'
+        ? 14
+        : province.region_code === '06_DoguAnadolu'
+          ? 12
+          : 8;
+    const doga = Math.max(28, Math.min(99, 32 + naturalHits * 13 + Math.min(22, natureKeywords * 3) + natureRegionBonus));
+
+    // 5. Kütüphane & Göçebe Uyumu (0-100)
+    const kutuphane = Math.max(25, Math.min(99, Math.round(richnessScore || computeStudyPlanRichness(province).score)));
+
+    return { tarih, gastronomi, irfan, doga, kutuphane };
+  }
+
+  function buildRadarSectionHtml(cityA, radarA, cityB, radarB, escapeHtml) {
+    const cx = 190;
+    const cy = 172;
+    const maxR = 112;
+    const rings = [25, 50, 75, 100];
+    const axisCount = RADAR_AXES.length;
+
+    function polarPoint(axisIndex, pct) {
+      const angle = -Math.PI / 2 + (axisIndex * 2 * Math.PI) / axisCount;
+      const r = (pct / 100) * maxR;
+      return {
+        x: Number((cx + r * Math.cos(angle)).toFixed(1)),
+        y: Number((cy + r * Math.sin(angle)).toFixed(1))
+      };
+    }
+
+    const ringPolys = rings.map(function (pct) {
+      const pts = RADAR_AXES.map(function (_, idx) {
+        const pt = polarPoint(idx, pct);
+        return pt.x + ',' + pt.y;
+      }).join(' ');
+      const topPt = polarPoint(0, pct);
+      return (
+        '<polygon class="vsbattle-radar-grid-poly" points="' + pts + '" />' +
+        '<text class="vsbattle-radar-ring-label" x="' + (topPt.x + 4) + '" y="' + (topPt.y + 3) + '">' + pct + '</text>'
+      );
+    }).join('');
+
+    const spokesAndLabels = RADAR_AXES.map(function (axis, idx) {
+      const edge = polarPoint(idx, 100);
+      const labelPt = polarPoint(idx, 124);
+      let anchor = 'middle';
+      if (labelPt.x < cx - 22) anchor = 'end';
+      else if (labelPt.x > cx + 22) anchor = 'start';
+      const dy = labelPt.y < cy - 80 ? -2 : labelPt.y > cy + 80 ? 11 : 4;
+      return (
+        '<line class="vsbattle-radar-spoke" x1="' + cx + '" y1="' + cy + '" x2="' + edge.x + '" y2="' + edge.y + '" />' +
+        '<text class="vsbattle-radar-axis-label" x="' + labelPt.x + '" y="' + (labelPt.y + dy) + '" text-anchor="' + anchor + '">' +
+        escapeHtml(axis.icon + ' ' + axis.shortLabel) +
+        '</text>'
+      );
+    }).join('');
+
+    const polyPointsA = RADAR_AXES.map(function (axis, idx) {
+      const pt = polarPoint(idx, radarA[axis.key] || 0);
+      return pt.x + ',' + pt.y;
+    }).join(' ');
+
+    const polyPointsB = RADAR_AXES.map(function (axis, idx) {
+      const pt = polarPoint(idx, radarB[axis.key] || 0);
+      return pt.x + ',' + pt.y;
+    }).join(' ');
+
+    const dotsA = RADAR_AXES.map(function (axis, idx) {
+      const val = radarA[axis.key] || 0;
+      const pt = polarPoint(idx, val);
+      return (
+        '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4.2" fill="#00f2fe" stroke="#0f172a" stroke-width="1.5">' +
+        '<title>' + escapeHtml(cityA.name + ' — ' + axis.label + ': ' + val + '/100') + '</title></circle>'
+      );
+    }).join('');
+
+    const dotsB = RADAR_AXES.map(function (axis, idx) {
+      const val = radarB[axis.key] || 0;
+      const pt = polarPoint(idx, val);
+      return (
+        '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4.2" fill="#f59e0b" stroke="#0f172a" stroke-width="1.5">' +
+        '<title>' + escapeHtml(cityB.name + ' — ' + axis.label + ': ' + val + '/100') + '</title></circle>'
+      );
+    }).join('');
+
+    const avgA = Math.round(RADAR_AXES.reduce(function (s, a) { return s + (radarA[a.key] || 0); }, 0) / axisCount);
+    const avgB = Math.round(RADAR_AXES.reduce(function (s, a) { return s + (radarB[a.key] || 0); }, 0) / axisCount);
+
+    const rowsHtml = RADAR_AXES.map(function (axis) {
+      const valA = radarA[axis.key] || 0;
+      const valB = radarB[axis.key] || 0;
+      return `
+        <div class="vsbattle-radar-row">
+          <span class="vsbattle-radar-row-label">${axis.icon} ${escapeHtml(axis.label)}</span>
+          <span class="vsbattle-radar-pill is-a ${valA > valB ? 'is-lead' : ''}">${valA}${valA > valB ? ' ★' : ''}</span>
+          <span class="vsbattle-radar-pill is-b ${valB > valA ? 'is-lead' : ''}">${valB > valA ? '★ ' : ''}${valB}</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <section class="glass-card vsbattle-radar-card" aria-label="5 Eksenli Radar Karşılaştırma Grafiği">
+        <div class="vsbattle-section-head">
+          <h3 class="vsbattle-section-title">🕸️ 5 Eksenli Radar / Örümcek Karşılaştırması</h3>
+          <span class="vsbattle-score-summary">
+            Genel İndeks:
+            <strong style="color:var(--accent-cyan);">${escapeHtml(cityA.name)} ${avgA}</strong>
+            vs
+            <strong style="color:var(--accent-gold);">${avgB} ${escapeHtml(cityB.name)}</strong>
+          </span>
+        </div>
+
+        <div class="vsbattle-radar-layout">
+          <div class="vsbattle-radar-svg-wrap">
+            <svg class="vsbattle-radar-svg" viewBox="0 0 380 344" role="img" aria-label="${escapeHtml(cityA.name)} ve ${escapeHtml(cityB.name)} 5 eksenli radar grafiği">
+              ${ringPolys}
+              ${spokesAndLabels}
+              <polygon class="vsbattle-radar-poly-a" points="${polyPointsA}" />
+              <polygon class="vsbattle-radar-poly-b" points="${polyPointsB}" />
+              ${dotsA}
+              ${dotsB}
+            </svg>
+            <div class="vsbattle-radar-legend">
+              <span class="vsbattle-radar-legend-item">
+                <span class="vsbattle-radar-swatch" style="background:#00f2fe;"></span>
+                <span>${escapeHtml(cityA.name)} (${avgA}/100)</span>
+              </span>
+              <span class="vsbattle-radar-legend-item">
+                <span class="vsbattle-radar-swatch" style="background:#f59e0b;"></span>
+                <span>${escapeHtml(cityB.name)} (${avgB}/100)</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="vsbattle-radar-table">
+            ${rowsHtml}
+          </div>
+        </div>
+      </section>
+    `;
   }
 
   // ---------------------------------------------------------------------------
@@ -1235,15 +1621,19 @@
   }
 
   function buildOfflineJudgeFallback(cityA, cityB, metricsA, metricsB, distStats) {
+    const rA = metricsA.radar || computeRadarScores(cityA, metricsA.richnessScore);
+    const rB = metricsB.radar || computeRadarScores(cityB, metricsB.richnessScore);
+    const totalA = rA.tarih + rA.gastronomi + rA.irfan + rA.doga + rA.kutuphane;
+    const totalB = rB.tarih + rB.gastronomi + rB.irfan + rB.doga + rB.kutuphane;
+
     const visitAdvice =
       !cityA.visited && cityB.visited
-        ? `**${cityA.name}** henüz ziyaret edilmemiş olduğu için yeni menzil keşfi açısından bir adım önde.`
+        ? `**${cityA.name}** henüz ziyaret edilmemiş olduğu için yeni menzil keşfi açısından bir adım önde (5 eksenli indeks: **${Math.round(totalA / 5)}/100**).`
         : !cityB.visited && cityA.visited
-          ? `**${cityB.name}** henüz ziyaret edilmemiş olduğu için seyahatname haritanı genişletmek adına öncelikli aday.`
-          : metricsA.richnessScore + metricsA.landmarks + metricsA.specialties >=
-              metricsB.richnessScore + metricsB.landmarks + metricsB.specialties
-            ? `**${cityA.name}**, toplam veri zenginliği ve kütüphane/plan derinliğiyle ilk etap için hafif bir üstünlük kuruyor.`
-            : `**${cityB.name}**, toplam veri zenginliği ve gastronomik/tarihî çeşitliliğiyle ilk etap için güçlü bir başlangıç sunuyor.`;
+          ? `**${cityB.name}** henüz ziyaret edilmemiş olduğu için seyahatname haritanı genişletmek adına öncelikli aday (5 eksenli indeks: **${Math.round(totalB / 5)}/100**).`
+          : totalA >= totalB
+            ? `**${cityA.name}**, 5 eksenli Bilgi Grafiği değerlendirmesinde **${Math.round(totalA / 5)}/100** ortalama skorla (vs ${Math.round(totalB / 5)}/100) ilk etap için öne çıkıyor.`
+            : `**${cityB.name}**, 5 eksenli Bilgi Grafiği değerlendirmesinde **${Math.round(totalB / 5)}/100** ortalama skorla (vs ${Math.round(totalA / 5)}/100) ilk etap için güçlü bir başlangıç sunuyor.`;
 
     const lmA = (cityA.landmarks || []).slice(0, 3).join(', ') || 'tarihî merkez';
     const lmB = (cityB.landmarks || []).slice(0, 3).join(', ') || 'tarihî merkez';
@@ -1251,26 +1641,33 @@
     const spB = (cityB.specialties || []).slice(0, 3).join(', ') || 'yöresel tatlar';
     const libA = cityA.custom_library || cityA.library || `${cityA.name} İl Halk Kütüphanesi`;
     const libB = cityB.custom_library || cityB.library || `${cityB.name} İl Halk Kütüphanesi`;
+    const spFigA = Array.isArray(cityA.spiritual_figures) && cityA.spiritual_figures.length
+      ? String(cityA.spiritual_figures[0]).replace(/\*\*/g, '')
+      : (cityA.custom_quote || cityA.quote || cityA.region);
+    const spFigB = Array.isArray(cityB.spiritual_figures) && cityB.spiritual_figures.length
+      ? String(cityB.spiritual_figures[0]).replace(/\*\*/g, '')
+      : (cityB.custom_quote || cityB.quote || cityB.region);
 
     return [
-      `### 1. 🏛️ Tarih & Mimari`,
+      `### 1. 🏛️ Tarihi Miras (${cityA.name} ${rA.tarih} vs ${rB.tarih} ${cityB.name})`,
       `- **${cityA.name}** (${metricsA.landmarks} ana miras): ${lmA} gibi duraklarla öne çıkıyor.`,
       `- **${cityB.name}** (${metricsB.landmarks} ana miras): ${lmB} ile güçlü bir mimari miras sunuyor.`,
       '',
-      `### 2. 🍽️ Yöresel Mutfak`,
+      `### 2. 🍽️ Gastronomi (${cityA.name} ${rA.gastronomi} vs ${rB.gastronomi} ${cityB.name})`,
       `- **${cityA.name}** (${metricsA.specialties} lezzet): ${spA} öne çıkan tatlar arasında.`,
       `- **${cityB.name}** (${metricsB.specialties} lezzet): ${spB} ile zengin bir sofra vadediyor.`,
       '',
-      `### 3. 📚 Kütüphane & Çalışma`,
+      `### 3. 🕌 İrfan & Maneviyat (${cityA.name} ${rA.irfan} vs ${rB.irfan} ${cityB.name})`,
+      `- **${cityA.name}**: ${spFigA}`,
+      `- **${cityB.name}**: ${spFigB}`,
+      '',
+      `### 4. 🌲 Doğa & İklim (${cityA.name} ${rA.doga} vs ${rB.doga} ${cityB.name})`,
+      `- **${cityA.name}** (${cityA.region}) ile **${cityB.name}** (${cityB.region}) arasında belirgin bir iklim ve tabiat kontrastı bulunuyor; mevsim tercihinize göre yayla/kıyı veya tarihî merkez dengesini kurabilirsiniz.`,
+      '',
+      `### 5. 📚 Kütüphane & Göçebe Uyumu (${cityA.name} ${rA.kutuphane} vs ${rB.kutuphane} ${cityB.name})`,
       `- **${cityA.name}** (${metricsA.richnessScore}/100): ${libA}`,
       `- **${cityB.name}** (${metricsB.richnessScore}/100): ${libB}`,
-      '',
-      `### 4. 🕌 Manevi Atmosfer`,
-      `- **${cityA.name}**: "${cityA.custom_quote || cityA.quote || cityA.region}"`,
-      `- **${cityB.name}**: "${cityB.custom_quote || cityB.quote || cityB.region}"`,
-      '',
-      `### 5. 🚌 Bütçe & Ulaşım`,
-      `- İki şehir arası kuş uçuşu **${distStats.airKm} km**, karayolu yaklaşık **${distStats.roadKm} km** (otobüsle tahmini **${distStats.busTimeText}**). Her iki şehirde de 5 Gün Kuralı ve İl Halk Kütüphanesi rutini ekonomik biçimde uygulanabilir.`,
+      `- **Ulaşım Köprüsü:** İki şehir arası kuş uçuşu **${distStats.airKm} km**, karayolu yaklaşık **${distStats.roadKm} km** (otobüsle tahmini **${distStats.busTimeText}**).`,
       '',
       `### 🏆 Uzman Hakem Kararı: Önce Hangi Şehre Gidilmeli?`,
       `${visitAdvice} Ardından diğer şehre otobüsle **${distStats.busTimeText}** yolculukla geçerek iki menzili tek koridorda birleştirebilirsin.`
@@ -1655,8 +2052,8 @@
             </select>
           </div>
 
-          <button type="button" id="vsbattle-btn-random" class="btn btn-primary vsbattle-random-btn" title="81 il arasından rastgele düello başlat">
-            🎲 Rastgele Düello
+          <button type="button" id="vsbattle-btn-random" class="btn btn-primary vsbattle-random-btn" title="81 il arasından rastgele kapışma başlat">
+            🎲 Rastgele Kapışma
           </button>
         </section>
 
@@ -1686,6 +2083,9 @@
 
           ${buildFighterCardHtml('vsbattle-fighter-b', '2. Köşe', selectedKeyB, cityB, escapeHtml)}
         </section>
+
+        <!-- 5-Axis SVG Radar / Spider Comparison Chart -->
+        ${buildRadarSectionHtml(cityA, metricsA.radar, cityB, metricsB.radar, escapeHtml)}
 
         <!-- Deterministic Instant Comparison Bars -->
         <section class="glass-card vsbattle-bars-card">
@@ -1811,7 +2211,7 @@
         }
         activeRequestId++;
         render(container, safeCtx);
-        showToast('🎲 Rastgele Düello: ' + provinces[selectedKeyA].name + ' vs ' + provinces[selectedKeyB].name);
+        showToast('🎲 Rastgele Kapışma: ' + provinces[selectedKeyA].name + ' vs ' + provinces[selectedKeyB].name);
       });
     }
 
@@ -1832,6 +2232,33 @@
         const currentCityB = provinces[selectedKeyB];
         const currentMetricsA = getProvinceMetrics(currentCityA);
         const currentMetricsB = getProvinceMetrics(currentCityB);
+
+        const aiReadyNow =
+          typeof window !== 'undefined' &&
+          window.SEYYAH_AI &&
+          typeof window.SEYYAH_AI.hasKey === 'function' &&
+          window.SEYYAH_AI.hasKey();
+
+        // Instant API-keyless Knowledge-Graph referee synthesis (zero network delay)
+        if (!aiReadyNow) {
+          const instantText = buildOfflineJudgeFallback(
+            currentCityA,
+            currentCityB,
+            currentMetricsA,
+            currentMetricsB,
+            distStats
+          );
+          const instantEntry = {
+            status: 'done',
+            mode: 'fallback',
+            text: instantText,
+            errorMsg: 'Anlık Bilgi Grafiği Hakemi'
+          };
+          verdictCache.set(currentPairKey, instantEntry);
+          renderVerdictContent(verdictBox, instantEntry, currentCityA, currentCityB, escapeHtml);
+          showToast('⚖️ Anlık Yerel Hakem Kararı hazır!');
+          return;
+        }
 
         judgeBtn.disabled = true;
         verdictCache.set(currentPairKey, {

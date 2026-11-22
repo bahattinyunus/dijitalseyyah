@@ -1358,6 +1358,69 @@
         color: var(--text-secondary, #94a3b8);
       }
 
+      /* Visual SVG Mini-Map Feedback */
+      .dg-minimap-box {
+        background: radial-gradient(circle at 50% 45%, rgba(15, 23, 42, 0.88), rgba(7, 12, 24, 0.96));
+        border: 1px solid rgba(0, 242, 254, 0.24);
+        border-radius: var(--radius-md, 14px);
+        padding: 12px 14px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .dg-minimap-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      .dg-minimap-head strong {
+        color: var(--text-primary, #f8fafc);
+      }
+
+      .dg-minimap-svg {
+        width: 100%;
+        max-height: 210px;
+        height: auto;
+        display: block;
+      }
+
+      .dg-mm-coast {
+        fill: rgba(30, 41, 59, 0.72);
+        stroke: rgba(148, 163, 184, 0.34);
+        stroke-width: 1.25;
+        stroke-linejoin: round;
+      }
+
+      .dg-mm-grid {
+        stroke: rgba(148, 163, 184, 0.12);
+        stroke-width: 0.7;
+        stroke-dasharray: 3 4;
+      }
+
+      .dg-mm-grid-lbl {
+        font-size: 8.5px;
+        fill: rgba(148, 163, 184, 0.5);
+        font-weight: 600;
+      }
+
+      .dg-mm-city-lbl {
+        font-family: var(--font-heading, sans-serif);
+        font-size: 11px;
+        font-weight: 800;
+        fill: #f8fafc;
+        paint-order: stroke;
+        stroke: rgba(7, 12, 24, 0.92);
+        stroke-width: 3.5px;
+        stroke-linejoin: round;
+      }
+
       /* Light Theme Adjustments */
       body.light-theme .dg-header,
       body.light-theme .dg-control-panel,
@@ -1415,6 +1478,29 @@
         border-color: rgba(2, 132, 199, 0.45);
       }
 
+      body.light-theme .dg-minimap-box {
+        background: radial-gradient(circle at 50% 45%, #f8fafc, #e2e8f0);
+        border-color: rgba(2, 132, 199, 0.28);
+      }
+
+      body.light-theme .dg-mm-coast {
+        fill: rgba(255, 255, 255, 0.95);
+        stroke: rgba(100, 116, 139, 0.52);
+      }
+
+      body.light-theme .dg-mm-grid {
+        stroke: rgba(100, 116, 139, 0.2);
+      }
+
+      body.light-theme .dg-mm-grid-lbl {
+        fill: rgba(71, 85, 105, 0.72);
+      }
+
+      body.light-theme .dg-mm-city-lbl {
+        fill: #0f172a;
+        stroke: rgba(255, 255, 255, 0.94);
+      }
+
       /* Responsive Breakpoints */
       @media (max-width: 820px) {
         .dg-hud {
@@ -1466,6 +1552,113 @@
   // =========================================================================
   // RENDER HELPERS
   // =========================================================================
+  const MM_W = 520;
+  const MM_H = 210;
+  const MM_PAD_X = 24;
+  const MM_PAD_Y = 18;
+  const MM_BOUNDS = { minLng: 25.5, maxLng: 45.0, minLat: 35.5, maxLat: 42.5 };
+
+  const MM_THRACE = [
+    [41.98, 26.35], [41.97, 27.15], [41.88, 28.00], [41.55, 28.22],
+    [41.24, 29.10], [41.00, 28.98], [41.06, 28.05], [40.98, 27.52],
+    [40.62, 27.12], [40.06, 26.20], [40.64, 26.35], [41.12, 26.36], [41.68, 26.55]
+  ];
+
+  const MM_ANATOLIA = [
+    [41.22, 29.16], [41.12, 30.72], [41.74, 32.38], [42.04, 35.15],
+    [41.30, 36.34], [40.99, 37.88], [41.01, 39.72], [41.52, 41.55],
+    [41.56, 42.75], [40.50, 43.65], [39.66, 44.78], [38.46, 44.36],
+    [37.14, 44.78], [37.16, 42.55], [37.06, 41.22], [36.72, 38.95],
+    [36.68, 37.10], [35.84, 36.12], [36.77, 35.78], [36.80, 34.63],
+    [36.02, 32.84], [36.88, 30.70], [36.20, 29.63], [36.85, 28.27],
+    [37.04, 27.43], [38.32, 26.32], [39.48, 26.08], [40.15, 26.40],
+    [40.38, 28.88], [40.76, 29.92], [41.01, 29.02]
+  ];
+
+  function projectMiniMap(lat, lng) {
+    const x = MM_PAD_X + ((lng - MM_BOUNDS.minLng) / (MM_BOUNDS.maxLng - MM_BOUNDS.minLng)) * (MM_W - MM_PAD_X * 2);
+    const y = MM_PAD_Y + ((MM_BOUNDS.maxLat - lat) / (MM_BOUNDS.maxLat - MM_BOUNDS.minLat)) * (MM_H - MM_PAD_Y * 2);
+    return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+  }
+
+  function buildMiniMapPath(coords) {
+    return coords.map((pt, i) => {
+      const p = projectMiniMap(pt[0], pt[1]);
+      return (i === 0 ? 'M' : 'L') + p.x + ',' + p.y;
+    }).join(' ') + ' Z';
+  }
+
+  function renderAnatoliaMiniMapSvg(cityA, cityB, badgeText, esc) {
+    if (!cityA || !cityB || !Number.isFinite(cityA.lat) || !Number.isFinite(cityB.lat)) return '';
+
+    const pA = projectMiniMap(cityA.lat, cityA.lng);
+    const pB = projectMiniMap(cityB.lat, cityB.lng);
+    const midX = Math.round(((pA.x + pB.x) / 2) * 10) / 10;
+    const midY = Math.round(((pA.y + pB.y) / 2) * 10) / 10;
+
+    // Smart label placement to avoid clipping at SVG edges
+    const anchorA = pA.x > MM_W - 105 ? 'end' : pA.x < 105 ? 'start' : 'middle';
+    const dyA = pA.y < 36 ? 18 : -11;
+    const anchorB = pB.x > MM_W - 105 ? 'end' : pB.x < 105 ? 'start' : 'middle';
+    const dyB = (Math.abs(pA.y - pB.y) < 22 && Math.abs(pA.x - pB.x) < 95)
+      ? (dyA < 0 ? 18 : -11)
+      : (pB.y < 36 ? 18 : -11);
+
+    const gridLngs = [28, 32, 36, 40, 44].map(lng => {
+      const top = projectMiniMap(MM_BOUNDS.maxLat, lng);
+      const bot = projectMiniMap(MM_BOUNDS.minLat, lng);
+      return `<line class="dg-mm-grid" x1="${top.x}" y1="${top.y}" x2="${bot.x}" y2="${bot.y}" />
+              <text class="dg-mm-grid-lbl" x="${top.x + 2}" y="${MM_H - 4}">${lng}°D</text>`;
+    }).join('');
+
+    const gridLats = [37, 39, 41].map(lat => {
+      const left = projectMiniMap(lat, MM_BOUNDS.minLng);
+      const right = projectMiniMap(lat, MM_BOUNDS.maxLng);
+      return `<line class="dg-mm-grid" x1="${left.x}" y1="${left.y}" x2="${right.x}" y2="${right.y}" />
+              <text class="dg-mm-grid-lbl" x="4" y="${left.y - 3}">${lat}°K</text>`;
+    }).join('');
+
+    const safeLabel = esc(badgeText || '');
+    const pillW = Math.max(76, Math.min(148, (badgeText ? badgeText.length * 6.5 + 18 : 84)));
+    const pillX = Math.max(8, Math.min(MM_W - pillW - 8, midX - pillW / 2));
+    const pillY = Math.max(8, Math.min(MM_H - 26, midY - 10));
+
+    return `
+      <div class="dg-minimap-box">
+        <div class="dg-minimap-head">
+          <span>🗺️ Coğrafi Konum &amp; Kuş Uçuşu Hattı</span>
+          <span><strong>${esc(cityA.name)}</strong> (${cityA.lat.toFixed(2)}°K, ${cityA.lng.toFixed(2)}°D) ↔ <strong>${esc(cityB.name)}</strong> (${cityB.lat.toFixed(2)}°K, ${cityB.lng.toFixed(2)}°D)</span>
+        </div>
+        <svg class="dg-minimap-svg" viewBox="0 0 ${MM_W} ${MM_H}" role="img" aria-label="${esc(cityA.name)} ile ${esc(cityB.name)} arası Anadolu harita konumu">
+          <defs>
+            <linearGradient id="dgMmLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00f2fe" />
+              <stop offset="50%" stop-color="#f59e0b" />
+              <stop offset="100%" stop-color="#10b981" />
+            </linearGradient>
+          </defs>
+          ${gridLngs}
+          ${gridLats}
+          <path class="dg-mm-coast" d="${buildMiniMapPath(MM_THRACE)}" />
+          <path class="dg-mm-coast" d="${buildMiniMapPath(MM_ANATOLIA)}" />
+          <line x1="${pA.x}" y1="${pA.y}" x2="${pB.x}" y2="${pB.y}" stroke="rgba(0, 242, 254, 0.28)" stroke-width="6" stroke-linecap="round" />
+          <line x1="${pA.x}" y1="${pA.y}" x2="${pB.x}" y2="${pB.y}" stroke="url(#dgMmLineGrad)" stroke-width="2.4" stroke-dasharray="6 4" stroke-linecap="round" />
+          ${safeLabel ? `
+            <rect x="${pillX}" y="${pillY}" width="${pillW}" height="20" rx="10" fill="rgba(10, 15, 29, 0.9)" stroke="rgba(245, 158, 11, 0.65)" stroke-width="1" />
+            <text x="${pillX + pillW / 2}" y="${pillY + 13.5}" text-anchor="middle" font-size="10" font-weight="800" fill="#fde68a">${safeLabel}</text>
+          ` : ''}
+          <circle cx="${pA.x}" cy="${pA.y}" r="8" fill="rgba(0, 242, 254, 0.22)" />
+          <circle cx="${pA.x}" cy="${pA.y}" r="4.5" fill="#00f2fe" stroke="#061224" stroke-width="1.6" />
+          <text class="dg-mm-city-lbl" x="${pA.x}" y="${pA.y + dyA}" text-anchor="${anchorA}">${formatPlate(cityA.plate)} ${esc(cityA.name)}</text>
+
+          <circle cx="${pB.x}" cy="${pB.y}" r="8" fill="rgba(16, 185, 129, 0.22)" />
+          <circle cx="${pB.x}" cy="${pB.y}" r="4.5" fill="#10b981" stroke="#061224" stroke-width="1.6" />
+          <text class="dg-mm-city-lbl" x="${pB.x}" y="${pB.y + dyB}" text-anchor="${anchorB}">${formatPlate(cityB.plate)} ${esc(cityB.name)}</text>
+        </svg>
+      </div>
+    `;
+  }
+
   function renderCityCard(city, options, esc) {
     const {
       side,
@@ -1741,6 +1934,8 @@
             </div>
           </div>
 
+          ${renderAnatoliaMiniMapSvg(r.a, r.b, `~${formatKm(r.actual)} km`, esc)}
+
           <div class="dg-result-actions">
             <span class="dg-tip-text">📖 Yukarıdaki iki şehirden herhangi birine tıklayıp dosyasını keşfedebilirsin.</span>
             <button type="button" class="dg-primary-btn" data-action="next-dist-round">
@@ -1876,6 +2071,7 @@
             ⚡ Sonraki Düello →
           </button>
         </div>
+        ${renderAnatoliaMiniMapSvg(q.a, q.b, q.diffText, esc)}
       `;
     }
 

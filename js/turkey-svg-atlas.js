@@ -61,13 +61,17 @@
 
   // Persisted UI state across module re-renders
   const uiState = {
-    mode: 'status', // 'status' | 'regions' | 'route'
+    mode: 'status', // 'status' | 'regions' | 'route' | 'heatmap'
     showLabels: false,
     activeRegionFilter: 'all',
     zoom: 1,
     tx: 0,
     ty: 0,
-    hoveredKey: null
+    hoveredKey: null,
+    rulerMode: false,
+    rulerKeyA: null,
+    rulerKeyB: null,
+    quickSearchQuery: ''
   };
 
   function defaultEscapeHtml(str) {
@@ -527,24 +531,108 @@
         font-size: 0.72rem;
         color: var(--text-muted, #64748b);
       }
+      .atlas-quick-search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .atlas-quick-search {
+        padding: 6px 12px 6px 30px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid var(--border-glass, rgba(255,255,255,0.12));
+        color: var(--text-primary, #f8fafc);
+        font-size: 0.8rem;
+        width: 175px;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+      .atlas-quick-search:focus {
+        border-color: var(--accent-cyan, #00f2fe);
+        box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
+        width: 200px;
+      }
+      .atlas-quick-search-icon {
+        position: absolute;
+        left: 10px;
+        font-size: 0.78rem;
+        pointer-events: none;
+        opacity: 0.75;
+      }
+      .atlas-heatmap-bar {
+        display: inline-block;
+        width: 96px;
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #00f2fe 0%, #38bdf8 30%, #fbbf24 70%, #f59e0b 100%);
+        border: 1px solid rgba(255,255,255,0.2);
+      }
+      .atlas-ruler-glow {
+        fill: none;
+        stroke: rgba(245, 158, 11, 0.35);
+        stroke-width: 7;
+        stroke-linecap: round;
+      }
+      .atlas-ruler-line {
+        fill: none;
+        stroke: #fbbf24;
+        stroke-width: 2.5;
+        stroke-dasharray: 6 4;
+        stroke-linecap: round;
+        animation: atlasDashFlow 1.4s linear infinite;
+      }
+      .atlas-ruler-callout-bg {
+        fill: rgba(10, 15, 29, 0.92);
+        stroke: #fbbf24;
+        stroke-width: 1.4;
+        rx: 8;
+        ry: 8;
+      }
+      .atlas-ruler-callout-text {
+        fill: #fbbf24;
+        font-size: 9.5px;
+        font-weight: 800;
+        font-family: var(--font-heading, sans-serif);
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      @keyframes atlasSearchPulse {
+        0%, 100% { r: 9; opacity: 0.95; stroke-width: 2.8; }
+        50% { r: 22; opacity: 0.2; stroke-width: 1.2; }
+      }
+      .atlas-search-pulse-ring {
+        fill: none;
+        stroke: #00f2fe;
+        pointer-events: none;
+        animation: atlasSearchPulse 1.3s ease-in-out infinite;
+      }
+      body.light-theme .atlas-stage,
       [data-theme="light"] .atlas-stage {
         background:
           radial-gradient(ellipse at 50% 45%, rgba(14, 165, 233, 0.10) 0%, rgba(241, 245, 249, 0.92) 72%),
           var(--bg-card, #ffffff);
       }
+      body.light-theme .atlas-node-label,
       [data-theme="light"] .atlas-node-label {
         fill: #0f172a;
         stroke: rgba(255, 255, 255, 0.92);
       }
+      body.light-theme .atlas-grid-label,
       [data-theme="light"] .atlas-grid-label {
         fill: rgba(71, 85, 105, 0.75);
       }
+      body.light-theme .atlas-sea-label,
       [data-theme="light"] .atlas-sea-label {
         fill: rgba(2, 132, 199, 0.25);
       }
+      body.light-theme .atlas-kpi-chip,
+      body.light-theme .atlas-legend-item,
+      body.light-theme .atlas-preview-badge,
+      body.light-theme .atlas-quick-search,
       [data-theme="light"] .atlas-kpi-chip,
       [data-theme="light"] .atlas-legend-item,
-      [data-theme="light"] .atlas-preview-badge {
+      [data-theme="light"] .atlas-preview-badge,
+      [data-theme="light"] .atlas-quick-search {
         background: rgba(241, 245, 249, 0.85);
         color: #1e293b;
       }
@@ -574,6 +662,7 @@
     const state = safeCtx.state || {};
     const escapeHtml = typeof safeCtx.escapeHtml === 'function' ? safeCtx.escapeHtml : defaultEscapeHtml;
     const selectCity = typeof safeCtx.selectCity === 'function' ? safeCtx.selectCity : function () {};
+    const openView = typeof safeCtx.openView === 'function' ? safeCtx.openView : function () {};
     const showToast = typeof safeCtx.showToast === 'function' ? safeCtx.showToast : function () {};
 
     if (!data || !data.provinces) {
@@ -589,6 +678,28 @@
     const regions = data.regions || {};
     const favorites = state.favorites || new Set();
 
+    function computeRichnessScore(p) {
+      const lm = Array.isArray(p.landmarks) ? p.landmarks.length : 0;
+      const sp = Array.isArray(p.specialties) ? p.specialties.length : 0;
+      const sf = Array.isArray(p.spiritual_figures) ? p.spiritual_figures.length : 0;
+      const visBonus = p.visited ? 3 : 0;
+      return lm + sp + sf + visBonus;
+    }
+
+    function getHeatmapColor(t) {
+      const clamped = Math.max(0, Math.min(1, t));
+      if (clamped < 0.35) {
+        return '#00f2fe';
+      }
+      if (clamped < 0.68) {
+        return '#38bdf8';
+      }
+      if (clamped < 0.88) {
+        return '#fbbf24';
+      }
+      return '#f59e0b';
+    }
+
     // Build normalized province entries with projected SVG coordinates
     const entries = Object.keys(data.provinces)
       .map((key) => {
@@ -603,10 +714,14 @@
           regionColor: reg.color || '#38bdf8',
           regionName: reg.name || p.region || '',
           regionIcon: reg.icon || '📍',
-          fav: isFavorite(favorites, key)
+          fav: isFavorite(favorites, key),
+          richnessScore: computeRichnessScore(p)
         };
       })
       .sort((a, b) => (a.province.plate || 0) - (b.province.plate || 0));
+
+    const minRichness = Math.min(...entries.map((e) => e.richnessScore));
+    const maxRichness = Math.max(...entries.map((e) => e.richnessScore), minRichness + 1);
 
     const byKey = new Map(entries.map((e) => [e.key, e]));
     const byNormName = new Map(entries.map((e) => [normalizeTurkish(e.province.name), e]));
@@ -695,15 +810,77 @@
       `;
     }
 
+    function buildRulerLayerSvg() {
+      if (!uiState.rulerMode) return '';
+      const entryA = uiState.rulerKeyA ? byKey.get(uiState.rulerKeyA) : null;
+      const entryB = uiState.rulerKeyB ? byKey.get(uiState.rulerKeyB) : null;
+      if (!entryA) return '';
+
+      let svg = `
+        <g class="atlas-ruler-layer" pointer-events="none">
+          <circle class="atlas-beacon" cx="${entryA.x}" cy="${entryA.y}" r="13" fill="none" stroke="#fbbf24" stroke-width="2.2" />
+      `;
+
+      if (entryB) {
+        const airKm = haversineKm(
+          Number(entryA.province.lat),
+          Number(entryA.province.lng),
+          Number(entryB.province.lat),
+          Number(entryB.province.lng)
+        );
+        const roadKm = Math.round(airKm * ROAD_FACTOR);
+        const hours = (roadKm / 80).toFixed(1);
+        const midX = Math.round(((entryA.x + entryB.x) / 2) * 10) / 10;
+        const midY = Math.round(((entryA.y + entryB.y) / 2) * 10) / 10;
+        const badgeText = `~${roadKm.toLocaleString('tr-TR')} km • ${hours} sa sürüş`;
+        const boxW = Math.max(128, badgeText.length * 5.8 + 18);
+        const boxH = 22;
+        const clampedX = Math.max(boxW / 2 + 8, Math.min(VIEW_W - boxW / 2 - 8, midX));
+        const clampedY = Math.max(boxH / 2 + 8, Math.min(VIEW_H - boxH / 2 - 8, midY - 14));
+
+        svg += `
+          <circle class="atlas-beacon" cx="${entryB.x}" cy="${entryB.y}" r="13" fill="none" stroke="#00f2fe" stroke-width="2.2" />
+          <line class="atlas-ruler-glow" x1="${entryA.x}" y1="${entryA.y}" x2="${entryB.x}" y2="${entryB.y}" />
+          <line class="atlas-ruler-line" x1="${entryA.x}" y1="${entryA.y}" x2="${entryB.x}" y2="${entryB.y}" />
+          <g transform="translate(${clampedX}, ${clampedY})">
+            <rect class="atlas-ruler-callout-bg" x="${-boxW / 2}" y="${-boxH / 2}" width="${boxW}" height="${boxH}" rx="8" ry="8" />
+            <text class="atlas-ruler-callout-text" x="0" y="0.5">📏 ${escapeHtml(badgeText)}</text>
+          </g>
+        `;
+      }
+
+      svg += '</g>';
+      return svg;
+    }
+
+    function findQuickSearchMatch(rawQuery) {
+      const q = normalizeTurkish(rawQuery);
+      if (!q) return null;
+      const numericPlate = /^\d+$/.test(q) ? parseInt(q, 10) : null;
+      if (numericPlate !== null) {
+        const byPlate = entries.find((e) => Number(e.province.plate) === numericPlate);
+        if (byPlate) return byPlate;
+      }
+      const exact = byNormName.get(q);
+      if (exact) return exact;
+      const starts = entries.find((e) => normalizeTurkish(e.province.name).startsWith(q));
+      if (starts) return starts;
+      return entries.find((e) => normalizeTurkish(e.province.name).includes(q)) || null;
+    }
+
     function buildNodesSvg() {
       const mode = uiState.mode;
       const regFilter = uiState.activeRegionFilter;
+      const searchMatch = findQuickSearchMatch(uiState.quickSearchQuery);
+      const searchMatchKey = searchMatch ? searchMatch.key : null;
 
       return entries.map((entry) => {
         const p = entry.province;
         const routeIdx = routeOrderByKey.get(entry.key) || 0;
         const isRouteStop = routeIdx > 0;
         const isFocused = uiState.hoveredKey === entry.key;
+        const isSearchHit = searchMatchKey === entry.key;
+        const isRulerStop = uiState.rulerMode && (uiState.rulerKeyA === entry.key || uiState.rulerKeyB === entry.key);
 
         let fill = '#64748b';
         let stroke = 'rgba(226, 232, 240, 0.55)';
@@ -750,6 +927,23 @@
             radius = 4.4;
             opacity = 0.36;
           }
+        } else if (mode === 'heatmap') {
+          const norm = (entry.richnessScore - minRichness) / Math.max(1, maxRichness - minRichness);
+          fill = getHeatmapColor(norm);
+          stroke = norm >= 0.68 ? '#fef3c7' : '#e0f2fe';
+          radius = Number((4.4 + norm * 4.4).toFixed(2));
+          filterAttr = norm >= 0.68 ? ' filter="url(#atlasGoldGlow)"' : ' filter="url(#atlasCyanGlow)"';
+          if (entry.fav) {
+            extraRings += `<circle cx="${entry.x}" cy="${entry.y}" r="${(radius + 3.2).toFixed(1)}" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-dasharray="2 2" />`;
+          }
+        }
+
+        if (isSearchHit) {
+          extraRings += `<circle class="atlas-search-pulse-ring" cx="${entry.x}" cy="${entry.y}" r="${radius + 6}" />`;
+        }
+
+        if (isRulerStop) {
+          extraRings += `<circle cx="${entry.x}" cy="${entry.y}" r="${radius + 4.2}" fill="none" stroke="#fbbf24" stroke-width="2.4" filter="url(#atlasGoldGlow)" />`;
         }
 
         const routeBadgeSvg = (mode === 'route' && isRouteStop)
@@ -766,7 +960,7 @@
         const ariaLabel = `${p.name} (${formatPlate(p.plate)}) - ${entry.regionName} - ${statusLabel}`;
 
         return `
-          <g class="atlas-node${isFocused ? ' is-focused' : ''}${isRouteStop && mode === 'route' ? ' is-route-stop' : ''}"
+          <g class="atlas-node${isFocused || isSearchHit || isRulerStop ? ' is-focused' : ''}${isRouteStop && mode === 'route' ? ' is-route-stop' : ''}"
              data-city-key="${escapeHtml(entry.key)}"
              tabindex="0"
              role="button"
@@ -782,7 +976,30 @@
       }).join('');
     }
 
+    function buildRulerStatusHtml() {
+      if (!uiState.rulerMode) return '';
+      const entryA = uiState.rulerKeyA ? byKey.get(uiState.rulerKeyA) : null;
+      const entryB = uiState.rulerKeyB ? byKey.get(uiState.rulerKeyB) : null;
+      if (!entryA) {
+        return '<span style="color:#fbbf24; font-weight:600;">📏 Cetvel Aktif: Ölçüm için 1. ili seçin</span>';
+      }
+      if (!entryB) {
+        return `<span style="color:#fbbf24; font-weight:600;">📏 ${escapeHtml(entryA.province.name)} seçildi — 2. ili seçin</span>`;
+      }
+      const airKm = haversineKm(
+        Number(entryA.province.lat),
+        Number(entryA.province.lng),
+        Number(entryB.province.lat),
+        Number(entryB.province.lng)
+      );
+      const roadKm = Math.round(airKm * ROAD_FACTOR);
+      const hours = (roadKm / 80).toFixed(1);
+      return `<span style="color:#fbbf24; font-weight:700;">📏 ${escapeHtml(entryA.province.name)} ↔ ${escapeHtml(entryB.province.name)}: ~${roadKm.toLocaleString('tr-TR')} km (${hours} sa • kuş uçuşu ${Math.round(airKm).toLocaleString('tr-TR')} km)</span>`;
+    }
+
     function buildSubbarHtml() {
+      const rulerStatus = buildRulerStatusHtml();
+
       if (uiState.mode === 'status') {
         return `
           <div class="atlas-legend">
@@ -790,7 +1007,7 @@
             <span class="atlas-legend-item"><span class="atlas-dot" style="background:#475569; border:1px solid #94a3b8;"></span> Sırada (${entries.length - visitedCount})</span>
             <span class="atlas-legend-item"><span class="atlas-dot" style="background:transparent; border:2px solid #f59e0b; box-shadow:0 0 6px #f59e0b;"></span> Favori Halkası (${favCount})</span>
           </div>
-          <span>🖱️ İllere tıklayarak detay sayfasına gidin</span>
+          ${rulerStatus || '<span>🖱️ İllere tıklayarak detay sayfasına gidin</span>'}
         `;
       }
 
@@ -813,6 +1030,25 @@
             </button>
             ${regPills}
           </div>
+          ${rulerStatus}
+        `;
+      }
+
+      if (uiState.mode === 'heatmap') {
+        const topRich = entries
+          .slice()
+          .sort((a, b) => b.richnessScore - a.richnessScore)
+          .slice(0, 3)
+          .map((e) => `${escapeHtml(e.province.name)} (${e.richnessScore})`)
+          .join(' • ');
+        return `
+          <div class="atlas-legend">
+            <span class="atlas-legend-item">❄️ Düşük (${minRichness})</span>
+            <span class="atlas-heatmap-bar" aria-label="Kültür yoğunluğu renk skalası"></span>
+            <span class="atlas-legend-item">🔥 Yüksek (${maxRichness})</span>
+            <span class="atlas-legend-item">🏆 Zirve: ${topRich}</span>
+          </div>
+          ${rulerStatus || '<span>🔥 Eser, lezzet, manevi miras ve keşif yoğunluğu skoru</span>'}
         `;
       }
 
@@ -824,7 +1060,7 @@
           <span class="atlas-legend-item"><span class="atlas-dot" style="background:#f59e0b;"></span> Varış</span>
           <span class="atlas-legend-item">🛣️ ~${Math.round(routeTotalKm).toLocaleString('tr-TR')} km</span>
         </div>
-        <span style="font-size:0.76rem; color: var(--accent-cyan, #00f2fe);">${routeChain}</span>
+        ${rulerStatus || `<span style="font-size:0.76rem; color: var(--accent-cyan, #00f2fe);">${routeChain}</span>`}
       `;
     }
 
@@ -899,9 +1135,25 @@
             <button type="button" class="filter-pill${uiState.mode === 'route' ? ' active' : ''}" data-atlas-mode="route" role="tab" aria-selected="${uiState.mode === 'route'}">
               🎯 Aktif Sefer Rotası
             </button>
+            <button type="button" class="filter-pill${uiState.mode === 'heatmap' ? ' active' : ''}" data-atlas-mode="heatmap" role="tab" aria-selected="${uiState.mode === 'heatmap'}">
+              🔥 Kültür Yoğunluğu
+            </button>
           </div>
 
           <div class="atlas-controls" aria-label="Harita Kontrolleri">
+            <div class="atlas-quick-search-wrap">
+              <span class="atlas-quick-search-icon" aria-hidden="true">🔍</span>
+              <input type="search"
+                     id="atlas-quick-search"
+                     class="atlas-quick-search"
+                     value="${escapeHtml(uiState.quickSearchQuery)}"
+                     placeholder="İl veya plaka ara..."
+                     aria-label="Haritada hızlı il ara"
+                     autocomplete="off" />
+            </div>
+            <button type="button" class="btn btn-outline atlas-ctrl-btn${uiState.rulerMode ? ' is-active' : ''}" id="atlas-ruler-btn" aria-pressed="${uiState.rulerMode}" title="İki il arası mesafe ölç">
+              📏 Cetvel
+            </button>
             <button type="button" class="btn btn-outline atlas-ctrl-btn" id="atlas-zoom-in" title="Yakınlaştır">+</button>
             <button type="button" class="btn btn-outline atlas-ctrl-btn" id="atlas-zoom-out" title="Uzaklaştır">−</button>
             <button type="button" class="btn btn-outline atlas-ctrl-btn" id="atlas-zoom-reset" title="Görünümü Sıfırla">↺</button>
@@ -975,6 +1227,7 @@
               </g>
               <g id="atlas-dynamic-layer">
                 ${buildRouteLayerSvg()}
+                ${buildRulerLayerSvg()}
                 ${buildNodesSvg()}
               </g>
             </g>
@@ -1007,6 +1260,8 @@
     const btnZoomOut = container.querySelector('#atlas-zoom-out');
     const btnZoomReset = container.querySelector('#atlas-zoom-reset');
     const btnToggleLabels = container.querySelector('#atlas-toggle-labels');
+    const btnRuler = container.querySelector('#atlas-ruler-btn');
+    const quickSearchInput = container.querySelector('#atlas-quick-search');
     const modeBtns = container.querySelectorAll('[data-atlas-mode]');
 
     function clampPan(tx, ty, zoom) {
@@ -1061,11 +1316,41 @@
 
     function refreshDynamicLayer() {
       if (dynamicLayerEl) {
-        dynamicLayerEl.innerHTML = buildRouteLayerSvg() + buildNodesSvg();
+        dynamicLayerEl.innerHTML = buildRouteLayerSvg() + buildRulerLayerSvg() + buildNodesSvg();
       }
       if (subbarEl) {
         subbarEl.innerHTML = buildSubbarHtml();
       }
+    }
+
+    function handleRulerPick(key) {
+      if (!key || !byKey.has(key)) return;
+      const entry = byKey.get(key);
+      if (!uiState.rulerKeyA || (uiState.rulerKeyA && uiState.rulerKeyB)) {
+        uiState.rulerKeyA = key;
+        uiState.rulerKeyB = null;
+        showToast(`📏 Başlangıç ili: ${entry.province.name} — İkinci ili seçin`);
+      } else if (uiState.rulerKeyA === key) {
+        uiState.rulerKeyA = null;
+        uiState.rulerKeyB = null;
+        showToast('📏 Cetvel ölçümü temizlendi');
+      } else {
+        uiState.rulerKeyB = key;
+        const entryA = byKey.get(uiState.rulerKeyA);
+        if (entryA) {
+          const airKm = haversineKm(
+            Number(entryA.province.lat),
+            Number(entryA.province.lng),
+            Number(entry.province.lat),
+            Number(entry.province.lng)
+          );
+          const roadKm = Math.round(airKm * ROAD_FACTOR);
+          const hours = (roadKm / 80).toFixed(1);
+          showToast(`📏 ${entryA.province.name} ↔ ${entry.province.name}: ~${roadKm.toLocaleString('tr-TR')} km (${hours} sa sürüş)`);
+        }
+      }
+      updatePreview(key);
+      refreshDynamicLayer();
     }
 
     // Mode pill switching
@@ -1110,8 +1395,12 @@
         uiState.tx = 0;
         uiState.ty = 0;
         uiState.activeRegionFilter = 'all';
+        uiState.quickSearchQuery = '';
+        uiState.rulerKeyA = null;
+        uiState.rulerKeyB = null;
+        if (quickSearchInput) quickSearchInput.value = '';
         applyTransform();
-        if (uiState.mode === 'regions') refreshDynamicLayer();
+        refreshDynamicLayer();
         showToast('↺ Harita görünümü sıfırlandı');
       });
     }
@@ -1122,6 +1411,51 @@
         btnToggleLabels.setAttribute('aria-pressed', String(uiState.showLabels));
         if (svgEl) {
           svgEl.classList.toggle('atlas-labels-visible', uiState.showLabels);
+        }
+      });
+    }
+    if (btnRuler) {
+      btnRuler.addEventListener('click', () => {
+        uiState.rulerMode = !uiState.rulerMode;
+        if (!uiState.rulerMode) {
+          uiState.rulerKeyA = null;
+          uiState.rulerKeyB = null;
+          showToast('📏 Cetvel modu kapatıldı');
+        } else {
+          showToast('📏 Cetvel modu aktif — Mesafe ölçmek için 2 il seçin');
+        }
+        btnRuler.classList.toggle('is-active', uiState.rulerMode);
+        btnRuler.setAttribute('aria-pressed', String(uiState.rulerMode));
+        refreshDynamicLayer();
+      });
+    }
+    if (quickSearchInput) {
+      quickSearchInput.addEventListener('input', () => {
+        uiState.quickSearchQuery = quickSearchInput.value;
+        const match = findQuickSearchMatch(uiState.quickSearchQuery);
+        refreshDynamicLayer();
+        if (match) {
+          updatePreview(match.key);
+        }
+      });
+      quickSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          uiState.quickSearchQuery = '';
+          quickSearchInput.value = '';
+          refreshDynamicLayer();
+          quickSearchInput.blur();
+          return;
+        }
+        if (e.key === 'Enter') {
+          const match = findQuickSearchMatch(quickSearchInput.value);
+          if (match) {
+            e.preventDefault();
+            if (uiState.rulerMode) {
+              handleRulerPick(match.key);
+            } else {
+              selectCity(match.key);
+            }
+          }
         }
       });
     }
@@ -1161,7 +1495,12 @@
         const node = e.target.closest('.atlas-node');
         if (!node) return;
         const key = node.getAttribute('data-city-key');
-        if (key) selectCity(key);
+        if (!key) return;
+        if (uiState.rulerMode) {
+          handleRulerPick(key);
+        } else {
+          selectCity(key);
+        }
       });
 
       dynamicLayerEl.addEventListener('keydown', (e) => {
@@ -1170,7 +1509,12 @@
         if (!node) return;
         e.preventDefault();
         const key = node.getAttribute('data-city-key');
-        if (key) selectCity(key);
+        if (!key) return;
+        if (uiState.rulerMode) {
+          handleRulerPick(key);
+        } else {
+          selectCity(key);
+        }
       });
     }
 

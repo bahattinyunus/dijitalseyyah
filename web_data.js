@@ -12,6 +12,12 @@ const TRAVEL_DATA = {
     "library_hours": 780,
     "total_photos": 162,
     "provinces_with_two_photos": 81,
+    "total_landmarks": 373,
+    "total_specialties": 310,
+    "geographic_center": {
+      "lat": 39.4571,
+      "lng": 35.9069
+    },
     "regional_breakdown": {
       "01_Marmara": {
         "name": "Marmara Bölgesi",

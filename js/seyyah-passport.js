@@ -12,6 +12,47 @@
 
   const PASSPORT_NO = 'TR-SYH-2026-081';
   const STYLE_ID = 'seyyah-passport-styles';
+  const PROFILE_STORAGE_KEY = 'dijital_seyyah_passport_profile_v1';
+
+  function loadPassportProfile() {
+    const fallback = { travelerName: 'Dijital Seyyah', travelerTitle: 'Anadolu Kâşifi' };
+    try {
+      const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return fallback;
+      return {
+        travelerName: typeof parsed.travelerName === 'string' && parsed.travelerName.trim()
+          ? parsed.travelerName.trim().slice(0, 48)
+          : fallback.travelerName,
+        travelerTitle: typeof parsed.travelerTitle === 'string' && parsed.travelerTitle.trim()
+          ? parsed.travelerTitle.trim().slice(0, 56)
+          : fallback.travelerTitle
+      };
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  function savePassportProfile(profile) {
+    try {
+      window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({
+        travelerName: String(profile.travelerName || '').trim().slice(0, 48),
+        travelerTitle: String(profile.travelerTitle || '').trim().slice(0, 56)
+      }));
+    } catch (_) {
+      // Ignore storage quota/privacy restrictions
+    }
+  }
+
+  function toMrzToken(str) {
+    return String(str || 'SEYYAH')
+      .replace(/İ/g, 'I').replace(/ı/g, 'I').replace(/ç/gi, 'C')
+      .replace(/ğ/gi, 'G').replace(/ö/gi, 'O').replace(/ş/gi, 'S').replace(/ü/gi, 'U')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '<')
+      .replace(/^<+|<+$/g, '') || 'SEYYAH';
+  }
 
   const REGION_ORDER = [
     '01_Marmara',
@@ -648,13 +689,89 @@
         font-size: 0.95rem;
       }
 
+      /* Custom Traveler Inscription Bar */
+      .sp-inscription-bar {
+        position: relative;
+        z-index: 1;
+        margin-top: 14px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(10, 15, 29, 0.52);
+        border: 1px solid rgba(212, 163, 74, 0.3);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .sp-inscription-label {
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #e6c27a;
+        white-space: nowrap;
+      }
+
+      .sp-inscription-input {
+        flex: 1 1 160px;
+        min-width: 140px;
+        padding: 7px 11px;
+        border-radius: 8px;
+        border: 1px solid rgba(245, 197, 94, 0.32);
+        background: rgba(15, 23, 42, 0.78);
+        color: #f8fafc;
+        font-size: 0.82rem;
+        font-weight: 600;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .sp-inscription-input:focus {
+        border-color: #f5c55e;
+        box-shadow: 0 0 0 2px rgba(245, 197, 94, 0.2);
+      }
+
+      .sp-inscription-save {
+        padding: 7px 13px;
+        border-radius: 8px;
+        border: 1px solid rgba(245, 197, 94, 0.55);
+        background: rgba(245, 197, 94, 0.18);
+        color: #fde68a;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+
+      .sp-inscription-save:hover {
+        background: rgba(245, 197, 94, 0.3);
+        color: #ffffff;
+      }
+
+      .sp-holder-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 11px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.14);
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        color: #bae6fd;
+        font-size: 0.79rem;
+        font-weight: 700;
+      }
+
       /* Light theme harmony */
+      body.light-theme .sp-controls,
       body[data-theme="light"] .sp-controls,
       [data-theme="light"] .sp-controls {
         background: rgba(255, 255, 255, 0.88);
         border-color: rgba(15, 23, 42, 0.12);
       }
 
+      body.light-theme .sp-pill,
       body[data-theme="light"] .sp-pill,
       [data-theme="light"] .sp-pill {
         background: rgba(241, 245, 249, 0.9);
@@ -662,6 +779,7 @@
         border-color: rgba(15, 23, 42, 0.12);
       }
 
+      body.light-theme .sp-pill.active,
       body[data-theme="light"] .sp-pill.active,
       [data-theme="light"] .sp-pill.active {
         background: #fef3c7;
@@ -669,17 +787,20 @@
         border-color: #d97706;
       }
 
+      body.light-theme .sp-status-group,
       body[data-theme="light"] .sp-status-group,
       [data-theme="light"] .sp-status-group {
         background: #f1f5f9;
         border-color: rgba(15, 23, 42, 0.1);
       }
 
+      body.light-theme .sp-status-btn,
       body[data-theme="light"] .sp-status-btn,
       [data-theme="light"] .sp-status-btn {
         color: #475569;
       }
 
+      body.light-theme .sp-status-btn.active,
       body[data-theme="light"] .sp-status-btn.active,
       [data-theme="light"] .sp-status-btn.active {
         background: #ffffff;
@@ -687,6 +808,7 @@
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
       }
 
+      body.light-theme .sp-sort-select,
       body[data-theme="light"] .sp-sort-select,
       [data-theme="light"] .sp-sort-select {
         background: #ffffff;
@@ -694,6 +816,7 @@
         border-color: rgba(15, 23, 42, 0.15);
       }
 
+      body.light-theme .sp-page,
       body[data-theme="light"] .sp-page,
       [data-theme="light"] .sp-page {
         background:
@@ -710,16 +833,19 @@
         box-shadow: inset 0 0 30px rgba(146, 108, 42, 0.08);
       }
 
+      body.light-theme .sp-page-label,
       body[data-theme="light"] .sp-page-label,
       [data-theme="light"] .sp-page-label {
         color: #92400e;
       }
 
+      body.light-theme .sp-stamp-card.is-visited,
       body[data-theme="light"] .sp-stamp-card.is-visited,
       [data-theme="light"] .sp-stamp-card.is-visited {
         background: rgba(255, 255, 255, 0.72);
       }
 
+      body.light-theme .sp-stamp-card.is-empty,
       body[data-theme="light"] .sp-stamp-card.is-empty,
       [data-theme="light"] .sp-stamp-card.is-empty {
         background: rgba(255, 255, 255, 0.45);
@@ -920,6 +1046,9 @@
       const rankTitle = (data && data.achievements && data.achievements.rank && data.achievements.rank.title)
         ? data.achievements.rank.title
         : 'Anadolu Kâşifi';
+      const profile = loadPassportProfile();
+      const holderNameUpper = toTurkishUpper(profile.travelerName || 'Dijital Seyyah');
+      const holderTitleUpper = toTurkishUpper(profile.travelerTitle || rankTitle);
 
       // 1. Luxury Deep Burgundy-Midnight Background
       const bgGrad = c.createLinearGradient(0, 0, W, H);
@@ -967,7 +1096,7 @@
 
       c.fillStyle = '#cbd5e1';
       c.font = 'bold 16px "Courier New", monospace';
-      c.fillText(`PASAPORT NO: ${PASSPORT_NO}   |   RÜTBE: ${toTurkishUpper(rankTitle)}`, 184, 152);
+      c.fillText(`SEYYAH: ${holderNameUpper}   |   UNVAN: ${holderTitleUpper}   |   NO: ${PASSPORT_NO}`, 184, 152);
 
       // Right-hand Stat Pills
       const statCards = [
@@ -1338,6 +1467,10 @@
       ? 'TÜM TÜRKİYE (81 İL)'
       : toTurkishUpper((regionsMap[uiState.region] && regionsMap[uiState.region].name) || uiState.region);
 
+    const profile = loadPassportProfile();
+    const mrzName = toMrzToken(profile.travelerName).slice(0, 18);
+    const mrzTitle = toMrzToken(profile.travelerTitle).slice(0, 18);
+
     container.innerHTML = `
       <section class="sp-root" aria-label="Dijital Seyyah Pasaportu">
         <!-- Luxury Passport Cover Header -->
@@ -1349,6 +1482,7 @@
                 <span class="sp-republic">Türkiye Cumhuriyeti • Anadolu Seyahatnamesi</span>
                 <h1 class="sp-main-title">DİJİTAL SEYYAH PASAPORTU</h1>
                 <div class="sp-meta-row">
+                  <span class="sp-holder-badge" id="sp-holder-display">🖋️ ${safeEscape(profile.travelerName, ctx)} • ${safeEscape(profile.travelerTitle, ctx)}</span>
                   <span class="sp-rank-badge">${safeEscape(rankObj.icon || '🗺️', ctx)} ${safeEscape(rankObj.title || 'Anadolu Kâşifi', ctx)}</span>
                   <span class="sp-passport-no">NO: ${PASSPORT_NO}</span>
                 </div>
@@ -1375,6 +1509,29 @@
             </div>
           </div>
 
+          <div class="sp-inscription-bar">
+            <span class="sp-inscription-label">✍️ Seyyah Künyesi:</span>
+            <input
+              type="text"
+              id="sp-input-name"
+              class="sp-inscription-input"
+              maxlength="48"
+              value="${safeEscape(profile.travelerName, ctx)}"
+              placeholder="Seyyah Adınız..."
+              aria-label="Seyyah Adı"
+            />
+            <input
+              type="text"
+              id="sp-input-title"
+              class="sp-inscription-input"
+              maxlength="56"
+              value="${safeEscape(profile.travelerTitle, ctx)}"
+              placeholder="Unvan / Mahlas..."
+              aria-label="Seyyah Unvanı"
+            />
+            <button type="button" class="sp-inscription-save" id="sp-save-profile-btn">💾 Pasaporta İşle</button>
+          </div>
+
           <div class="sp-progress-wrap">
             <div class="sp-progress-meta">
               <span>${nextRankText}</span>
@@ -1385,8 +1542,8 @@
             </div>
           </div>
 
-          <div class="sp-mrz" aria-hidden="true">
-            P&lt;TURSEYYAH&lt;&lt;ANADOLU&lt;KASIFI&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>
+          <div class="sp-mrz" id="sp-mrz-strip" aria-hidden="true">
+            P&lt;TUR${safeEscape(mrzName, ctx)}&lt;&lt;${safeEscape(mrzTitle, ctx)}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>
             TRSYH2026081&lt;TUR81${padPlate(visitedCount)}${padPlate(remainingCount)}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
           </div>
         </div>
@@ -1461,6 +1618,42 @@
       exportBtn.addEventListener('click', () => {
         exportPassportPng(data, provincesList, regionsMap, ctx);
       });
+    }
+
+    // Custom Traveler Inscription Save (localStorage)
+    const nameInp = rootEl.querySelector('#sp-input-name');
+    const titleInp = rootEl.querySelector('#sp-input-title');
+    const saveProfileBtn = rootEl.querySelector('#sp-save-profile-btn');
+    const holderDisplay = rootEl.querySelector('#sp-holder-display');
+    const mrzStrip = rootEl.querySelector('#sp-mrz-strip');
+
+    function persistInscription(showFeedback) {
+      const nextName = (nameInp ? nameInp.value : '').trim() || 'Dijital Seyyah';
+      const nextTitle = (titleInp ? titleInp.value : '').trim() || 'Anadolu Kâşifi';
+      savePassportProfile({ travelerName: nextName, travelerTitle: nextTitle });
+      if (holderDisplay) {
+        holderDisplay.textContent = `🖋️ ${nextName} • ${nextTitle}`;
+      }
+      if (mrzStrip) {
+        const mn = toMrzToken(nextName).slice(0, 18);
+        const mt = toMrzToken(nextTitle).slice(0, 18);
+        mrzStrip.innerHTML =
+          `P&lt;TUR${safeEscape(mn, ctx)}&lt;&lt;${safeEscape(mt, ctx)}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>` +
+          `TRSYH2026081&lt;TUR81${padPlate(visitedCount)}${padPlate(remainingCount)}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;`;
+      }
+      if (showFeedback) {
+        notify('🛂 Seyyah künyesi pasaportunuza mühürlendi!', ctx);
+      }
+    }
+
+    if (saveProfileBtn) {
+      saveProfileBtn.addEventListener('click', () => persistInscription(true));
+    }
+    if (nameInp) {
+      nameInp.addEventListener('input', () => persistInscription(false));
+    }
+    if (titleInp) {
+      titleInp.addEventListener('input', () => persistInscription(false));
     }
 
     // Stamp card click -> open province via ctx.selectCity(key)

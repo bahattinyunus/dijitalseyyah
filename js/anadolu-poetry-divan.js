@@ -107,6 +107,17 @@
       directive:
         'Türk modern şiirinin (Sezai Karakoç, Cahit Sıtkı Tarancı, Ahmet Muhip Dıranas ve Orhan Veli çizgisinin) imge gücünü harmanlayan, ' +
         'seçili şehrin sabah ışığını, sokak seslerini ve insan hafızasını duyusal imgelerle yakalayan etkileyici bir serbest şiir yaz.'
+    },
+    {
+      id: 'divan',
+      label: 'Klasik Divan Gazeli (Beyit & Mahlas)',
+      shortLabel: 'Divan Gazeli',
+      icon: '🕌',
+      badge: 'Aruz Ruhu & 5 Beyit',
+      desc: 'Fuzûlî, Bâkî ve Nâbî geleneğinden matla-makta ahengiyle şehir gazeli',
+      directive:
+        'Klasik Osmanlı Divan şiiri (Bâkî, Fuzûlî, Nâbî) geleneğinde, aa / ba / ca / da / ea kafiye düzeniyle 5 beyitlik, son beyitte "Seyyah" mahlaslı, ' +
+        'seçili şehrin kubbesini, suyunu, ilim meclisini ve hikmetini terennüm eden zarif ve anlaşılır bir gazel yaz.'
     }
   ];
 
@@ -519,8 +530,96 @@
     outputGenreId: 'tanpinar',
     outputSource: '',
     isStreaming: false,
-    streamRunId: 0
+    streamRunId: 0,
+    isSpeaking: false,
+    speakingCardId: ''
   };
+
+  function stopDivanTts() {
+    try {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (_) {}
+    uiState.isSpeaking = false;
+    uiState.speakingCardId = '';
+  }
+
+  function speakTurkishText(rawText, cardId, onEnd) {
+    if (typeof window === 'undefined' || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') {
+      return false;
+    }
+    stopDivanTts();
+    const clean = String(rawText || '')
+      .replace(/^#+\s*/gm, '')
+      .replace(/^>\s*/gm, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/[_`]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!clean) return false;
+
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.lang = 'tr-TR';
+    utter.rate = 0.92;
+    utter.pitch = 1.0;
+
+    try {
+      const voices = window.speechSynthesis.getVoices() || [];
+      const trVoice = voices.find(function (v) {
+        return v && v.lang && v.lang.toLowerCase().indexOf('tr') === 0;
+      });
+      if (trVoice) utter.voice = trVoice;
+    } catch (_) {}
+
+    uiState.isSpeaking = true;
+    uiState.speakingCardId = cardId || 'paper';
+
+    utter.onend = function () {
+      uiState.isSpeaking = false;
+      uiState.speakingCardId = '';
+      if (typeof onEnd === 'function') onEnd();
+    };
+    utter.onerror = function () {
+      uiState.isSpeaking = false;
+      uiState.speakingCardId = '';
+      if (typeof onEnd === 'function') onEnd();
+    };
+
+    try {
+      window.speechSynthesis.speak(utter);
+      return true;
+    } catch (_) {
+      uiState.isSpeaking = false;
+      uiState.speakingCardId = '';
+      return false;
+    }
+  }
+
+  async function copyTextReliable(text) {
+    if (!text) return false;
+    try {
+      if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return Boolean(ok);
+    } catch (_) {
+      return false;
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Utilities
@@ -850,6 +949,37 @@
         'Sevda çeken yürek daim uyanıktır,',
         '**' + city + '** hatırası kalpte sıcaktır,',
         'Her menzil bir yeni bahar olur.'
+      ].join('\n');
+    }
+
+    if (genre.id === 'divan') {
+      const plateNum = Number(province.plate) || 1;
+      const libName = province.library ? String(province.library).split(' - ')[0] : city + ' Dârü’l-Kütübü';
+      const openingFlavors = [
+        'Seher vaktinde açılır gül-i irfânı',
+        'Gök kubbe altında çınlar hoş sadâsı',
+        'Asırların nakşını taşır her taş duvarı'
+      ];
+      const opener = openingFlavors[plateNum % openingFlavors.length];
+      return [
+        '## ' + city + ' Medhinde Klasik Gazel (Plaka ' + formatPlate(plateNum) + ')',
+        '',
+        '*' + opener + ' **' + city + '** ilinin,*',
+        '*Bahr-i hikmetten akar âb-ı revânı **' + region + '** ikliminin.*',
+        '',
+        '***' + lm1 + '*** burcunda parlar mihr ü mâh-ı ma‘rifet,',
+        '***' + lm2 + '*** avlusunda dinlenir kalb-i hazîni yolcunun.',
+        '',
+        'Meclis-i ilme varıp ***' + libName + '*** içinde oturan,',
+        'Satırından sadırına devşirir sırr-ı zamanın.',
+        '',
+        'Şükr ile kurulan sofrada ***' + specialty + '*** ikrâm olur,',
+        '***' + motifLine + '*** ile tazelenir şevki bu cânın.',
+        '',
+        'Ey **Seyyah**, bâkî kalan şu kubbede bir hoş sadâdır,',
+        'Gönül defterine nakşoldu muhabbeti **' + city + '** diyârının.',
+        '',
+        quoteClean ? '> *' + quoteClean + '*' : '> *“Bâkî kalan bu kubbede bir hoş sadâ imiş.”*'
       ].join('\n');
     }
 
@@ -2042,9 +2172,15 @@
             '<button type="button" class="divan-city-btn" data-open-city="' + esc(item.provinceKey) + '">' +
               '📍 ' + esc(plateTxt + item.provinceName) +
             '</button>' +
-            '<button type="button" class="divan-compose-btn" data-compose-city="' + esc(item.provinceKey) + '">' +
-              '✨ Bu Şehre Yaz' +
-            '</button>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+              '<button type="button" class="divan-action-btn" data-card-tts="' + esc(item.id) + '" title="Sesli Dinle (tr-TR)">' +
+                (uiState.isSpeaking && uiState.speakingCardId === item.id ? '⏹️ Durdur' : '🔊 Dinle') +
+              '</button>' +
+              '<button type="button" class="divan-action-btn" data-card-copy="' + esc(item.id) + '" title="Şiiri Kopyala">📋 Kopyala</button>' +
+              '<button type="button" class="divan-compose-btn" data-compose-city="' + esc(item.provinceKey) + '">' +
+                '✨ Bu Şehre Yaz' +
+              '</button>' +
+            '</div>' +
           '</div>' +
         '</article>'
       );
@@ -2144,6 +2280,47 @@
         });
       });
 
+      catalogHost.querySelectorAll('[data-card-tts]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const cardId = btn.getAttribute('data-card-tts');
+          if (uiState.isSpeaking && uiState.speakingCardId === cardId) {
+            stopDivanTts();
+            updateCatalogView();
+            updatePaperDom();
+            return;
+          }
+          const found = CURATED_ANTHOLOGY.find(function (x) { return x.id === cardId; });
+          if (!found) return;
+          const ok = speakTurkishText(
+            found.workTitle + '. ' + found.author + '. ' + found.excerpt,
+            cardId,
+            function () {
+              updateCatalogView();
+              updatePaperDom();
+            }
+          );
+          if (!ok) {
+            notify(ctx, '⚠️ Tarayıcınız sesli okuma (TTS) özelliğini desteklemiyor.');
+          } else {
+            notify(ctx, '🔊 ' + found.author + ' sesli okunuyor (tr-TR)...');
+            updateCatalogView();
+            updatePaperDom();
+          }
+        });
+      });
+
+      catalogHost.querySelectorAll('[data-card-copy]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const cardId = btn.getAttribute('data-card-copy');
+          const found = CURATED_ANTHOLOGY.find(function (x) { return x.id === cardId; });
+          if (!found) return;
+          const txt = found.workTitle + ' — ' + found.author + '\n\n' + found.excerpt;
+          copyTextReliable(txt).then(function (ok) {
+            notify(ctx, ok ? '📋 Şiir alıntısı panoya kopyalandı!' : '⚠️ Panoya kopyalanamadı.');
+          });
+        });
+      });
+
       catalogHost.querySelectorAll('[data-compose-city]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           const cityKey = btn.getAttribute('data-compose-city');
@@ -2166,6 +2343,7 @@
       const wordEl = container.querySelector('#divan-word-count');
       const sourceEl = container.querySelector('#divan-source-label');
       const copyBtn = container.querySelector('#divan-copy-btn');
+      const ttsBtn = container.querySelector('#divan-tts-btn');
       const dlBtn = container.querySelector('#divan-dl-btn');
       const saveBtn = container.querySelector('#divan-save-btn');
       const genBtn = container.querySelector('#divan-generate-btn');
@@ -2208,6 +2386,13 @@
 
       const hasOutput = Boolean(uiState.outputText && uiState.outputText.trim());
       if (copyBtn) copyBtn.disabled = !hasOutput || uiState.isStreaming;
+      if (ttsBtn) {
+        ttsBtn.disabled = !hasOutput || uiState.isStreaming;
+        ttsBtn.textContent =
+          uiState.isSpeaking && uiState.speakingCardId === 'paper'
+            ? '⏹️ Sesi Durdur'
+            : '🔊 Sesli Dinle (TTS)';
+      }
       if (dlBtn) dlBtn.disabled = !hasOutput || uiState.isStreaming;
       if (saveBtn) saveBtn.disabled = !hasOutput || uiState.isStreaming;
       if (genBtn) {
@@ -2405,7 +2590,8 @@
               '<div class="divan-paper-head">' +
                 '<div class="divan-paper-title" id="divan-paper-title">Edebî Kalem Hazır</div>' +
                 '<div class="divan-paper-actions">' +
-                  '<button type="button" class="divan-action-btn" id="divan-copy-btn" disabled>📋 Kopyala</button>' +
+                  '<button type="button" class="divan-action-btn" id="divan-tts-btn" disabled>🔊 Sesli Dinle (TTS)</button>' +
+                  '<button type="button" class="divan-action-btn" id="divan-copy-btn" disabled>📋 Şiiri Kopyala</button>' +
                   '<button type="button" class="divan-action-btn" id="divan-dl-btn" disabled>📥 .md İndir</button>' +
                   '<button type="button" class="divan-action-btn is-save" id="divan-save-btn" disabled>📝 Seyir Defterim\'e Kaydet</button>' +
                 '</div>' +
@@ -2455,6 +2641,7 @@
     const motifInput = container.querySelector('#divan-motif-input');
     const genBtn = container.querySelector('#divan-generate-btn');
     const stopBtn = container.querySelector('#divan-stop-btn');
+    const ttsBtn = container.querySelector('#divan-tts-btn');
     const copyBtn = container.querySelector('#divan-copy-btn');
     const dlBtn = container.querySelector('#divan-dl-btn');
     const saveBtn = container.querySelector('#divan-save-btn');
@@ -2513,19 +2700,37 @@
       });
     }
 
+    if (ttsBtn) {
+      ttsBtn.addEventListener('click', function () {
+        if (uiState.isSpeaking && uiState.speakingCardId === 'paper') {
+          stopDivanTts();
+          updatePaperDom();
+          updateCatalogView();
+          return;
+        }
+        if (!uiState.outputText) return;
+        const ok = speakTurkishText(uiState.outputText, 'paper', function () {
+          updatePaperDom();
+          updateCatalogView();
+        });
+        if (!ok) {
+          notify(ctx, '⚠️ Tarayıcınız sesli okuma (TTS) özelliğini desteklemiyor.');
+        } else {
+          notify(ctx, '🔊 Şiir / deneme sesli okunuyor (tr-TR)...');
+          updatePaperDom();
+          updateCatalogView();
+        }
+      });
+    }
+
     if (copyBtn) {
       copyBtn.addEventListener('click', function () {
         if (!uiState.outputText) return;
         const p = provinces[uiState.outputCityKey || uiState.selectedCityKey];
         const header = p ? p.name + ' — ' + getGenreMeta(uiState.outputGenreId).label + '\n\n' : '';
-        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard
-            .writeText(header + uiState.outputText)
-            .then(function () {
-              notify(ctx, '📋 Edebî metin panoya kopyalandı!');
-            })
-            .catch(function () {});
-        }
+        copyTextReliable(header + uiState.outputText).then(function (ok) {
+          notify(ctx, ok ? '📋 Şiir / edebî metin panoya kopyalandı!' : '⚠️ Panoya kopyalanamadı.');
+        });
       });
     }
 

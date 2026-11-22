@@ -1712,9 +1712,105 @@ Lütfen Türkçe, edebi ama son derece uygulanabilir, somut bir **Mezopotamya Se
         gap: 10px;
       }
 
+      /* Personal 9-Province Readiness Checklist */
+      .mzp-readiness-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .mzp-readiness-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 13px;
+        background: var(--mzp-surface-strong);
+        border: 1px solid var(--mzp-border);
+        cursor: pointer;
+        transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+      }
+
+      .mzp-readiness-item:hover {
+        border-color: var(--mzp-border-warm);
+        transform: translateY(-1px);
+      }
+
+      .mzp-readiness-item.is-ready {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.45);
+      }
+
+      body.light-theme .mzp-readiness-item.is-ready {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(5, 150, 105, 0.45);
+      }
+
+      .mzp-readiness-item input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        margin-top: 2px;
+        accent-color: #10b981;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+
+      .mzp-readiness-name {
+        font-family: var(--font-heading);
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+
+      .mzp-readiness-item.is-ready .mzp-readiness-name {
+        color: var(--mzp-emerald);
+      }
+
+      .mzp-readiness-sub {
+        font-size: 0.74rem;
+        color: var(--text-secondary);
+        margin-top: 3px;
+        line-height: 1.4;
+      }
+
+      .mzp-route-load-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(16, 185, 129, 0.55);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.24), rgba(0, 242, 254, 0.2));
+        color: #ecfdf5;
+        font-family: var(--font-heading);
+        font-size: 0.84rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .mzp-route-load-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.28);
+      }
+
+      body.light-theme .mzp-route-load-btn {
+        background: linear-gradient(135deg, #059669, #0284c7);
+        border-color: #059669;
+        color: #ffffff;
+      }
+
       @media (max-width: 1040px) {
         .mzp-kpi-strip {
           grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .mzp-readiness-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         .mzp-map-layout,
         .mzp-master-grid,
@@ -1733,7 +1829,8 @@ Lütfen Türkçe, edebi ama son derece uygulanabilir, somut bir **Mezopotamya Se
         .mzp-kpi-strip {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-        .mzp-dossier-grid {
+        .mzp-dossier-grid,
+        .mzp-readiness-grid {
           grid-template-columns: 1fr;
         }
       }
@@ -1792,6 +1889,7 @@ Lütfen Türkçe, edebi ama son derece uygulanabilir, somut bir **Mezopotamya Se
               </p>
             </div>
             <div class="mzp-btn-group">
+              <button type="button" class="mzp-route-load-btn" id="mzp-load-main-route">🧭 9 İllik Mezopotamya Koridorunu Ana Rota Planlayıcıya Yükle</button>
               <button type="button" class="mzp-secondary-btn" id="mzp-scroll-ai">✨ AI Sefer Stratejisi</button>
               <button type="button" class="mzp-primary-btn" id="mzp-open-active-city">📍 ${esc(activeStop.name)} İncele</button>
             </div>
@@ -1986,6 +2084,45 @@ Lütfen Türkçe, edebi ama son derece uygulanabilir, somut bir **Mezopotamya Se
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- 3B. Personal 9-Province Readiness Checklist (localStorage persisted) -->
+        <section class="mzp-section" aria-label="Kişisel 9 İl Mezopotamya Hazırlık Kontrol Listesi">
+          <div class="mzp-section-head">
+            <div>
+              <h2 class="mzp-section-title">✅ Kişisel 9 İl Mezopotamya Hazırlık Kontrol Listesi</h2>
+              <p class="mzp-section-sub">Her il için KYK rezervasyonu, kütüphane çalışma notu ve rota hazırlığınızı işaretleyin — tarayıcınızda otomatik kaydedilir.</p>
+            </div>
+            <div class="mzp-btn-group">
+              <span class="mzp-badge is-emerald">${readyCount}/9 İl Hazır (%${Math.round((readyCount / 9) * 100)})</span>
+              <button type="button" class="mzp-pill-btn" id="mzp-prep-check-all">☑️ Tümünü İşaretle</button>
+              <button type="button" class="mzp-pill-btn" id="mzp-prep-clear-all">⬜ Sıfırla</button>
+            </div>
+          </div>
+
+          <div class="mzp-bar-track" style="margin-top:4px;">
+            <div class="mzp-bar-fill" style="width:${Math.round((readyCount / 9) * 100)}%"></div>
+          </div>
+
+          <div class="mzp-readiness-grid">
+            ${stops
+              .map((s) => {
+                const isReady = Boolean(prepState[s.key]);
+                return `
+                  <label class="mzp-readiness-item ${isReady ? 'is-ready' : ''}">
+                    <input type="checkbox" class="mzp-prep-check" data-prep-key="${esc(s.key)}" ${isReady ? 'checked' : ''} />
+                    <div style="min-width:0;flex:1;">
+                      <div class="mzp-readiness-name">
+                        <span>#${s.stopNumber} ${esc(s.name)} (${String(s.plate).padStart(2, '0')})</span>
+                        <span style="font-size:0.72rem;font-weight:700;">${isReady ? '✅ Hazır' : '⏳ Plan'}</span>
+                      </div>
+                      <div class="mzp-readiness-sub">${esc(s.dayLabel)} • ${esc(s.eraBadge)}</div>
+                    </div>
+                  </label>
+                `;
+              })
+              .join('')}
           </div>
         </section>
 
@@ -2189,6 +2326,48 @@ Lütfen Türkçe, edebi ama son derece uygulanabilir, somut bir **Mezopotamya Se
         }
       });
     });
+
+    const loadMainRouteBtn = container.querySelector('#mzp-load-main-route');
+    if (loadMainRouteBtn) {
+      loadMainRouteBtn.addEventListener('click', () => {
+        const corridorNames = stops.map((s) => s.name);
+        if (safeCtx.state) {
+          safeCtx.state.customRouteCities = corridorNames;
+        }
+        showToast(`🧭 9 İllik Mezopotamya Koridoru (${corridorNames[0]} ➔ ${corridorNames[corridorNames.length - 1]}) Rota Planlayıcıya yüklendi!`);
+        if (typeof safeCtx.openView === 'function') {
+          safeCtx.openView('route');
+        } else if (typeof window !== 'undefined') {
+          window.location.hash = '#route';
+        }
+      });
+    }
+
+    const prepCheckAllBtn = container.querySelector('#mzp-prep-check-all');
+    if (prepCheckAllBtn) {
+      prepCheckAllBtn.addEventListener('click', () => {
+        const next = readPrepState();
+        stops.forEach((s) => {
+          next[s.key] = true;
+        });
+        writePrepState(next);
+        render(container, safeCtx);
+        showToast('✅ 9 Mezopotamya ilinin tamamı hazır olarak işaretlendi!');
+      });
+    }
+
+    const prepClearAllBtn = container.querySelector('#mzp-prep-clear-all');
+    if (prepClearAllBtn) {
+      prepClearAllBtn.addEventListener('click', () => {
+        const next = readPrepState();
+        stops.forEach((s) => {
+          next[s.key] = false;
+        });
+        writePrepState(next);
+        render(container, safeCtx);
+        showToast('⬜ Mezopotamya hazırlık kontrol listesi sıfırlandı.');
+      });
+    }
 
     const openActiveBtn = container.querySelector('#mzp-open-active-city');
     if (openActiveBtn) {

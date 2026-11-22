@@ -16,6 +16,60 @@
     { id: 'kis', icon: '❄️', label: 'Kış', desc: 'Soğuk & karlı Anadolu' }
   ];
 
+  const REGION_PROFILES = [
+    {
+      id: 'karadeniz',
+      icon: '🌲',
+      label: 'Karadeniz',
+      tip: 'Ani sağanak ve yayla sisi için su geçirmez yağmurluk, yedek çorap ve hızlı kuruyan mikrofiber havlu hayati önem taşır.',
+      essentialIds: ['health-raincoat', 'gsb-towel', 'gsb-thermos', 'cloth-bahar-4', 'cloth-bahar-3', 'cloth-kis-4', 'cloth-yaz-5']
+    },
+    {
+      id: 'dogu',
+      icon: '🏔️',
+      label: 'Doğu Anadolu',
+      tip: 'Yüksek rakım ve gece ayazı nedeniyle termal içlik, katmanlı polar, bere-eldiven ve sıcak içecek termosu olmazsa olmazdır.',
+      essentialIds: ['cloth-kis-1', 'cloth-kis-2', 'cloth-kis-4', 'cloth-kis-5', 'cloth-bahar-3', 'cloth-bahar-6', 'gsb-thermos', 'health-firstaid']
+    },
+    {
+      id: 'guneydogu',
+      icon: '🏜️',
+      label: 'Güneydoğu Anadolu',
+      tip: 'Mezopotamya güneşi ve taş sokak yürüyüşleri için yüksek koruyuculu güneş kremi, şapka, katlanabilir su matarası ve hafif katmanlar önceliklidir.',
+      essentialIds: ['health-sunscreen', 'gsb-bottle', 'cloth-yaz-4', 'cloth-yaz-1', 'cloth-yaz-6', 'cloth-bahar-1', 'health-id']
+    },
+    {
+      id: 'icanadolu',
+      icon: '🌾',
+      label: 'İç Anadolu',
+      tip: 'Bozkırın gündüz-gece sıcaklık farkına karşı katmanlı giyim, rüzgarlık ve uzun otobüs/YHT geçişleri için powerbank kritik önemdedir.',
+      essentialIds: ['cloth-bahar-4', 'cloth-bahar-3', 'cloth-kis-1', 'cloth-yaz-5', 'gsb-thermos', 'tech-powerbank']
+    },
+    {
+      id: 'akdeniz',
+      icon: '☀️',
+      label: 'Akdeniz',
+      tip: 'Nemli sahil sıcağı ve antik kent yürüyüşleri için nefes alan tişört, güneş kremi, matara ve hafif yürüyüş ayakkabısı şarttır.',
+      essentialIds: ['health-sunscreen', 'gsb-bottle', 'cloth-yaz-1', 'cloth-yaz-4', 'cloth-yaz-6', 'cloth-bahar-1']
+    },
+    {
+      id: 'ege',
+      icon: '🌊',
+      label: 'Ege',
+      tip: 'Antik ören yerleri ve kıyı rüzgarı için güneş koruması, MüzeKart, hafif yürüyüş ayakkabısı ve akşam esintisine ince gömlek önerilir.',
+      essentialIds: ['health-id', 'health-sunscreen', 'cloth-yaz-4', 'cloth-yaz-5', 'cloth-yaz-6', 'gsb-bottle']
+    },
+    {
+      id: 'marmara',
+      icon: '🏰',
+      label: 'Marmara',
+      tip: 'Yoğun toplu taşıma, vapur ve şehir içi yürüyüş temposu için hafif çanta, kulaklık, yağmurluk ve kimlik/MüzeKart her an el altında olmalıdır.',
+      essentialIds: ['health-raincoat', 'health-id', 'tech-headphones', 'tech-powerbank', 'cloth-bahar-4', 'cloth-yaz-6']
+    }
+  ];
+
+  const LIBRARY_CODING_IDS = ['tech-laptop', 'tech-gan', 'tech-powerbank', 'tech-headphones', 'tech-powerstrip'];
+
   const SEASONAL_CLOTHING = {
     yaz: [
       { id: 'cloth-yaz-1', name: 'Nefes Alan Tişört (4 Adet)', weightG: 560, note: 'Pamuk / hızlı kuruyan' },
@@ -147,9 +201,89 @@
     return SEASONS.find((s) => s.id === seasonId) || SEASONS[1];
   }
 
+  function getRegionProfile(regionId) {
+    return REGION_PROFILES.find((r) => r.id === regionId) || REGION_PROFILES[0];
+  }
+
+  function computeRecommendations(state) {
+    const profile = getRegionProfile(state.region);
+    const activeItemsById = new Map();
+    CATEGORIES.forEach((cat) => {
+      getCategoryItems(cat, state).forEach((item) => {
+        activeItemsById.set(item.id, { ...item, categoryIcon: cat.icon, categoryTitle: cat.title });
+      });
+    });
+
+    const recommendedIds = new Set();
+    const reasons = new Map();
+
+    profile.essentialIds.forEach((id) => {
+      if (activeItemsById.has(id)) {
+        recommendedIds.add(id);
+        reasons.set(id, `${profile.icon} ${profile.label}`);
+      }
+    });
+
+    // Always highlight season-specific core clothing items
+    if (state.season === 'kis') {
+      ['cloth-kis-1', 'cloth-kis-4', 'cloth-kis-5'].forEach((id) => {
+        if (activeItemsById.has(id)) {
+          recommendedIds.add(id);
+          if (!reasons.has(id)) reasons.set(id, '❄️ Kış Koruması');
+        }
+      });
+    } else if (state.season === 'yaz') {
+      ['cloth-yaz-4', 'health-sunscreen', 'gsb-bottle'].forEach((id) => {
+        if (activeItemsById.has(id)) {
+          recommendedIds.add(id);
+          if (!reasons.has(id)) reasons.set(id, '☀️ Yaz Sıcakları');
+        }
+      });
+    } else {
+      ['cloth-bahar-3', 'cloth-bahar-4', 'health-raincoat'].forEach((id) => {
+        if (activeItemsById.has(id)) {
+          recommendedIds.add(id);
+          if (!reasons.has(id)) reasons.set(id, '🍂 Geçiş Havası');
+        }
+      });
+    }
+
+    // 4-hour daily library coding essentials
+    if (state.libraryFocus !== false) {
+      LIBRARY_CODING_IDS.forEach((id) => {
+        if (activeItemsById.has(id)) {
+          recommendedIds.add(id);
+          const prev = reasons.get(id);
+          reasons.set(id, prev ? `${prev} · 💻 4sa Kütüphane` : '💻 4sa Kütüphane Kodlama');
+        }
+      });
+    }
+
+    const items = [];
+    recommendedIds.forEach((id) => {
+      const meta = activeItemsById.get(id);
+      if (meta) {
+        items.push({
+          ...meta,
+          reason: reasons.get(id) || profile.label,
+          isChecked: Boolean(state.checked[id])
+        });
+      }
+    });
+
+    return {
+      profile,
+      recommendedIds,
+      items,
+      missingCount: items.filter((it) => !it.isChecked).length
+    };
+  }
+
   function getDefaultState() {
     return {
       season: 'bahar',
+      region: 'karadeniz',
+      libraryFocus: true,
       checked: {},
       customItems: []
     };
@@ -164,9 +298,12 @@
       if (!parsed || typeof parsed !== 'object') return fallback;
 
       const validSeasonIds = new Set(SEASONS.map((s) => s.id));
+      const validRegionIds = new Set(REGION_PROFILES.map((r) => r.id));
       const validCategoryIds = new Set(CATEGORIES.map((c) => c.id));
 
       const season = validSeasonIds.has(parsed.season) ? parsed.season : fallback.season;
+      const region = validRegionIds.has(parsed.region) ? parsed.region : fallback.region;
+      const libraryFocus = parsed.libraryFocus === undefined ? true : Boolean(parsed.libraryFocus);
       const checked = {};
       if (parsed.checked && typeof parsed.checked === 'object' && !Array.isArray(parsed.checked)) {
         Object.keys(parsed.checked).forEach((k) => {
@@ -194,7 +331,7 @@
         });
       }
 
-      return { season, checked, customItems };
+      return { season, region, libraryFocus, checked, customItems };
     } catch (_) {
       return fallback;
     }
@@ -204,6 +341,8 @@
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
         season: state.season,
+        region: state.region,
+        libraryFocus: state.libraryFocus,
         checked: state.checked,
         customItems: state.customItems
       }));
@@ -763,6 +902,130 @@
         border-color: rgba(16, 185, 129, 0.25);
       }
 
+      .packing-item.is-recommended {
+        border-color: rgba(245, 158, 11, 0.45);
+        box-shadow: inset 3px 0 0 #f59e0b;
+      }
+
+      .packing-rec-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        margin-left: 6px;
+        padding: 1px 7px;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 700;
+        background: rgba(245, 158, 11, 0.16);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        vertical-align: middle;
+      }
+
+      /* Smart Season & Region Optimizer Panel */
+      .packing-optimizer {
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+        padding: 16px 20px;
+        border-radius: var(--radius-lg, 18px);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.72));
+        border: 1px solid rgba(0, 242, 254, 0.28);
+        backdrop-filter: blur(12px);
+      }
+
+      .packing-opt-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .packing-opt-title {
+        font-family: var(--font-heading, sans-serif);
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .packing-opt-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .packing-region-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+        background: rgba(15, 23, 42, 0.58);
+        color: var(--text-secondary, #94a3b8);
+        font-size: 0.77rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .packing-region-pill:hover {
+        border-color: rgba(0, 242, 254, 0.45);
+        color: var(--text-primary, #f8fafc);
+      }
+
+      .packing-region-pill.active {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(16, 185, 129, 0.18));
+        border-color: var(--accent-cyan, #00f2fe);
+        color: #ffffff;
+      }
+
+      .packing-opt-tip {
+        font-size: 0.83rem;
+        color: var(--text-secondary, #cbd5e1);
+        line-height: 1.5;
+        padding: 10px 13px;
+        border-radius: 10px;
+        background: rgba(0, 242, 254, 0.06);
+        border-left: 3px solid var(--accent-cyan, #00f2fe);
+      }
+
+      .packing-opt-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+
+      .packing-opt-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        background: rgba(245, 158, 11, 0.12);
+        color: #fde68a;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .packing-opt-chip.is-done {
+        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.14);
+        color: #6ee7b7;
+      }
+
+      .packing-opt-chip:hover {
+        transform: translateY(-1px);
+      }
+
       .packing-item-left {
         display: flex;
         align-items: flex-start;
@@ -941,6 +1204,52 @@
       body.light-theme .packing-weight-badge.tier-ideal { color: #b45309; }
       body.light-theme .packing-weight-badge.tier-heavy { color: #b91c1c; }
 
+      body.light-theme .packing-optimizer {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 249, 255, 0.94));
+        border-color: rgba(2, 132, 199, 0.28);
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+      }
+
+      body.light-theme .packing-opt-title {
+        color: #0f172a;
+      }
+
+      body.light-theme .packing-region-pill {
+        background: #ffffff;
+        border-color: rgba(15, 23, 42, 0.14);
+        color: #334155;
+      }
+
+      body.light-theme .packing-region-pill.active {
+        background: linear-gradient(135deg, #0284c7, #059669);
+        border-color: #0284c7;
+        color: #ffffff;
+      }
+
+      body.light-theme .packing-opt-tip {
+        background: rgba(2, 132, 199, 0.07);
+        border-left-color: #0284c7;
+        color: #1e293b;
+      }
+
+      body.light-theme .packing-opt-chip {
+        background: rgba(245, 158, 11, 0.14);
+        border-color: rgba(217, 119, 6, 0.35);
+        color: #92400e;
+      }
+
+      body.light-theme .packing-opt-chip.is-done {
+        background: rgba(16, 185, 129, 0.14);
+        border-color: rgba(5, 150, 105, 0.38);
+        color: #065f46;
+      }
+
+      body.light-theme .packing-rec-badge {
+        background: rgba(245, 158, 11, 0.15);
+        color: #b45309;
+        border-color: rgba(217, 119, 6, 0.35);
+      }
+
       /* Responsive */
       @media (max-width: 860px) {
         .packing-module {
@@ -988,6 +1297,7 @@
     function draw() {
       const tele = computeTelemetry(state);
       const seasonMeta = getSeasonMeta(state.season);
+      const rec = computeRecommendations(state);
       const weightBarPct = Math.min(100, Math.round((tele.checkedWeightG / 12000) * 100));
 
       const seasonButtonsHtml = SEASONS.map((s) => {
@@ -1023,8 +1333,9 @@
         const itemsHtml = visibleItems.length > 0
           ? visibleItems.map((item) => {
               const isChecked = !!state.checked[item.id];
+              const isRec = rec.recommendedIds.has(item.id);
               return `
-                <li class="packing-item${isChecked ? ' is-checked' : ''}" data-action="toggle-item" data-item-id="${escapeHtml(item.id)}">
+                <li class="packing-item${isChecked ? ' is-checked' : ''}${isRec ? ' is-recommended' : ''}" data-action="toggle-item" data-item-id="${escapeHtml(item.id)}">
                   <div class="packing-item-left">
                     <input
                       type="checkbox"
@@ -1034,7 +1345,7 @@
                       aria-label="${escapeHtml(item.name)}"
                     />
                     <div class="packing-item-text">
-                      <span class="packing-item-name">${escapeHtml(item.name)}</span>
+                      <span class="packing-item-name">${escapeHtml(item.name)}${isRec ? '<span class="packing-rec-badge">⭐ Önerilen</span>' : ''}</span>
                       ${item.note ? `<span class="packing-item-note">${escapeHtml(item.note)}</span>` : ''}
                       ${item.isCustom ? `<span class="packing-item-note">✨ Özel eşya</span>` : ''}
                     </div>
@@ -1137,6 +1448,55 @@
             </div>
           </section>
 
+          <section class="packing-optimizer" aria-label="Mevsime ve Bölgeye Göre Çanta Optimizasyonu">
+            <div class="packing-opt-head">
+              <div class="packing-opt-title">🧠 Mevsime &amp; Bölgeye Göre Çantayı Optimize Et</div>
+              <div class="packing-action-group">
+                <button
+                  type="button"
+                  class="packing-region-pill${state.libraryFocus !== false ? ' active' : ''}"
+                  data-action="toggle-lib-focus"
+                  aria-pressed="${state.libraryFocus !== false ? 'true' : 'false'}"
+                >💻 4 Saat Kütüphane Kodlama</button>
+                <button
+                  type="button"
+                  class="packing-btn packing-btn-primary"
+                  data-action="check-recommended"
+                  style="padding: 6px 12px; font-size: 0.77rem;"
+                >✨ Önerilenleri İşaretle (${rec.items.length - rec.missingCount}/${rec.items.length})</button>
+              </div>
+            </div>
+
+            <div class="packing-opt-pills" role="group" aria-label="Hedef Bölge Seçimi">
+              ${REGION_PROFILES.map((r) => `
+                <button
+                  type="button"
+                  class="packing-region-pill${r.id === state.region ? ' active' : ''}"
+                  data-action="set-region"
+                  data-region="${escapeHtml(r.id)}"
+                  aria-pressed="${r.id === state.region ? 'true' : 'false'}"
+                >${r.icon} ${escapeHtml(r.label)}</button>
+              `).join('')}
+            </div>
+
+            <div class="packing-opt-tip">
+              <strong>${seasonMeta.icon} ${escapeHtml(seasonMeta.label)} × ${rec.profile.icon} ${escapeHtml(rec.profile.label)} Tavsiyesi:</strong>
+              ${escapeHtml(rec.profile.tip)}${state.libraryFocus !== false ? ' Günlük 4 saat İl Halk Kütüphanesi kodlama mesaisi için laptop, GaN şarj, powerbank, ANC kulaklık ve kompakt çoklu priz önceliklendirildi.' : ''}
+            </div>
+
+            <div class="packing-opt-items">
+              ${rec.items.map((it) => `
+                <button
+                  type="button"
+                  class="packing-opt-chip${it.isChecked ? ' is-done' : ''}"
+                  data-action="toggle-item"
+                  data-item-id="${escapeHtml(it.id)}"
+                  title="${escapeHtml(it.reason)} — işaretlemek için tıklayın"
+                >${it.isChecked ? '✅' : '⭐'} ${escapeHtml(it.name)}</button>
+              `).join('')}
+            </div>
+          </section>
+
           <div class="packing-controls-row">
             <div class="packing-action-group">
               <button type="button" class="packing-btn" data-action="check-all">☑️ Tümünü İşaretle</button>
@@ -1224,6 +1584,44 @@
           updateAndRender();
           showToast(`${meta.icon} Mevsim "${meta.label}" olarak güncellendi`);
         }
+        return;
+      }
+
+      // Region switcher for optimizer
+      const regionBtn = target.closest('[data-action="set-region"]');
+      if (regionBtn) {
+        const nextRegion = regionBtn.getAttribute('data-region');
+        if (nextRegion && nextRegion !== state.region) {
+          state.region = nextRegion;
+          const prof = getRegionProfile(nextRegion);
+          updateAndRender();
+          showToast(`🧠 Çanta önerileri ${prof.icon} ${prof.label} için güncellendi`);
+        }
+        return;
+      }
+
+      // Library 4-hour coding focus toggle
+      if (target.closest('[data-action="toggle-lib-focus"]')) {
+        state.libraryFocus = state.libraryFocus === false;
+        updateAndRender();
+        showToast(state.libraryFocus ? '💻 4 saat kütüphane kodlama ekipmanları öne çıkarıldı' : '💻 Kütüphane kodlama vurgusu kapatıldı');
+        return;
+      }
+
+      // Check all recommended essentials
+      if (target.closest('[data-action="check-recommended"]')) {
+        const rec = computeRecommendations(state);
+        let added = 0;
+        rec.recommendedIds.forEach((id) => {
+          if (!state.checked[id]) {
+            state.checked[id] = true;
+            added += 1;
+          }
+        });
+        updateAndRender();
+        showToast(added > 0
+          ? `✨ ${added} önerilen kritik eşya çantaya işaretlendi!`
+          : '✅ Tüm önerilen kritik eşyalar zaten çantada hazır!');
         return;
       }
 

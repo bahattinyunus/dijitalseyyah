@@ -20,7 +20,7 @@
   const MODE_BAR_CLASS = 'seyyah-dash-mode-bar';
   const STORAGE_KEY = 'dijital_seyyah_dash_mode';
 
-  const VALID_MODES = ['full', 'focus', 'irfan'];
+  const VALID_MODES = ['full', 'focus', 'planner', 'irfan'];
 
   const MODE_META = {
     full: {
@@ -32,6 +32,11 @@
       id: 'focus',
       label: '🎯 Odak & Öz',
       caption: 'Yalın editoryal vitrin: Kahraman, 4 KPI, Aktif Rota ve 7 Bölge'
+    },
+    planner: {
+      id: 'planner',
+      label: '🧭 Sefer & Rota',
+      caption: 'Sefer planlama vitrini: Kahraman, 4 KPI, Aktif Sefer Kartı ve 7 Bölge İlerlemesi'
     },
     irfan: {
       id: 'irfan',
@@ -47,9 +52,36 @@
     { view: 'skyMap', label: '🌌 Anadolu Semâsı', hint: '81 Yıldız' }
   ];
 
+  const PLANNER_QUICK_BUTTONS = [
+    { view: 'route', label: '🧭 Rota & GPX', hint: '2-Opt Plan' },
+    { view: 'mesopotamia', label: '🏜️ Mezopotamya', hint: '0/9 Özel Sefer' },
+    { view: 'budget', label: '💰 Bütçe', hint: 'GSB Hesabı' },
+    { view: 'packing', label: '🎒 Sırt Çantası', hint: 'Ekipman' }
+  ];
+
+  const SURPRISE_STUDIOS = [
+    { view: 'cinematicTour', label: 'Sinematik Anadolu Turu' },
+    { view: 'skyMap', label: 'Anadolu Semâsı (81 Yıldız)' },
+    { view: 'hikmetMeclisi', label: 'Hikmet Meclisi (5 Bilge AI)' },
+    { view: 'halvet', label: 'Halvet & Tefekkür Odası' },
+    { view: 'aiMood', label: 'AI Ruh Hali Kaşifi' },
+    { view: 'aiBattle', label: 'AI Şehir Düellosu' },
+    { view: 'aiChef', label: 'AI Gurme Şef' },
+    { view: 'postcard', label: 'Kartpostal Stüdyosu' },
+    { view: 'sound', label: 'Sufi Ses Stüdyosu' },
+    { view: 'quiz', label: '81 İl Bilgi Yarışması' },
+    { view: 'distanceGame', label: 'Mesafe Düellosu' },
+    { view: 'makamAtlas', label: 'Anadolu Makamları & Mûsikî' },
+    { view: 'sevenValleys', label: 'Yedi Vadi (Mantıku\'t-Tayr)' },
+    { view: 'natureWonders', label: 'Tabiat Harikaları & Kaplıcalar' },
+    { view: 'caravanserai', label: 'Kervansaray & İpek Yolu' },
+    { view: 'bazaar', label: 'Zanaatlar & Tarihi Çarşılar' }
+  ];
+
   let activeCtx = null;
   let viewportObserver = null;
   let isOrchestrating = false;
+  let lastSurpriseView = null;
 
   // =========================================================================
   // Persistence Helpers
@@ -166,6 +198,13 @@
         line-height: 1.35;
       }
 
+      .sdo-bar-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
       .sdo-pills-track {
         display: inline-flex;
         align-items: center;
@@ -175,6 +214,33 @@
         background: rgba(2, 6, 23, 0.62);
         border: 1px solid rgba(255, 255, 255, 0.08);
         flex-wrap: wrap;
+      }
+
+      .sdo-surprise-btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 9999px;
+        border: 1px solid rgba(168, 85, 247, 0.45);
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(0, 242, 254, 0.16) 100%);
+        color: #f5f3ff;
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .sdo-surprise-btn:hover,
+      .sdo-surprise-btn:focus-visible {
+        outline: none;
+        transform: translateY(-1px);
+        border-color: rgba(0, 242, 254, 0.72);
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.34) 0%, rgba(0, 242, 254, 0.26) 100%);
+        box-shadow: 0 8px 18px -6px rgba(168, 85, 247, 0.45);
       }
 
       .sdo-mode-pill {
@@ -217,11 +283,69 @@
         box-shadow: 0 4px 14px -4px rgba(6, 182, 212, 0.5);
       }
 
+      .sdo-mode-pill[data-sdo-mode="planner"].is-active {
+        color: #022c22;
+        background: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%);
+        border-color: rgba(209, 250, 229, 0.72);
+        box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.52);
+      }
+
       .sdo-mode-pill[data-sdo-mode="irfan"].is-active {
         color: #fef3c7;
         background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(20, 184, 166, 0.32) 100%);
         border-color: rgba(212, 175, 55, 0.65);
         box-shadow: 0 4px 16px -4px rgba(212, 175, 55, 0.35);
+      }
+
+      /* Planner Quick Gateways Strip */
+      .sdo-planner-quickbar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px 14px;
+        flex-wrap: wrap;
+        padding-top: 10px;
+        border-top: 1px solid rgba(16, 185, 129, 0.24);
+      }
+
+      .sdo-planner-quickbar.is-visible {
+        display: flex;
+      }
+
+      .sdo-planner-quick-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6ee7b7;
+        letter-spacing: 0.02em;
+      }
+
+      .sdo-planner-btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 13px;
+        border-radius: 12px;
+        border: 1px solid rgba(16, 185, 129, 0.34);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(6, 182, 212, 0.1) 100%);
+        color: #d1fae5;
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .sdo-planner-btn:hover,
+      .sdo-planner-btn:focus-visible {
+        outline: none;
+        transform: translateY(-1px);
+        border-color: rgba(52, 211, 153, 0.75);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.26) 0%, rgba(6, 182, 212, 0.2) 100%);
+        box-shadow: 0 8px 18px -8px rgba(16, 185, 129, 0.45);
       }
 
       /* İrfan & Hikmet Quick Gateways Strip */
@@ -314,7 +438,35 @@
         display: none !important;
       }
 
-      /* 2. İrfan & Hikmet: Hero + 4 KPIs + Mode Bar + Quick Links + Spotlight + Philosophy Ribbon */
+      /* 2. Sefer & Rota (Planner): Hero + 4 KPIs + Mode Bar + Active Expedition Card + Regional Progress */
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="stories"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="spotlight"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="philosophy"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="marquee"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="launchers"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="feature-hub"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="rank"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="badges"],
+      .dashboard-view[data-dash-mode="planner"] > [data-sdo-role="nomad-guide"],
+      .dashboard-view[data-dash-mode="planner"] > .anadolu-stories-bar,
+      .dashboard-view[data-dash-mode="planner"] > .daily-spotlight-card,
+      .dashboard-view[data-dash-mode="planner"] > .seyyah-philosophy-ribbon,
+      .dashboard-view[data-dash-mode="planner"] > [data-dv3-block="marquee"],
+      .dashboard-view[data-dash-mode="planner"] > [data-dv3-block="launchers"],
+      .dashboard-view[data-dash-mode="planner"] > .rank-banner,
+      .dashboard-view[data-dash-mode="planner"] > .detail-card {
+        display: none !important;
+      }
+
+      .dashboard-view[data-dash-mode="planner"] > [data-dv3-block="expedition"] .dv3-expedition-card {
+        border-color: rgba(16, 185, 129, 0.56) !important;
+        box-shadow:
+          0 20px 44px -16px rgba(0, 0, 0, 0.68),
+          0 0 28px -8px rgba(16, 185, 129, 0.32),
+          inset 0 1px 0 rgba(209, 250, 229, 0.16) !important;
+      }
+
+      /* 3. İrfan & Hikmet: Hero + 4 KPIs + Mode Bar + Quick Links + Spotlight + Philosophy Ribbon */
       .dashboard-view[data-dash-mode="irfan"] > [data-sdo-role="stories"],
       .dashboard-view[data-dash-mode="irfan"] > [data-sdo-role="marquee"],
       .dashboard-view[data-dash-mode="irfan"] > [data-sdo-role="expedition"],
@@ -408,6 +560,66 @@
         background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
         border-color: rgba(3, 105, 161, 0.45);
         box-shadow: 0 4px 12px -4px rgba(2, 132, 199, 0.4);
+      }
+
+      body.light-theme .sdo-mode-pill[data-sdo-mode="planner"].is-active,
+      [data-theme="light"] .sdo-mode-pill[data-sdo-mode="planner"].is-active {
+        color: #ffffff;
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        border-color: rgba(4, 120, 87, 0.48);
+        box-shadow: 0 4px 12px -4px rgba(5, 150, 105, 0.42);
+      }
+
+      body.light-theme .sdo-surprise-btn,
+      [data-theme="light"] .sdo-surprise-btn {
+        color: #5b21b6;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(14, 165, 233, 0.12) 100%);
+        border-color: rgba(124, 58, 237, 0.34);
+      }
+
+      body.light-theme .sdo-surprise-btn:hover,
+      body.light-theme .sdo-surprise-btn:focus-visible,
+      [data-theme="light"] .sdo-surprise-btn:hover,
+      [data-theme="light"] .sdo-surprise-btn:focus-visible {
+        color: #4c1d95;
+        border-color: rgba(124, 58, 237, 0.6);
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(14, 165, 233, 0.18) 100%);
+        box-shadow: 0 6px 14px -6px rgba(124, 58, 237, 0.26);
+      }
+
+      body.light-theme .sdo-planner-quickbar,
+      [data-theme="light"] .sdo-planner-quickbar {
+        border-top-color: rgba(5, 150, 105, 0.2);
+      }
+
+      body.light-theme .sdo-planner-quick-label,
+      [data-theme="light"] .sdo-planner-quick-label {
+        color: #047857;
+      }
+
+      body.light-theme .sdo-planner-btn,
+      [data-theme="light"] .sdo-planner-btn {
+        color: #064e3b;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(209, 250, 229, 0.62) 100%);
+        border-color: rgba(5, 150, 105, 0.28);
+      }
+
+      body.light-theme .sdo-planner-btn:hover,
+      body.light-theme .sdo-planner-btn:focus-visible,
+      [data-theme="light"] .sdo-planner-btn:hover,
+      [data-theme="light"] .sdo-planner-btn:focus-visible {
+        color: #064e3b;
+        border-color: rgba(5, 150, 105, 0.56);
+        background: linear-gradient(135deg, rgba(209, 250, 229, 0.92) 0%, rgba(207, 250, 254, 0.62) 100%);
+        box-shadow: 0 6px 14px -6px rgba(5, 150, 105, 0.24);
+      }
+
+      body.light-theme .dashboard-view[data-dash-mode="planner"] > [data-dv3-block="expedition"] .dv3-expedition-card,
+      [data-theme="light"] .dashboard-view[data-dash-mode="planner"] > [data-dv3-block="expedition"] .dv3-expedition-card {
+        border-color: rgba(5, 150, 105, 0.45) !important;
+        box-shadow:
+          0 16px 36px -14px rgba(15, 23, 42, 0.16),
+          0 0 22px -6px rgba(5, 150, 105, 0.22) !important;
       }
 
       body.light-theme .sdo-mode-pill[data-sdo-mode="irfan"].is-active,
@@ -518,6 +730,10 @@
       `<button type="button" class="sdo-irfan-btn" data-sdo-view="${btn.view}"><span>${btn.label}</span><span class="sdo-irfan-btn-hint">${btn.hint}</span></button>`
     )).join('');
 
+    const plannerBtnsHtml = PLANNER_QUICK_BUTTONS.map((btn) => (
+      `<button type="button" class="sdo-planner-btn" data-sdo-view="${btn.view}"><span>${btn.label}</span><span class="sdo-irfan-btn-hint">${btn.hint}</span></button>`
+    )).join('');
+
     const activeMeta = MODE_META[initialMode] || MODE_META.full;
 
     bar.innerHTML = `
@@ -526,8 +742,22 @@
           <span class="sdo-bar-eyebrow"><span class="sdo-natgeo-mark" aria-hidden="true"></span>Vitrin Modu</span>
           <span class="sdo-mode-caption" data-sdo-caption>${activeMeta.caption}</span>
         </div>
-        <div class="sdo-pills-track" role="tablist" aria-label="Vitrin Modu Seçici">
-          ${pillsHtml}
+        <div class="sdo-bar-controls">
+          <div class="sdo-pills-track" role="tablist" aria-label="Vitrin Modu Seçici">
+            ${pillsHtml}
+          </div>
+          <button type="button"
+                  class="sdo-surprise-btn"
+                  data-sdo-surprise="1"
+                  title="Seçkin etkileşimli stüdyolardan birini rastgele aç">
+            🎲 Sürpriz Stüdyo
+          </button>
+        </div>
+      </div>
+      <div class="sdo-planner-quickbar${initialMode === 'planner' ? ' is-visible' : ''}" data-sdo-planner-bar>
+        <span class="sdo-planner-quick-label">🧭 Sefer &amp; Rota Araçları:</span>
+        <div class="sdo-irfan-btns">
+          ${plannerBtnsHtml}
         </div>
       </div>
       <div class="sdo-irfan-quickbar${initialMode === 'irfan' ? ' is-visible' : ''}" data-sdo-irfan-bar>
@@ -539,6 +769,12 @@
     `;
 
     bar.addEventListener('click', (e) => {
+      const surpriseBtn = e.target && e.target.closest ? e.target.closest('[data-sdo-surprise]') : null;
+      if (surpriseBtn) {
+        launchSurpriseStudio();
+        return;
+      }
+
       const modeBtn = e.target && e.target.closest ? e.target.closest('[data-sdo-mode]') : null;
       if (modeBtn) {
         const nextMode = modeBtn.getAttribute('data-sdo-mode');
@@ -562,6 +798,20 @@
     });
 
     return bar;
+  }
+
+  function launchSurpriseStudio() {
+    if (!SURPRISE_STUDIOS.length) return;
+    const pool = SURPRISE_STUDIOS.filter((s) => s.view !== lastSurpriseView);
+    const candidates = pool.length ? pool : SURPRISE_STUDIOS;
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    if (!pick) return;
+
+    lastSurpriseView = pick.view;
+    if (activeCtx && typeof activeCtx.showToast === 'function') {
+      activeCtx.showToast(`🎲 Sürpriz Stüdyo: ${pick.label}`);
+    }
+    navigateToView(pick.view);
   }
 
   function navigateToView(viewName) {
@@ -604,6 +854,11 @@
       btn.classList.toggle('is-active', active);
       btn.setAttribute('aria-selected', active ? 'true' : 'false');
     });
+
+    const plannerBar = modeBar.querySelector('[data-sdo-planner-bar]');
+    if (plannerBar) {
+      plannerBar.classList.toggle('is-visible', resolved === 'planner');
+    }
 
     const irfanBar = modeBar.querySelector('[data-sdo-irfan-bar]');
     if (irfanBar) {

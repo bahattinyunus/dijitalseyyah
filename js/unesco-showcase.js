@@ -328,11 +328,54 @@
   ];
 
   // Persistent module UI state
+  const UNESCO_CHECKED_STORAGE_KEY = 'dijital_seyyah_unesco_checked_v1';
+
   const uiState = {
-    filter: 'all', // 'all' | 'visited' | 'pending' | 'cultural' | 'mixed'
+    filter: 'all', // 'all' | 'visited' | 'pending' | 'stamped' | 'unstamped' | 'cultural' | 'mixed'
     search: '',
-    sort: 'year-asc' // 'year-asc' | 'year-desc' | 'visited-first' | 'alpha'
+    sort: 'year-asc' // 'year-asc' | 'year-desc' | 'visited-first' | 'stamped-first' | 'alpha'
   };
+
+  function loadCheckedUnescoIds() {
+    try {
+      if (typeof localStorage === 'undefined') return new Set();
+      const raw = localStorage.getItem(UNESCO_CHECKED_STORAGE_KEY);
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? new Set(parsed) : new Set();
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function saveCheckedUnescoIds(setObj) {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(UNESCO_CHECKED_STORAGE_KEY, JSON.stringify(Array.from(setObj)));
+    } catch (_) {}
+  }
+
+  function dispatchRouteCities(ctx, provinceKeys, toastMsg) {
+    const uniqueKeys = [];
+    (provinceKeys || []).forEach(function (k) {
+      if (k && uniqueKeys.indexOf(k) === -1) uniqueKeys.push(k);
+    });
+    if (!uniqueKeys.length) return;
+    if (ctx && ctx.state) {
+      ctx.state.customRouteCities = uniqueKeys.slice();
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('seyyah_custom_route', JSON.stringify(uniqueKeys));
+      }
+    } catch (_) {}
+    if (ctx && typeof ctx.showToast === 'function' && toastMsg) {
+      ctx.showToast(toastMsg);
+    }
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.hash = '#route';
+    }
+  }
 
   function injectStyles() {
     if (document.getElementById('unesco-showcase-styles')) return;
@@ -1002,6 +1045,185 @@
         background: rgba(245, 158, 11, 0.3);
       }
 
+      /* Personal UNESCO Passport Stamp Tracker & Route Planner */
+      .unesco-passport-panel {
+        margin-top: 14px;
+        background: rgba(10, 15, 29, 0.62);
+        border: 1px solid rgba(16, 185, 129, 0.32);
+        border-radius: var(--radius-md, 14px);
+        padding: 15px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+      }
+
+      .unesco-passport-top {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .unesco-passport-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #a7f3d0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .unesco-passport-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .unesco-route-plan-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: var(--radius-full, 9999px);
+        border: 1px solid rgba(0, 242, 254, 0.45);
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.22) 0%, rgba(16, 185, 129, 0.24) 100%);
+        color: #ffffff;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .unesco-route-plan-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(0, 242, 254, 0.25);
+        border-color: var(--accent-cyan, #00f2fe);
+      }
+
+      .unesco-sync-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 12px;
+        border-radius: var(--radius-full, 9999px);
+        border: 1px solid rgba(245, 158, 11, 0.38);
+        background: rgba(245, 158, 11, 0.14);
+        color: #fde68a;
+        font-size: 0.76rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .unesco-sync-btn:hover {
+        background: rgba(245, 158, 11, 0.26);
+      }
+
+      .unesco-stamps-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .unesco-stamp-mini {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.71rem;
+        font-weight: 700;
+        border: 1px dashed rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.55);
+        color: var(--text-secondary, #94a3b8);
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .unesco-stamp-mini.stamped {
+        border-style: solid;
+        border-color: rgba(16, 185, 129, 0.65);
+        background: rgba(16, 185, 129, 0.2);
+        color: #a7f3d0;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.18);
+      }
+
+      .unesco-stamp-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.65);
+        color: #cbd5e1;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .unesco-stamp-toggle-btn:hover {
+        border-color: rgba(245, 158, 11, 0.55);
+        color: #ffffff;
+      }
+
+      .unesco-stamp-toggle-btn.is-stamped {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.28), rgba(245, 158, 11, 0.22));
+        border-color: #10b981;
+        color: #a7f3d0;
+      }
+
+      body.light-theme .unesco-passport-panel {
+        background: rgba(241, 245, 249, 0.92);
+        border-color: rgba(5, 150, 105, 0.32);
+      }
+
+      body.light-theme .unesco-passport-title {
+        color: #065f46;
+      }
+
+      body.light-theme .unesco-route-plan-btn {
+        background: linear-gradient(135deg, #0284c7 0%, #059669 100%);
+        color: #ffffff;
+        border-color: transparent;
+      }
+
+      body.light-theme .unesco-sync-btn {
+        background: rgba(217, 119, 6, 0.12);
+        color: #92400e;
+        border-color: rgba(217, 119, 6, 0.35);
+      }
+
+      body.light-theme .unesco-stamp-mini {
+        background: rgba(255, 255, 255, 0.9);
+        color: #475569;
+        border-color: rgba(15, 23, 42, 0.2);
+      }
+
+      body.light-theme .unesco-stamp-mini.stamped {
+        background: rgba(16, 185, 129, 0.16);
+        color: #065f46;
+        border-color: #059669;
+      }
+
+      body.light-theme .unesco-stamp-toggle-btn {
+        background: #f1f5f9;
+        color: #334155;
+        border-color: rgba(15, 23, 42, 0.16);
+      }
+
+      body.light-theme .unesco-stamp-toggle-btn.is-stamped {
+        background: rgba(16, 185, 129, 0.18);
+        color: #065f46;
+        border-color: #059669;
+      }
+
       /* Light Theme Overrides */
       body.light-theme .unesco-hero {
         background:
@@ -1113,10 +1335,12 @@
     document.head.appendChild(style);
   }
 
-  function enrichSites(provinces) {
+  function enrichSites(provinces, checkedSet) {
+    const safeChecked = checkedSet || new Set();
     return UNESCO_SITES.map(function (site) {
       const prov = (provinces && provinces[site.provinceKey]) || null;
       const visited = Boolean(prov && prov.visited);
+      const personalChecked = safeChecked.has(site.id);
       const bannerSrc =
         prov && prov.has_banner && prov.banner_rel
           ? prov.banner_rel
@@ -1127,6 +1351,7 @@
 
       return Object.assign({}, site, {
         visited: visited,
+        personalChecked: personalChecked,
         bannerSrc: bannerSrc,
         provinceName: provinceName,
         plate: plate,
@@ -1138,6 +1363,7 @@
   function computeMetrics(enrichedSites) {
     const total = enrichedSites.length;
     let visitedCount = 0;
+    let personalCheckedCount = 0;
     let culturalCount = 0;
     let mixedCount = 0;
     const uniqueProvinces = new Set();
@@ -1149,22 +1375,30 @@
         visitedCount++;
         visitedUniqueProvinces.add(s.provinceKey);
       }
+      if (s.personalChecked) {
+        personalCheckedCount++;
+      }
       if (s.type === 'mixed') mixedCount++;
       else culturalCount++;
     });
 
     const pendingCount = total - visitedCount;
+    const unstampedCount = total - personalCheckedCount;
     const pct = total > 0 ? Math.round((visitedCount / total) * 1000) / 10 : 0;
+    const personalPct = total > 0 ? Math.round((personalCheckedCount / total) * 1000) / 10 : 0;
 
     return {
       total: total,
       visitedCount: visitedCount,
       pendingCount: pendingCount,
+      personalCheckedCount: personalCheckedCount,
+      unstampedCount: unstampedCount,
       culturalCount: culturalCount,
       mixedCount: mixedCount,
       uniqueProvinceCount: uniqueProvinces.size,
       visitedProvinceCount: visitedUniqueProvinces.size,
-      pct: pct
+      pct: pct,
+      personalPct: personalPct
     };
   }
 
@@ -1174,6 +1408,8 @@
     const filtered = enrichedSites.filter(function (site) {
       if (uiState.filter === 'visited' && !site.visited) return false;
       if (uiState.filter === 'pending' && site.visited) return false;
+      if (uiState.filter === 'stamped' && !site.personalChecked) return false;
+      if (uiState.filter === 'unstamped' && site.personalChecked) return false;
       if (uiState.filter === 'cultural' && site.type !== 'cultural') return false;
       if (uiState.filter === 'mixed' && site.type !== 'mixed') return false;
 
@@ -1206,6 +1442,10 @@
       sorted.sort(function (a, b) {
         return (b.visited ? 1 : 0) - (a.visited ? 1 : 0) || a.year - b.year;
       });
+    } else if (uiState.sort === 'stamped-first') {
+      sorted.sort(function (a, b) {
+        return (b.personalChecked ? 1 : 0) - (a.personalChecked ? 1 : 0) || a.year - b.year;
+      });
     } else if (uiState.sort === 'alpha') {
       sorted.sort(function (a, b) {
         return a.name.localeCompare(b.name, 'tr');
@@ -1223,8 +1463,9 @@
   function buildCardHtml(site, escapeHtml, provinces) {
     const isMixed = site.type === 'mixed';
     const typeBadgeText = isMixed ? '🌿 Karma' : '🏛️ Kültürel';
-    const statusBadgeText = site.visited ? '✅ Ziyaret Edildi' : '⏳ Bekliyor';
+    const statusBadgeText = site.visited ? '✅ İl Gezildi' : '⏳ Bekliyor';
     const statusClass = site.visited ? 'visited' : 'pending';
+    const isStamped = Boolean(site.personalChecked);
 
     const highlightsHtml = site.highlights
       .map(function (h) {
@@ -1262,7 +1503,7 @@
 
     return (
       '<article class="unesco-card ' +
-      (site.visited ? 'is-visited' : '') +
+      (site.visited || isStamped ? 'is-visited' : '') +
       '" role="button" tabindex="0" data-city-key="' +
       escapeHtml(site.provinceKey) +
       '" aria-label="' +
@@ -1324,10 +1565,16 @@
       '</div>' +
       relatedHtml +
       '<div class="unesco-card-footer">' +
-      '<span class="unesco-region-text">' +
-      escapeHtml(site.regionName ? site.regionName + ' Bölgesi' : 'Türkiye') +
-      '</span>' +
-      '<span class="unesco-open-cta">Şehir Rehberini Aç →</span>' +
+      '<button type="button" class="unesco-stamp-toggle-btn ' +
+      (isStamped ? 'is-stamped' : '') +
+      '" data-unesco-stamp-id="' +
+      escapeHtml(site.id) +
+      '" aria-pressed="' +
+      (isStamped ? 'true' : 'false') +
+      '" title="Kişisel UNESCO pasaport mührünü işaretle">' +
+      (isStamped ? '🛂 Pasaport Mührü Basıldı' : '⬜ Pasaporta Mühür Bas') +
+      '</button>' +
+      '<span class="unesco-open-cta">Şehir Rehberi →</span>' +
       '</div>' +
       '</div>' +
       '</article>'
@@ -1350,278 +1597,398 @@
     const selectCity =
       typeof safeCtx.selectCity === 'function' ? safeCtx.selectCity : function () {};
 
-    const enrichedSites = enrichSites(provinces);
-    const metrics = computeMetrics(enrichedSites);
+    let checkedUnescoSet = loadCheckedUnescoIds();
 
-    const filterDefs = [
-      { id: 'all', label: 'Tümü', count: metrics.total },
-      { id: 'visited', label: '✅ Ziyaret Edilenler', count: metrics.visitedCount },
-      { id: 'pending', label: '⏳ Bekleyenler', count: metrics.pendingCount },
-      { id: 'cultural', label: '🏛️ Kültürel', count: metrics.culturalCount },
-      { id: 'mixed', label: '🌿 Karma (Doğal+Kültürel)', count: metrics.mixedCount }
-    ];
+    function paintView() {
+      const enrichedSites = enrichSites(provinces, checkedUnescoSet);
+      const metrics = computeMetrics(enrichedSites);
 
-    const filterButtonsHtml = filterDefs
-      .map(function (f) {
-        const isActive = uiState.filter === f.id;
-        return (
-          '<button type="button" class="unesco-filter-btn ' +
-          (isActive ? 'active' : '') +
-          '" data-unesco-filter="' +
-          f.id +
-          '" aria-pressed="' +
-          (isActive ? 'true' : 'false') +
-          '">' +
-          '<span>' +
-          escapeHtml(f.label) +
-          '</span>' +
-          '<span class="unesco-filter-count">' +
-          f.count +
-          '</span>' +
-          '</button>'
-        );
-      })
-      .join('');
+      const filterDefs = [
+        { id: 'all', label: 'Tümü', count: metrics.total },
+        { id: 'stamped', label: '🛂 Pasaportta Mühürlü', count: metrics.personalCheckedCount },
+        { id: 'unstamped', label: '🧭 Mühür Bekleyen', count: metrics.unstampedCount },
+        { id: 'visited', label: '✅ Gezilen İller', count: metrics.visitedCount },
+        { id: 'pending', label: '⏳ Bekleyen İller', count: metrics.pendingCount },
+        { id: 'cultural', label: '🏛️ Kültürel', count: metrics.culturalCount },
+        { id: 'mixed', label: '🌿 Karma (Doğal+Kültürel)', count: metrics.mixedCount }
+      ];
 
-    container.innerHTML =
-      '<section class="unesco-shell" aria-label="Türkiye UNESCO Dünya Mirası Vitrini">' +
-      // Hero + Live Progress Bar
-      '<div class="unesco-hero">' +
-      '<div class="unesco-hero-top">' +
-      '<div>' +
-      '<span class="unesco-hero-kicker">✨ İnsanlığın Ortak Mirası · 1985 – 2023</span>' +
-      '<h2 class="unesco-hero-title">🏛️ Türkiye UNESCO Dünya Mirası Vitrini</h2>' +
-      '<p class="unesco-hero-subtitle">' +
-      'Göbeklitepe\'nin 12.000 yıllık dikilitaşlarından Anadolu\'nun ahşap hipostil camilerine uzanan 21 evrensel hazineyi keşfedin ve Dijital Seyyah\'ın UNESCO yolculuğunu canlı takip edin.' +
-      '</p>' +
-      '</div>' +
-      '<div class="unesco-kpi-strip">' +
-      '<div class="unesco-kpi-pill">' +
-      '<span class="unesco-kpi-val gold">' +
-      metrics.total +
-      '</span>' +
-      '<span class="unesco-kpi-label">UNESCO Mirası</span>' +
-      '</div>' +
-      '<div class="unesco-kpi-pill">' +
-      '<span class="unesco-kpi-val emerald">' +
-      metrics.visitedCount +
-      ' / ' +
-      metrics.total +
-      '</span>' +
-      '<span class="unesco-kpi-label">Ziyaret Edilen</span>' +
-      '</div>' +
-      '<div class="unesco-kpi-pill">' +
-      '<span class="unesco-kpi-val cyan">' +
-      metrics.visitedProvinceCount +
-      ' / ' +
-      metrics.uniqueProvinceCount +
-      '</span>' +
-      '<span class="unesco-kpi-label">Miras İli</span>' +
-      '</div>' +
-      '<div class="unesco-kpi-pill">' +
-      '<span class="unesco-kpi-val">' +
-      metrics.culturalCount +
-      ' · ' +
-      metrics.mixedCount +
-      '</span>' +
-      '<span class="unesco-kpi-label">Kültürel · Karma</span>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<div class="unesco-progress-box">' +
-      '<div class="unesco-progress-meta">' +
-      '<span class="unesco-progress-label">🧭 Dijital Seyyah UNESCO Miras İlerlemesi</span>' +
-      '<span class="unesco-progress-stat">' +
-      metrics.visitedCount +
-      ' / ' +
-      metrics.total +
-      ' Miras Alanı (%' +
-      metrics.pct.toFixed(1) +
-      ')</span>' +
-      '</div>' +
-      '<div class="unesco-progress-track" role="progressbar" aria-valuenow="' +
-      metrics.visitedCount +
-      '" aria-valuemin="0" aria-valuemax="' +
-      metrics.total +
-      '">' +
-      '<div class="unesco-progress-fill" style="width: ' +
-      metrics.pct +
-      '%;"></div>' +
-      '</div>' +
-      '<div class="unesco-progress-foot">' +
-      '<span>✅ ' +
-      metrics.visitedCount +
-      ' miras alanı ziyaret edilen illerde</span>' +
-      '<span>⏳ ' +
-      metrics.pendingCount +
-      ' miras alanı keşif bekliyor</span>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      // Filter & Search Toolbar
-      '<div class="unesco-toolbar">' +
-      '<div class="unesco-filter-row" role="group" aria-label="UNESCO filtreleri">' +
-      filterButtonsHtml +
-      '</div>' +
-      '<div class="unesco-controls-row">' +
-      '<div class="unesco-search-wrap">' +
-      '<span class="unesco-search-icon" aria-hidden="true">🔍</span>' +
-      '<input type="search" class="unesco-search-input" id="unescoSearchInput" placeholder="Miras alanı, şehir, dönem veya anıt ara (örn: Efes, 1985, Kapadokya, Sinan)..." value="' +
-      escapeHtml(uiState.search) +
-      '" autocomplete="off" />' +
-      '<button type="button" class="unesco-search-clear ' +
-      (uiState.search ? 'visible' : '') +
-      '" id="unescoSearchClear" aria-label="Aramayı temizle">✕</button>' +
-      '</div>' +
-      '<select class="unesco-sort-select" id="unescoSortSelect" aria-label="Sıralama">' +
-      '<option value="year-asc"' +
-      (uiState.sort === 'year-asc' ? ' selected' : '') +
-      '>📅 Kayıt Yılı (1985 → 2023)</option>' +
-      '<option value="year-desc"' +
-      (uiState.sort === 'year-desc' ? ' selected' : '') +
-      '>📅 Kayıt Yılı (2023 → 1985)</option>' +
-      '<option value="visited-first"' +
-      (uiState.sort === 'visited-first' ? ' selected' : '') +
-      '>✅ Önce Ziyaret Edilenler</option>' +
-      '<option value="alpha"' +
-      (uiState.sort === 'alpha' ? ' selected' : '') +
-      '>🔤 Alfabetik (A → Z)</option>' +
-      '</select>' +
-      '<span class="unesco-result-summary" id="unescoResultSummary"></span>' +
-      '</div>' +
-      '</div>' +
-      // Cards Grid
-      '<div class="unesco-grid" id="unescoCardsGrid"></div>' +
-      '</section>';
-
-    const gridEl = container.querySelector('#unescoCardsGrid');
-    const summaryEl = container.querySelector('#unescoResultSummary');
-    const searchInput = container.querySelector('#unescoSearchInput');
-    const searchClearBtn = container.querySelector('#unescoSearchClear');
-    const sortSelect = container.querySelector('#unescoSortSelect');
-    const filterButtons = container.querySelectorAll('[data-unesco-filter]');
-
-    function updateGrid() {
-      const list = filterAndSortSites(enrichedSites, normalizeTurkish);
-
-      if (summaryEl) {
-        summaryEl.textContent =
-          list.length === metrics.total
-            ? 'Toplam ' + metrics.total + ' UNESCO mirası listeleniyor'
-            : list.length + ' / ' + metrics.total + ' miras alanı gösteriliyor';
-      }
-
-      if (!gridEl) return;
-
-      if (list.length === 0) {
-        gridEl.innerHTML =
-          '<div class="unesco-empty">' +
-          '<div class="unesco-empty-icon">🏛️</div>' +
-          '<h3 class="unesco-empty-title">Aramanızla eşleşen UNESCO mirası bulunamadı</h3>' +
-          '<p class="unesco-empty-desc">Farklı bir anahtar kelime deneyebilir veya aktif filtreleri sıfırlayabilirsiniz.</p>' +
-          '<button type="button" class="unesco-reset-btn" id="unescoResetBtn">Filtreleri Sıfırla</button>' +
-          '</div>';
-
-        const resetBtn = gridEl.querySelector('#unescoResetBtn');
-        if (resetBtn) {
-          resetBtn.addEventListener('click', function () {
-            uiState.filter = 'all';
-            uiState.search = '';
-            if (searchInput) searchInput.value = '';
-            if (searchClearBtn) searchClearBtn.classList.remove('visible');
-            filterButtons.forEach(function (btn) {
-              const active = btn.getAttribute('data-unesco-filter') === 'all';
-              btn.classList.toggle('active', active);
-              btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-            });
-            updateGrid();
-          });
-        }
-        return;
-      }
-
-      gridEl.innerHTML = list
-        .map(function (site) {
-          return buildCardHtml(site, escapeHtml, provinces);
+      const filterButtonsHtml = filterDefs
+        .map(function (f) {
+          const isActive = uiState.filter === f.id;
+          return (
+            '<button type="button" class="unesco-filter-btn ' +
+            (isActive ? 'active' : '') +
+            '" data-unesco-filter="' +
+            f.id +
+            '" aria-pressed="' +
+            (isActive ? 'true' : 'false') +
+            '">' +
+            '<span>' +
+            escapeHtml(f.label) +
+            '</span>' +
+            '<span class="unesco-filter-count">' +
+            f.count +
+            '</span>' +
+            '</button>'
+          );
         })
         .join('');
-    }
 
-    // Filter button clicks
-    filterButtons.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        const nextFilter = btn.getAttribute('data-unesco-filter') || 'all';
-        uiState.filter = nextFilter;
-        filterButtons.forEach(function (b) {
-          const active = b.getAttribute('data-unesco-filter') === nextFilter;
-          b.classList.toggle('active', active);
-          b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      const miniStampsHtml = enrichedSites
+        .map(function (s) {
+          return (
+            '<button type="button" class="unesco-stamp-mini ' +
+            (s.personalChecked ? 'stamped' : '') +
+            '" data-unesco-stamp-id="' +
+            escapeHtml(s.id) +
+            '" title="' +
+            escapeHtml(s.name + ' (' + s.provinceName + ') mühür durumunu değiştir') +
+            '">' +
+            (s.personalChecked ? '🛂 ' : '○ ') +
+            escapeHtml(s.name.split(':')[0].split(' - ')[0]) +
+            '</button>'
+          );
+        })
+        .join('');
+
+      container.innerHTML =
+        '<section class="unesco-shell" aria-label="Türkiye UNESCO Dünya Mirası Vitrini">' +
+        // Hero + Live Progress Bar
+        '<div class="unesco-hero">' +
+        '<div class="unesco-hero-top">' +
+        '<div>' +
+        '<span class="unesco-hero-kicker">✨ İnsanlığın Ortak Mirası · 1985 – 2023</span>' +
+        '<h2 class="unesco-hero-title">🏛️ Türkiye UNESCO Dünya Mirası Vitrini</h2>' +
+        '<p class="unesco-hero-subtitle">' +
+        'Göbeklitepe\'nin 12.000 yıllık dikilitaşlarından Anadolu\'nun ahşap hipostil camilerine uzanan 21 evrensel hazineyi keşfedin, kişisel UNESCO pasaport mühürlerinizi işaretleyin ve gezilmeyen alanlara tek tıkla rota planlayın.' +
+        '</p>' +
+        '</div>' +
+        '<div class="unesco-kpi-strip">' +
+        '<div class="unesco-kpi-pill">' +
+        '<span class="unesco-kpi-val gold">' +
+        metrics.total +
+        '</span>' +
+        '<span class="unesco-kpi-label">UNESCO Mirası</span>' +
+        '</div>' +
+        '<div class="unesco-kpi-pill">' +
+        '<span class="unesco-kpi-val emerald">' +
+        metrics.personalCheckedCount +
+        ' / ' +
+        metrics.total +
+        '</span>' +
+        '<span class="unesco-kpi-label">Pasaport Mührü</span>' +
+        '</div>' +
+        '<div class="unesco-kpi-pill">' +
+        '<span class="unesco-kpi-val cyan">' +
+        metrics.visitedProvinceCount +
+        ' / ' +
+        metrics.uniqueProvinceCount +
+        '</span>' +
+        '<span class="unesco-kpi-label">Miras İli</span>' +
+        '</div>' +
+        '<div class="unesco-kpi-pill">' +
+        '<span class="unesco-kpi-val">' +
+        metrics.culturalCount +
+        ' · ' +
+        metrics.mixedCount +
+        '</span>' +
+        '<span class="unesco-kpi-label">Kültürel · Karma</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="unesco-progress-box">' +
+        '<div class="unesco-progress-meta">' +
+        '<span class="unesco-progress-label">🧭 Dijital Seyyah İl Bazlı UNESCO İlerlemesi</span>' +
+        '<span class="unesco-progress-stat">' +
+        metrics.visitedCount +
+        ' / ' +
+        metrics.total +
+        ' Miras Alanı (%' +
+        metrics.pct.toFixed(1) +
+        ')</span>' +
+        '</div>' +
+        '<div class="unesco-progress-track" role="progressbar" aria-valuenow="' +
+        metrics.visitedCount +
+        '" aria-valuemin="0" aria-valuemax="' +
+        metrics.total +
+        '">' +
+        '<div class="unesco-progress-fill" style="width: ' +
+        metrics.pct +
+        '%;"></div>' +
+        '</div>' +
+        '<div class="unesco-progress-foot">' +
+        '<span>✅ ' +
+        metrics.visitedCount +
+        ' miras alanı ziyaret edilen illerde</span>' +
+        '<span>⏳ ' +
+        metrics.pendingCount +
+        ' miras alanı keşif bekliyor</span>' +
+        '</div>' +
+        '</div>' +
+        // Personal UNESCO Checklist & Passport Stamp Tracker
+        '<div class="unesco-passport-panel">' +
+        '<div class="unesco-passport-top">' +
+        '<span class="unesco-passport-title">🛂 Kişisel UNESCO Pasaportu &amp; Mühür Defteri (' +
+        metrics.personalCheckedCount +
+        ' / ' +
+        metrics.total +
+        ' Mühür · %' +
+        metrics.personalPct.toFixed(1) +
+        ')</span>' +
+        '<div class="unesco-passport-actions">' +
+        '<button type="button" class="unesco-sync-btn" id="unescoSyncVisitedBtn" title="Gezilen illerdeki UNESCO alanlarını pasaporta otomatik mühürle">🔄 Gezilen İllerle Eşitle</button>' +
+        '<button type="button" class="unesco-route-plan-btn" id="unescoPlanUnvisitedBtn">🧭 Gezilmeyen UNESCO Alanlarına Rota Planla</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="unesco-progress-track" role="progressbar" aria-label="Kişisel UNESCO pasaport ilerlemesi" aria-valuenow="' +
+        metrics.personalCheckedCount +
+        '" aria-valuemin="0" aria-valuemax="' +
+        metrics.total +
+        '">' +
+        '<div class="unesco-progress-fill" style="width: ' +
+        metrics.personalPct +
+        '%; background: linear-gradient(90deg, #10b981 0%, #00f2fe 55%, #f59e0b 100%);"></div>' +
+        '</div>' +
+        '<div class="unesco-stamps-strip">' +
+        miniStampsHtml +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        // Filter & Search Toolbar
+        '<div class="unesco-toolbar">' +
+        '<div class="unesco-filter-row" role="group" aria-label="UNESCO filtreleri">' +
+        filterButtonsHtml +
+        '</div>' +
+        '<div class="unesco-controls-row">' +
+        '<div class="unesco-search-wrap">' +
+        '<span class="unesco-search-icon" aria-hidden="true">🔍</span>' +
+        '<input type="search" class="unesco-search-input" id="unescoSearchInput" placeholder="Miras alanı, şehir, dönem veya anıt ara (örn: Efes, 1985, Kapadokya, Sinan)..." value="' +
+        escapeHtml(uiState.search) +
+        '" autocomplete="off" />' +
+        '<button type="button" class="unesco-search-clear ' +
+        (uiState.search ? 'visible' : '') +
+        '" id="unescoSearchClear" aria-label="Aramayı temizle">✕</button>' +
+        '</div>' +
+        '<select class="unesco-sort-select" id="unescoSortSelect" aria-label="Sıralama">' +
+        '<option value="year-asc"' +
+        (uiState.sort === 'year-asc' ? ' selected' : '') +
+        '>📅 Kayıt Yılı (1985 → 2023)</option>' +
+        '<option value="year-desc"' +
+        (uiState.sort === 'year-desc' ? ' selected' : '') +
+        '>📅 Kayıt Yılı (2023 → 1985)</option>' +
+        '<option value="stamped-first"' +
+        (uiState.sort === 'stamped-first' ? ' selected' : '') +
+        '>🛂 Önce Pasaportta Mühürlüler</option>' +
+        '<option value="visited-first"' +
+        (uiState.sort === 'visited-first' ? ' selected' : '') +
+        '>✅ Önce Ziyaret Edilen İller</option>' +
+        '<option value="alpha"' +
+        (uiState.sort === 'alpha' ? ' selected' : '') +
+        '>🔤 Alfabetik (A → Z)</option>' +
+        '</select>' +
+        '<span class="unesco-result-summary" id="unescoResultSummary"></span>' +
+        '</div>' +
+        '</div>' +
+        // Cards Grid
+        '<div class="unesco-grid" id="unescoCardsGrid"></div>' +
+        '</section>';
+
+      const gridEl = container.querySelector('#unescoCardsGrid');
+      const summaryEl = container.querySelector('#unescoResultSummary');
+      const searchInput = container.querySelector('#unescoSearchInput');
+      const searchClearBtn = container.querySelector('#unescoSearchClear');
+      const sortSelect = container.querySelector('#unescoSortSelect');
+      const filterButtons = container.querySelectorAll('[data-unesco-filter]');
+      const planUnvisitedBtn = container.querySelector('#unescoPlanUnvisitedBtn');
+      const syncVisitedBtn = container.querySelector('#unescoSyncVisitedBtn');
+
+      function toggleStamp(siteId) {
+        if (!siteId) return;
+        if (checkedUnescoSet.has(siteId)) {
+          checkedUnescoSet.delete(siteId);
+        } else {
+          checkedUnescoSet.add(siteId);
+        }
+        saveCheckedUnescoIds(checkedUnescoSet);
+        paintView();
+      }
+
+      if (syncVisitedBtn) {
+        syncVisitedBtn.addEventListener('click', function () {
+          enrichedSites.forEach(function (s) {
+            if (s.visited) checkedUnescoSet.add(s.id);
+          });
+          saveCheckedUnescoIds(checkedUnescoSet);
+          if (typeof safeCtx.showToast === 'function') {
+            safeCtx.showToast('🛂 Gezilen illerdeki UNESCO alanları pasaportunuza mühürlendi!');
+          }
+          paintView();
         });
-        updateGrid();
-      });
-    });
+      }
 
-    // Live search input (no focus loss)
-    if (searchInput) {
-      searchInput.addEventListener('input', function () {
-        uiState.search = searchInput.value;
-        if (searchClearBtn) {
-          searchClearBtn.classList.toggle('visible', Boolean(uiState.search));
-        }
-        updateGrid();
-      });
-    }
+      if (planUnvisitedBtn) {
+        planUnvisitedBtn.addEventListener('click', function () {
+          let targetSites = enrichedSites.filter(function (s) {
+            return !s.personalChecked && !s.visited;
+          });
+          if (!targetSites.length) {
+            targetSites = enrichedSites.filter(function (s) {
+              return !s.personalChecked;
+            });
+          }
+          if (!targetSites.length) {
+            targetSites = enrichedSites.filter(function (s) {
+              return !s.visited;
+            });
+          }
+          if (!targetSites.length) {
+            targetSites = enrichedSites;
+          }
+          const routeProvinceKeys = [];
+          targetSites.forEach(function (s) {
+            if (s.provinceKey && routeProvinceKeys.indexOf(s.provinceKey) === -1) {
+              routeProvinceKeys.push(s.provinceKey);
+            }
+          });
+          dispatchRouteCities(
+            safeCtx,
+            routeProvinceKeys,
+            '🧭 ' + routeProvinceKeys.length + ' UNESCO miras ili rota planlayıcıya aktarıldı!'
+          );
+        });
+      }
 
-    if (searchClearBtn) {
-      searchClearBtn.addEventListener('click', function () {
-        uiState.search = '';
-        if (searchInput) {
-          searchInput.value = '';
-          searchInput.focus();
-        }
-        searchClearBtn.classList.remove('visible');
-        updateGrid();
-      });
-    }
-
-    // Sort select
-    if (sortSelect) {
-      sortSelect.addEventListener('change', function () {
-        uiState.sort = sortSelect.value;
-        updateGrid();
-      });
-    }
-
-    // Event delegation for card & related-province clicks and keyboard navigation
-    if (gridEl) {
-      gridEl.addEventListener('click', function (e) {
-        const relatedBtn = e.target.closest('.unesco-related-btn');
-        if (relatedBtn) {
+      container.querySelectorAll('.unesco-stamp-mini[data-unesco-stamp-id]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
           e.stopPropagation();
-          const relKey = relatedBtn.getAttribute('data-city-key');
-          if (relKey) selectCity(relKey);
+          toggleStamp(btn.getAttribute('data-unesco-stamp-id'));
+        });
+      });
+
+      function updateGrid() {
+        const list = filterAndSortSites(enrichedSites, normalizeTurkish);
+
+        if (summaryEl) {
+          summaryEl.textContent =
+            list.length === metrics.total
+              ? 'Toplam ' + metrics.total + ' UNESCO mirası listeleniyor'
+              : list.length + ' / ' + metrics.total + ' miras alanı gösteriliyor';
+        }
+
+        if (!gridEl) return;
+
+        if (list.length === 0) {
+          gridEl.innerHTML =
+            '<div class="unesco-empty">' +
+            '<div class="unesco-empty-icon">🏛️</div>' +
+            '<h3 class="unesco-empty-title">Aramanızla eşleşen UNESCO mirası bulunamadı</h3>' +
+            '<p class="unesco-empty-desc">Farklı bir anahtar kelime deneyebilir veya aktif filtreleri sıfırlayabilirsiniz.</p>' +
+            '<button type="button" class="unesco-reset-btn" id="unescoResetBtn">Filtreleri Sıfırla</button>' +
+            '</div>';
+
+          const resetBtn = gridEl.querySelector('#unescoResetBtn');
+          if (resetBtn) {
+            resetBtn.addEventListener('click', function () {
+              uiState.filter = 'all';
+              uiState.search = '';
+              paintView();
+            });
+          }
           return;
         }
-        const card = e.target.closest('.unesco-card');
-        if (card) {
-          const cityKey = card.getAttribute('data-city-key');
-          if (cityKey) selectCity(cityKey);
-        }
+
+        gridEl.innerHTML = list
+          .map(function (site) {
+            return buildCardHtml(site, escapeHtml, provinces);
+          })
+          .join('');
+      }
+
+      // Filter button clicks
+      filterButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const nextFilter = btn.getAttribute('data-unesco-filter') || 'all';
+          uiState.filter = nextFilter;
+          filterButtons.forEach(function (b) {
+            const active = b.getAttribute('data-unesco-filter') === nextFilter;
+            b.classList.toggle('active', active);
+            b.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+          updateGrid();
+        });
       });
 
-      gridEl.addEventListener('keydown', function (e) {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        const card = e.target.closest('.unesco-card');
-        if (card && e.target === card) {
-          e.preventDefault();
-          const cityKey = card.getAttribute('data-city-key');
-          if (cityKey) selectCity(cityKey);
-        }
-      });
+      // Live search input (no focus loss)
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          uiState.search = searchInput.value;
+          if (searchClearBtn) {
+            searchClearBtn.classList.toggle('visible', Boolean(uiState.search));
+          }
+          updateGrid();
+        });
+      }
+
+      if (searchClearBtn) {
+        searchClearBtn.addEventListener('click', function () {
+          uiState.search = '';
+          if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+          }
+          searchClearBtn.classList.remove('visible');
+          updateGrid();
+        });
+      }
+
+      // Sort select
+      if (sortSelect) {
+        sortSelect.addEventListener('change', function () {
+          uiState.sort = sortSelect.value;
+          updateGrid();
+        });
+      }
+
+      // Event delegation for card & related-province clicks and keyboard navigation
+      if (gridEl) {
+        gridEl.addEventListener('click', function (e) {
+          const stampBtn = e.target.closest('[data-unesco-stamp-id]');
+          if (stampBtn) {
+            e.stopPropagation();
+            toggleStamp(stampBtn.getAttribute('data-unesco-stamp-id'));
+            return;
+          }
+          const relatedBtn = e.target.closest('.unesco-related-btn');
+          if (relatedBtn) {
+            e.stopPropagation();
+            const relKey = relatedBtn.getAttribute('data-city-key');
+            if (relKey) selectCity(relKey);
+            return;
+          }
+          const card = e.target.closest('.unesco-card');
+          if (card) {
+            const cityKey = card.getAttribute('data-city-key');
+            if (cityKey) selectCity(cityKey);
+          }
+        });
+
+        gridEl.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          const card = e.target.closest('.unesco-card');
+          if (card && e.target === card) {
+            e.preventDefault();
+            const cityKey = card.getAttribute('data-city-key');
+            if (cityKey) selectCity(cityKey);
+          }
+        });
+      }
+
+      // Initial grid population
+      updateGrid();
     }
 
-    // Initial grid population
-    updateGrid();
+    paintView();
   }
 
   window.SEYYAH_MODULES.unesco = {

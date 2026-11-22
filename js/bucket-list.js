@@ -613,6 +613,114 @@
         box-shadow: 0 4px 16px rgba(0, 242, 254, 0.2);
       }
 
+      .bl-btn-route {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(245, 158, 11, 0.22));
+        border-color: rgba(16, 185, 129, 0.48);
+        color: #ecfdf5;
+      }
+
+      .bl-btn-route:hover {
+        border-color: rgba(16, 185, 129, 0.75);
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.22);
+      }
+
+      /* Category Progress Breakdown Card */
+      .bl-cat-breakdown {
+        padding: 16px 20px;
+        border-radius: var(--radius-md, 14px);
+        background: var(--bg-card, rgba(30, 41, 59, 0.7));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .bl-cat-breakdown-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .bl-cat-breakdown-title {
+        font-family: var(--font-heading, sans-serif);
+        font-size: 0.94rem;
+        font-weight: 700;
+        color: var(--text-primary, #f8fafc);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .bl-cat-breakdown-hint {
+        font-size: 0.76rem;
+        color: var(--text-muted, #64748b);
+      }
+
+      .bl-cat-bars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+      }
+
+      .bl-cat-bar-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 11px;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+      }
+
+      .bl-cat-bar-item:hover {
+        border-color: rgba(0, 242, 254, 0.4);
+        transform: translateY(-1px);
+      }
+
+      .bl-cat-bar-item.is-active {
+        border-color: rgba(0, 242, 254, 0.65);
+        background: rgba(0, 242, 254, 0.1);
+      }
+
+      .bl-cat-bar-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 0.8rem;
+      }
+
+      .bl-cat-bar-name {
+        font-weight: 700;
+        color: var(--text-primary, #f8fafc);
+      }
+
+      .bl-cat-bar-stat {
+        font-family: var(--font-heading, sans-serif);
+        font-weight: 700;
+        font-size: 0.76rem;
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      .bl-cat-bar-track {
+        width: 100%;
+        height: 7px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.16);
+        overflow: hidden;
+      }
+
+      .bl-cat-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
       /* Animated SVG Ring */
       .bl-ring-wrap {
         position: relative;
@@ -1202,6 +1310,36 @@
         color: #ffffff;
       }
 
+      body.light-theme .bl-btn-route {
+        background: linear-gradient(135deg, #059669, #d97706);
+        border-color: #059669;
+        color: #ffffff;
+      }
+
+      body.light-theme .bl-cat-breakdown {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(15, 23, 42, 0.12);
+      }
+
+      body.light-theme .bl-cat-breakdown-title,
+      body.light-theme .bl-cat-bar-name {
+        color: #0f172a;
+      }
+
+      body.light-theme .bl-cat-bar-item {
+        background: rgba(248, 250, 252, 0.95);
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      body.light-theme .bl-cat-bar-item.is-active {
+        background: rgba(2, 132, 199, 0.1);
+        border-color: rgba(2, 132, 199, 0.5);
+      }
+
+      body.light-theme .bl-cat-bar-track {
+        background: rgba(15, 23, 42, 0.08);
+      }
+
       body.light-theme .bl-submit-btn {
         background: linear-gradient(135deg, #059669, #0284c7);
         border-color: #059669;
@@ -1390,6 +1528,7 @@
             <div class="bl-hero-metrics" data-role="hero-metrics"></div>
             <div class="bl-hero-actions">
               <button type="button" class="bl-btn bl-btn-primary" data-action="toggle-form">➕ Yeni Sefer Hedefi Ekle</button>
+              <button type="button" class="bl-btn bl-btn-route" data-action="build-route-from-remaining" title="Tamamlanmamış hedeflerdeki illeri Rota Planlayıcıya aktar">🧭 Kalan Hedeflerden Rota Oluştur</button>
               <button type="button" class="bl-btn" data-action="sync-visited" title="Ziyaret edilen illerdeki küratörlü hedefleri otomatik tamamla">🔄 Ziyaretlerle Eşitle</button>
             </div>
           </div>
@@ -1424,6 +1563,8 @@
             <span class="bl-ring-caption" data-role="ring-caption">Sefer İlerlemesi</span>
           </div>
         </section>
+
+        <section class="bl-cat-breakdown" data-role="cat-breakdown" aria-label="Kategori İlerleme Dağılımı"></section>
 
         <section class="bl-add-card">
           <div class="bl-add-header">
@@ -1475,6 +1616,7 @@
 
     const root = container.querySelector('.bl-studio');
     const heroMetricsEl = root.querySelector('[data-role="hero-metrics"]');
+    const catBreakdownEl = root.querySelector('[data-role="cat-breakdown"]');
     const ringProgressEl = root.querySelector('[data-role="ring-progress"]');
     const ringPctEl = root.querySelector('[data-role="ring-pct"]');
     const ringSubEl = root.querySelector('[data-role="ring-sub"]');
@@ -1507,6 +1649,42 @@
         <span class="bl-metric-pill">✅ <strong>${stats.completedCount} / ${stats.total}</strong> Tamamlanan Hedef</span>
         <span class="bl-metric-pill">🗺️ <strong>${stats.activeRegions} / 7</strong> Bölgeden İz</span>
         <span class="bl-metric-pill">✨ <strong>${stats.customCount}</strong> Özel Hedef</span>
+      `;
+    }
+
+    function renderCategoryBreakdown(missions) {
+      if (!catBreakdownEl) return;
+      const barsHtml = CATEGORIES.map((cat) => {
+        const catItems = missions.filter((m) => m.category === cat.id);
+        const total = catItems.length;
+        const done = catItems.filter((m) => m.completed).length;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        const isActive = uiState.categoryFilter === cat.id;
+        return `
+          <button
+            type="button"
+            class="bl-cat-bar-item ${isActive ? 'is-active' : ''}"
+            data-action="toggle-cat-breakdown"
+            data-value="${escapeHtml(cat.id)}"
+            title="${escapeHtml(cat.shortLabel)} kategorisine göre filtrele"
+          >
+            <div class="bl-cat-bar-top">
+              <span class="bl-cat-bar-name">${escapeHtml(cat.label)}</span>
+              <span class="bl-cat-bar-stat">${done}/${total} · %${pct}</span>
+            </div>
+            <div class="bl-cat-bar-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${escapeHtml(cat.shortLabel)} ilerlemesi">
+              <div class="bl-cat-bar-fill" style="width:${pct}%;background:${cat.color};"></div>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      catBreakdownEl.innerHTML = `
+        <div class="bl-cat-breakdown-head">
+          <div class="bl-cat-breakdown-title">📊 Kategori Bazlı İlerleme Dağılımı</div>
+          <span class="bl-cat-breakdown-hint">Filtrelemek için bir kategori çubuğuna tıklayın</span>
+        </div>
+        <div class="bl-cat-bars">${barsHtml}</div>
       `;
     }
 
@@ -1645,6 +1823,7 @@
     function refreshAll() {
       const missions = getAllMissions();
       updateHeroAndRing(missions);
+      renderCategoryBreakdown(missions);
       renderFilterPills(missions);
       renderGrid(missions);
     }
@@ -1653,6 +1832,48 @@
     root.addEventListener('click', (e) => {
       const target = e.target;
       if (!target || typeof target.closest !== 'function') return;
+
+      const buildRouteBtn = target.closest('[data-action="build-route-from-remaining"]');
+      if (buildRouteBtn) {
+        const remainingMissions = getAllMissions().filter((m) => !m.completed);
+        const seen = new Set();
+        const routeCities = [];
+        remainingMissions.forEach((m) => {
+          const prov = provincesMap[m.cityKey];
+          const name = (prov && prov.name) || m.cityName;
+          if (!name) return;
+          const norm = normalizeTurkish(name);
+          if (!seen.has(norm)) {
+            seen.add(norm);
+            routeCities.push(name);
+          }
+        });
+        if (!routeCities.length) {
+          showToast('🏆 Tebrikler! Kalan hedef kalmadı, tüm hedefler tamamlandı!');
+          return;
+        }
+        if (ctx && ctx.state) {
+          ctx.state.customRouteCities = routeCities;
+        }
+        showToast(`🧭 Kalan hedeflerden ${routeCities.length} illik sefer rotası oluşturuldu!`);
+        if (ctx && typeof ctx.openView === 'function') {
+          ctx.openView('route');
+        } else if (typeof window !== 'undefined') {
+          window.location.hash = '#route';
+        }
+        return;
+      }
+
+      const catBreakdownBtn = target.closest('[data-action="toggle-cat-breakdown"]');
+      if (catBreakdownBtn) {
+        const val = catBreakdownBtn.getAttribute('data-value') || 'all';
+        uiState.categoryFilter = uiState.categoryFilter === val ? 'all' : val;
+        const missions = getAllMissions();
+        renderCategoryBreakdown(missions);
+        renderFilterPills(missions);
+        renderGrid(missions);
+        return;
+      }
 
       const toggleFormBtn = target.closest('[data-action="toggle-form"]');
       if (toggleFormBtn) {
@@ -1715,6 +1936,7 @@
       if (catBtn) {
         uiState.categoryFilter = catBtn.getAttribute('data-value') || 'all';
         const missions = getAllMissions();
+        renderCategoryBreakdown(missions);
         renderFilterPills(missions);
         renderGrid(missions);
         return;
@@ -1834,6 +2056,7 @@
 
     // Initial render: draw filters & grid immediately, animate SVG ring from 0 -> target on next frame
     const initialMissions = getAllMissions();
+    renderCategoryBreakdown(initialMissions);
     renderFilterPills(initialMissions);
     renderGrid(initialMissions);
 

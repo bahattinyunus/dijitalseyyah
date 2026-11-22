@@ -191,12 +191,15 @@
     };
   }
 
-  function computeVelocityProjection(unvisitedCount, pacePerMonth) {
-    const pace = Math.max(1, Math.min(10, Math.round(Number(pacePerMonth) || 2)));
+  function computeVelocityProjection(unvisitedCount, pacePerMonth, avgKmPerProvince) {
+    const pace = Math.max(1, Math.min(4, Math.round(Number(pacePerMonth) || 2)));
     const remaining = Math.max(0, Number(unvisitedCount) || 0);
+    const kmPerProv = Number.isFinite(avgKmPerProvince) && avgKmPerProvince > 50 ? avgKmPerProvince : 285;
     const remainingDays = remaining * DAYS_PER_PROVINCE;
     const estLibraryHours = remainingDays * LIBRARY_HOURS_PER_DAY;
     const kykSavingsTL = remainingDays * STANDARD_HOTEL_NIGHTLY_TL;
+    const estRemainingKm = Math.round(remaining * kmPerProv);
+    const monthlyKm = Math.round(pace * kmPerProv);
     const monthsNeeded = remaining > 0 ? Math.ceil(remaining / pace) : 0;
     const eta = addMonthsTurkish(monthsNeeded);
     const yearlyRate = pace * 12;
@@ -207,6 +210,9 @@
       remainingDays,
       estLibraryHours,
       kykSavingsTL,
+      estRemainingKm,
+      monthlyKm,
+      kmPerProv: Math.round(kmPerProv),
       monthsNeeded,
       etaLabel: eta.label,
       yearlyRate
@@ -1760,7 +1766,8 @@
     }
 
     const corridor = resolveExpeditionCorridor(data, state, provincesList, normalizeTurkish);
-    const proj = computeVelocityProjection(unvisitedCount, uiState.pace);
+    const avgKmPerProvince = visitedCount > 0 && estimatedKm > 0 ? Math.round(estimatedKm / visitedCount) : 285;
+    const proj = computeVelocityProjection(unvisitedCount, uiState.pace, avgKmPerProvince);
 
     const achievements = data.achievements || {};
     const nextRank = achievements.next_rank || null;
@@ -2035,8 +2042,8 @@
           <div class="dsa-card">
             <div class="dsa-card-head">
               <div>
-                <h3 class="dsa-card-title">🚀 81/81 Tamamlama Hız Simülatörü</h3>
-                <p class="dsa-card-sub">5 Gün Kuralı · Günde 4 saat kütüphane · GSB Seyahatsever KYK tasarruf modeli</p>
+                <h3 class="dsa-card-title">⚡ Sefer Hızı Simülatörü</h3>
+                <p class="dsa-card-sub">Ayda 1–4 il temposu · 5 Gün Kuralı (GSB) · Tahmini kalan menzil (km) projeksiyonu</p>
               </div>
             </div>
 
@@ -2050,19 +2057,19 @@
                 id="dsa-pace-slider"
                 class="dsa-range-input"
                 min="1"
-                max="10"
+                max="4"
                 step="1"
                 value="${proj.pace}"
-                aria-label="Ayda ortalama kaç yeni il geziyorsun"
+                aria-label="Ayda ortalama kaç yeni il geziyorsun (1-4 il/ay)"
               />
               <div class="dsa-range-scale">
-                <span>1 il/ay</span><span>3</span><span>5</span><span>7</span><span>10 il/ay</span>
+                <span>1 il/ay</span><span>2 il/ay</span><span>3 il/ay</span><span>4 il/ay</span>
               </div>
               <div class="dsa-pace-presets" id="dsa-pace-presets">
                 <button type="button" class="dsa-preset-chip ${proj.pace === 1 ? 'active' : ''}" data-pace="1">🐢 1 il/ay</button>
-                <button type="button" class="dsa-preset-chip ${proj.pace === 2 ? 'active' : ''}" data-pace="2">🚶 2 il/ay (Varsayılan)</button>
-                <button type="button" class="dsa-preset-chip ${proj.pace === 4 ? 'active' : ''}" data-pace="4">🚆 4 il/ay</button>
-                <button type="button" class="dsa-preset-chip ${proj.pace === 6 ? 'active' : ''}" data-pace="6">⚡ 6 il/ay</button>
+                <button type="button" class="dsa-preset-chip ${proj.pace === 2 ? 'active' : ''}" data-pace="2">🚶 2 il/ay (Dengeli)</button>
+                <button type="button" class="dsa-preset-chip ${proj.pace === 3 ? 'active' : ''}" data-pace="3">🚆 3 il/ay (Hızlı)</button>
+                <button type="button" class="dsa-preset-chip ${proj.pace === 4 ? 'active' : ''}" data-pace="4">⚡ 4 il/ay (Ekspres)</button>
               </div>
             </div>
 
@@ -2073,21 +2080,21 @@
               </div>
               <div class="dsa-eta-meta" id="dsa-eta-meta">
                 ${proj.remaining > 0
-                  ? `<strong>${proj.monthsNeeded} ay</strong> içinde tamamlanır<br/>Yıllık tempo: ~${proj.yearlyRate} il/yıl`
+                  ? `<strong>${proj.monthsNeeded} ay</strong> içinde tamamlanır<br/>Yıllık tempo: ~${proj.yearlyRate} il/yıl · ~${formatNumber(proj.monthlyKm)} km/ay`
                   : 'Anadolu’nun 81 ili tamamlandı!'}
               </div>
             </div>
 
             <div class="dsa-calc-grid">
               <div class="dsa-calc-stat">
-                <span class="dsa-calc-stat-label">⏳ Kalan İl Sayısı</span>
-                <span class="dsa-calc-stat-val" id="dsa-calc-unvisited" style="color:var(--accent-cyan, #00f2fe);">${proj.remaining} İl</span>
-                <span class="dsa-calc-stat-hint">${totalCities} ilden ${visitedCount} tanesi gezildi</span>
+                <span class="dsa-calc-stat-label">📅 Kalan GSB Seyahatsever Günü</span>
+                <span class="dsa-calc-stat-val" id="dsa-calc-days" style="color:var(--accent-gold, #f59e0b);">${formatNumber(proj.remainingDays)} Gün</span>
+                <span class="dsa-calc-stat-hint">${proj.remaining} il × ${DAYS_PER_PROVINCE} gün kuralı (Aylık ${proj.pace * DAYS_PER_PROVINCE} gün)</span>
               </div>
               <div class="dsa-calc-stat">
-                <span class="dsa-calc-stat-label">📅 5 Gün Kuralı ile Kalan Süre</span>
-                <span class="dsa-calc-stat-val" id="dsa-calc-days" style="color:var(--accent-gold, #f59e0b);">${formatNumber(proj.remainingDays)} Gün</span>
-                <span class="dsa-calc-stat-hint">${proj.remaining} il × ${DAYS_PER_PROVINCE} gün kuralı</span>
+                <span class="dsa-calc-stat-label">🛣️ Tahmini Kalan Menzil</span>
+                <span class="dsa-calc-stat-val" id="dsa-calc-km" style="color:var(--accent-cyan, #00f2fe);">~${formatNumber(proj.estRemainingKm)} km</span>
+                <span class="dsa-calc-stat-hint" id="dsa-calc-km-hint">Aylık ~${formatNumber(proj.monthlyKm)} km · İl başı ~${formatNumber(proj.kmPerProv)} km</span>
               </div>
               <div class="dsa-calc-stat">
                 <span class="dsa-calc-stat-label">📚 Tahmini Kütüphane Mesaisi</span>
@@ -2252,13 +2259,14 @@
     const paceBadge = container.querySelector('#dsa-pace-badge');
     const etaDateEl = container.querySelector('#dsa-eta-date');
     const etaMetaEl = container.querySelector('#dsa-eta-meta');
-    const calcUnvisitedEl = container.querySelector('#dsa-calc-unvisited');
     const calcDaysEl = container.querySelector('#dsa-calc-days');
+    const calcKmEl = container.querySelector('#dsa-calc-km');
+    const calcKmHintEl = container.querySelector('#dsa-calc-km-hint');
     const calcHoursEl = container.querySelector('#dsa-calc-hours');
     const calcSavingsEl = container.querySelector('#dsa-calc-savings');
 
     function updateVelocityUI(newPace) {
-      const p = computeVelocityProjection(unvisitedCount, newPace);
+      const p = computeVelocityProjection(unvisitedCount, newPace, avgKmPerProvince);
       uiState.pace = p.pace;
 
       if (paceSlider && Number(paceSlider.value) !== p.pace) {
@@ -2269,11 +2277,18 @@
       if (etaMetaEl) {
         etaMetaEl.innerHTML =
           p.remaining > 0
-            ? `<strong>${p.monthsNeeded} ay</strong> içinde tamamlanır<br/>Yıllık tempo: ~${p.yearlyRate} il/yıl`
+            ? `<strong>${p.monthsNeeded} ay</strong> içinde tamamlanır<br/>Yıllık tempo: ~${p.yearlyRate} il/yıl · ~${formatNumber(p.monthlyKm)} km/ay`
             : 'Anadolu’nun 81 ili tamamlandı!';
       }
-      if (calcUnvisitedEl) calcUnvisitedEl.textContent = `${p.remaining} İl`;
-      if (calcDaysEl) calcDaysEl.textContent = `${formatNumber(p.remainingDays)} Gün`;
+      if (calcDaysEl) {
+        calcDaysEl.textContent = `${formatNumber(p.remainingDays)} Gün`;
+        const daysHint = calcDaysEl.nextElementSibling;
+        if (daysHint) {
+          daysHint.textContent = `${p.remaining} il × ${DAYS_PER_PROVINCE} gün kuralı (Aylık ${p.pace * DAYS_PER_PROVINCE} gün)`;
+        }
+      }
+      if (calcKmEl) calcKmEl.textContent = `~${formatNumber(p.estRemainingKm)} km`;
+      if (calcKmHintEl) calcKmHintEl.textContent = `Aylık ~${formatNumber(p.monthlyKm)} km · İl başı ~${formatNumber(p.kmPerProv)} km`;
       if (calcHoursEl) calcHoursEl.textContent = `${formatNumber(p.estLibraryHours)} Saat`;
       if (calcSavingsEl) calcSavingsEl.textContent = formatTL(p.kykSavingsTL);
 

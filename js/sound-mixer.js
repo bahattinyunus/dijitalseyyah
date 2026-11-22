@@ -91,11 +91,18 @@
   // Persistent Module State (survives view switches cleanly)
   // =========================================================================
 
+  const CUSTOM_MIX_STORAGE_KEY = 'dijital_seyyah_custom_sound_mix_v1';
+  const SLEEP_OPTIONS = [0, 15, 30, 60];
+
   const state = {
     masterVolume: 80,
     isPaused: false,
     activePreset: null,
     vizMode: 'hybrid', // 'hybrid' | 'wave' | 'spectrum'
+    sleepMinutes: 0,
+    sleepEndTime: null,
+    sleepIntervalId: null,
+    sleepFading: false,
     channels: {}
   };
 
@@ -656,6 +663,135 @@
     if (!silentToast && ui.container && document.body.contains(ui.container)) {
       ui.ctxHelpers.showToast('🔇 Tüm ses kanalları susturuldu.', 'info');
     }
+  }
+
+  // =========================================================================
+  // Sleep / Fade-Out Timer & Personal Mix Slot (localStorage)
+  // =========================================================================
+
+  function loadCustomMix() {
+    try {
+      const raw = window.localStorage.getItem(CUSTOM_MIX_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || !parsed.channels) return null;
+      return parsed;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveCustomMix() {
+    try {
+      const payload = {
+        masterVolume: state.masterVolume,
+        savedAt: new Date().toISOString(),
+        channels: {}
+      };
+      CHANNELS.forEach(function (c) {
+        const ch = state.channels[c.id];
+        payload.channels[c.id] = {
+          volume: ch.volume,
+          muted: Boolean(ch.muted),
+          solo: Boolean(ch.solo)
+        };
+      });
+      window.localStorage.setItem(CUSTOM_MIX_STORAGE_KEY, JSON.stringify(payload));
+      refreshUIControls();
+      ui.ctxHelpers.showToast('💾 Kişisel ses miksiniz tarayıcıya kaydedildi!', 'success');
+    } catch (_) {
+      ui.ctxHelpers.showToast('Kişisel miks kaydedilemedi (depolama erişimi kısıtlı).', 'warning');
+    }
+  }
+
+  function applyCustomMix() {
+    const saved = loadCustomMix();
+    if (!saved) {
+      ui.ctxHelpers.showToast('Henüz kaydedilmiş bir kişisel miks bulunmuyor.', 'info');
+      return;
+    }
+    state.activePreset = null;
+    state.isPaused = false;
+    state.masterVolume = Math.max(0, Math.min(100, Number(saved.masterVolume) || 80));
+    CHANNELS.forEach(function (c) {
+      const src = saved.channels[c.id];
+      state.channels[c.id].volume = src ? Math.max(0, Math.min(100, Number(src.volume) || 0)) : 0;
+      state.channels[c.id].muted = Boolean(src && src.muted);
+      state.channels[c.id].solo = Boolean(src && src.solo);
+    });
+    syncAudioGains(true);
+    refreshUIControls();
+    ui.ctxHelpers.showToast('📂 Kişisel ses miksiniz yüklendi!', 'success');
+  }
+
+  function formatSleepRemaining(ms) {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  }
+
+  function cancelSleepTimer(silent) {
+    if (state.sleepIntervalId) {
+      clearInterval(state.sleepIntervalId);
+      state.sleepIntervalId = null;
+    }
+    state.sleepMinutes = 0;
+    state.sleepEndTime = null;
+    state.sleepFading = false;
+    refreshUIControls();
+    if (!silent) {
+      ui.ctxHelpers.showToast('⏲️ Uyku zamanlayıcısı kapatıldı.', 'info');
+    }
+  }
+
+  function setSleepTimer(minutes) {
+    const mins = Number(minutes) || 0;
+    if (mins <= 0) {
+      cancelSleepTimer(false);
+      return;
+    }
+    if (state.sleepIntervalId) {
+      clearInterval(state.sleepIntervalId);
+      state.sleepIntervalId = null;
+    }
+    state.sleepMinutes = mins;
+    state.sleepEndTime = Date.now() + mins * 60 * 1000;
+    state.sleepFading = false;
+
+    const FADE_WINDOW_MS = 8000;
+    state.sleepIntervalId = setInterval(function () {
+      if (!state.sleepEndTime) return;
+      const msLeft = state.sleepEndTime - Date.now();
+      if (msLeft <= 0) {
+        clearInterval(state.sleepIntervalId);
+        state.sleepIntervalId = null;
+        state.sleepMinutes = 0;
+        state.sleepEndTime = null;
+        state.sleepFading = false;
+        state.isPaused = true;
+        syncAudioGains(false);
+        refreshUIControls();
+        ui.ctxHelpers.showToast('🌙 Uyku zamanlayıcısı tamamlandı — sesler yumuşakça susturuldu.', 'info');
+        return;
+      }
+
+      if (msLeft <= FADE_WINDOW_MS && !state.sleepFading) {
+        state.sleepFading = true;
+        if (engine.ctx && engine.masterGain && hasAnyAudibleChannel()) {
+          const now = engine.ctx.currentTime;
+          const curVal = engine.masterGain.gain.value;
+          engine.masterGain.gain.cancelScheduledValues(now);
+          engine.masterGain.gain.setValueAtTime(curVal, now);
+          engine.masterGain.gain.linearRampToValueAtTime(0.0001, now + Math.max(0.5, msLeft / 1000));
+        }
+      }
+
+      refreshUIControls();
+    }, 500);
+
+    refreshUIControls();
+    ui.ctxHelpers.showToast('⏲️ Uyku zamanlayıcısı ' + mins + ' dk olarak ayarlandı.', 'success');
   }
 
   // =========================================================================
@@ -1329,6 +1465,87 @@
         color: var(--ch-accent, #00f2fe);
       }
 
+      /* Sleep Timer & Custom Mix Slot Bar */
+      .sm-tools-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 13px 16px;
+        border-radius: var(--radius-md, 14px);
+        background: var(--bg-card, rgba(30, 41, 59, 0.68));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+      }
+      body.light-theme .sm-tools-bar {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(15, 23, 42, 0.12);
+      }
+      .sm-tool-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .sm-tool-label {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .sm-sleep-countdown {
+        font-size: 0.76rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.18);
+        border: 1px solid rgba(245, 158, 11, 0.45);
+        color: #fbbf24;
+      }
+      body.light-theme .sm-sleep-countdown {
+        color: #b45309;
+      }
+      .sm-pill-btn {
+        padding: 6px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.14));
+        background: rgba(15, 23, 42, 0.5);
+        color: var(--text-secondary, #94a3b8);
+        font-size: 0.76rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+      body.light-theme .sm-pill-btn {
+        background: #f1f5f9;
+        color: #334155;
+        border-color: rgba(15, 23, 42, 0.14);
+      }
+      .sm-pill-btn:hover {
+        border-color: rgba(0, 242, 254, 0.5);
+        color: var(--text-primary, #f8fafc);
+      }
+      body.light-theme .sm-pill-btn:hover {
+        color: #0f172a;
+      }
+      .sm-pill-btn.active {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(16, 185, 129, 0.2));
+        border-color: var(--accent-cyan, #00f2fe);
+        color: #ffffff;
+      }
+      body.light-theme .sm-pill-btn.active {
+        background: #e0f2fe;
+        border-color: #0284c7;
+        color: #0369a1;
+      }
+      .sm-pill-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
       @media (max-width: 600px) {
         .sm-header { padding: 14px 16px; }
         .sm-viz-canvas { height: 145px; }
@@ -1428,6 +1645,22 @@
           '</div>' +
         '</div>' +
 
+        '<div class="sm-tools-bar">' +
+          '<div class="sm-tool-group" role="group" aria-label="Uyku Zamanlayıcısı">' +
+            '<span class="sm-tool-label">⏲️ Uyku Zamanlayıcısı:</span>' +
+            SLEEP_OPTIONS.map(function (mins) {
+              const lbl = mins === 0 ? 'Kapalı' : (mins + ' dk');
+              const act = state.sleepMinutes === mins ? ' active' : '';
+              return '<button type="button" class="sm-pill-btn' + act + '" data-sleep-mins="' + mins + '">' + lbl + '</button>';
+            }).join('') +
+            '<span class="sm-sleep-countdown" data-sleep-countdown style="display:none;">00:00</span>' +
+          '</div>' +
+          '<div class="sm-tool-group" role="group" aria-label="Kişisel Miks Slotu">' +
+            '<button type="button" class="sm-pill-btn" data-action="save-custom-mix">💾 Kişisel Miksi Kaydet</button>' +
+            '<button type="button" class="sm-pill-btn" data-action="load-custom-mix"' + (loadCustomMix() ? '' : ' disabled') + '>📂 Kişisel Miksi Yükle</button>' +
+          '</div>' +
+        '</div>' +
+
         '<div>' +
           '<div class="sm-section-title">✨ Tek Tık Ruh Hali Ön Ayarları</div>' +
           '<div class="sm-presets-grid">' + presetsHtml + '</div>' +
@@ -1491,6 +1724,12 @@
         return;
       }
 
+      const sleepBtn = e.target.closest('[data-sleep-mins]');
+      if (sleepBtn) {
+        setSleepTimer(parseInt(sleepBtn.getAttribute('data-sleep-mins'), 10) || 0);
+        return;
+      }
+
       const actionBtn = e.target.closest('[data-action]');
       if (!actionBtn) return;
 
@@ -1514,7 +1753,12 @@
       } else if (action === 'toggle-pause') {
         togglePause();
       } else if (action === 'stop-all') {
+        cancelSleepTimer(true);
         stopAll(false);
+      } else if (action === 'save-custom-mix') {
+        saveCustomMix();
+      } else if (action === 'load-custom-mix') {
+        applyCustomMix();
       }
     });
   }
@@ -1588,6 +1832,28 @@
     root.querySelectorAll('[data-preset]').forEach(function (btn) {
       btn.classList.toggle('active', btn.getAttribute('data-preset') === state.activePreset);
     });
+
+    // Sleep timer controls & countdown
+    root.querySelectorAll('[data-sleep-mins]').forEach(function (btn) {
+      const m = parseInt(btn.getAttribute('data-sleep-mins'), 10) || 0;
+      btn.classList.toggle('active', state.sleepMinutes === m);
+    });
+    const countdownEl = root.querySelector('[data-sleep-countdown]');
+    if (countdownEl) {
+      if (state.sleepEndTime && state.sleepMinutes > 0) {
+        const msLeft = Math.max(0, state.sleepEndTime - Date.now());
+        countdownEl.style.display = 'inline-flex';
+        countdownEl.textContent = (state.sleepFading ? '🌙 Kısılıyor ' : '⏳ ') + formatSleepRemaining(msLeft);
+      } else {
+        countdownEl.style.display = 'none';
+      }
+    }
+
+    // Personal Mix Load button enabled state
+    const loadMixBtn = root.querySelector('[data-action="load-custom-mix"]');
+    if (loadMixBtn) {
+      loadMixBtn.disabled = !loadCustomMix();
+    }
 
     // Channels
     CHANNELS.forEach(function (c) {

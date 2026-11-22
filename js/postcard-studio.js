@@ -1140,6 +1140,70 @@
         background: rgba(245, 158, 11, 0.08);
         border: 1px solid rgba(245, 158, 11, 0.24);
       }
+      .pc-quote-presets-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 2px;
+      }
+      .pc-quote-presets-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-muted, #94a3b8);
+        letter-spacing: 0.03em;
+      }
+      .pc-quote-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .pc-quote-preset-btn {
+        max-width: 100%;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.14));
+        background: rgba(15, 23, 42, 0.55);
+        color: var(--text-secondary, #cbd5e1);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: all 0.18s ease;
+      }
+      .pc-quote-preset-btn:hover {
+        border-color: var(--accent-cyan, #00f2fe);
+        color: var(--text-primary, #f8fafc);
+        background: rgba(0, 242, 254, 0.12);
+      }
+      .pc-quote-preset-btn.active {
+        border-color: var(--accent-gold, #f59e0b);
+        color: #fde68a;
+        background: rgba(245, 158, 11, 0.15);
+      }
+      body.light-theme .pc-header,
+      body.light-theme .pc-panel,
+      body.light-theme .pc-stage-panel {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(15, 23, 42, 0.12);
+      }
+      body.light-theme .pc-select,
+      body.light-theme .pc-textarea,
+      body.light-theme .pc-seg-btn,
+      body.light-theme .pc-theme-btn,
+      body.light-theme .pc-btn-secondary,
+      body.light-theme .pc-quote-preset-btn {
+        background: rgba(248, 250, 252, 0.95);
+        border-color: rgba(15, 23, 42, 0.14);
+        color: #0f172a;
+      }
+      body.light-theme .pc-quote-preset-btn.active {
+        background: #fef3c7;
+        border-color: #d97706;
+        color: #92400e;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -1147,6 +1211,60 @@
   // =========================================================================
   // Main Render Entry Point
   // =========================================================================
+
+  function getProvinceQuotePresets(data, province) {
+    const presets = [];
+    const seen = new Set();
+    const pushUnique = (label, text) => {
+      const clean = String(text || '').replace(/\s+/g, ' ').trim();
+      if (!clean || seen.has(clean)) return;
+      seen.add(clean);
+      presets.push({ label, text: clean });
+    };
+
+    if (province) {
+      if (province.custom_quote) pushUnique('✨ Özel Şehir Sözü', province.custom_quote);
+      if (province.quote) pushUnique('🏛️ Şehir Ruhu', province.quote);
+      if (province.soul) pushUnique('💫 Şehir Özü', province.soul);
+      if (province.motto) pushUnique('🧭 Şehir Şiarı', province.motto);
+      if (Array.isArray(province.landmarks) && province.landmarks.length > 0) {
+        pushUnique(
+          '📍 Miras Notu',
+          `${province.name} hatırası: ${province.landmarks.slice(0, 2).join(' ve ')} ışığında bir Anadolu durağı.`
+        );
+      }
+    }
+
+    const globalQuotes = Array.isArray(data && data.quotes) ? data.quotes : [];
+    const provNameLower = province && province.name ? province.name.toLocaleLowerCase('tr-TR') : '';
+    if (provNameLower) {
+      globalQuotes.forEach((q) => {
+        if (!q || !q.quote) return;
+        if (String(q.quote).toLocaleLowerCase('tr-TR').includes(provNameLower)) {
+          const full = q.author ? `${q.quote} — ${q.author}` : q.quote;
+          pushUnique('📜 Edebi Alıntı', full);
+        }
+      });
+    }
+
+    // Add 1-2 general Anatolian literary presets if list is short
+    const curatedFallback = [
+      { label: '📜 Evliya Çelebi', text: 'Seyahat, şehirlerin taşında tarihi ve insanın gönlünde hikmeti okumaktır.' },
+      { label: '🧭 Anadolu İzi', text: 'Her il yeni bir ufuk, her kütüphane yeni bir menzildir.' }
+    ];
+    for (let i = 0; i < globalQuotes.length && presets.length < 4; i++) {
+      const q = globalQuotes[i];
+      if (q && q.quote) {
+        const full = q.author ? `${q.quote} — ${q.author}` : q.quote;
+        pushUnique(`📖 ${q.author || 'Hikmet'}`, full);
+      }
+    }
+    curatedFallback.forEach((c) => {
+      if (presets.length < 4) pushUnique(c.label, c.text);
+    });
+
+    return presets.slice(0, 5);
+  }
 
   function render(container, ctx) {
     if (!container) return;
@@ -1257,6 +1375,10 @@
                 <button type="button" id="pc-reset-quote" class="pc-reset-link">Varsayılana Dön</button>
               </div>
               <textarea id="pc-quote-input" class="pc-textarea" maxlength="220" placeholder="Şehir için özel mesajınızı veya alıntınızı yazın...">${escapeHtml(studioState.quote)}</textarea>
+              <div class="pc-quote-presets-wrap">
+                <span class="pc-quote-presets-label">⚡ Hızlı Şehir &amp; Edebiyat Alıntısı Seç</span>
+                <div class="pc-quote-presets" id="pc-quote-presets"></div>
+              </div>
             </div>
 
             <div class="pc-field">
@@ -1308,6 +1430,7 @@
     const photoBtns = container.querySelectorAll('.pc-seg-btn');
     const themeBtns = container.querySelectorAll('.pc-theme-btn');
     const quoteInput = container.querySelector('#pc-quote-input');
+    const quotePresetsEl = container.querySelector('#pc-quote-presets');
     const resetQuoteBtn = container.querySelector('#pc-reset-quote');
     const chkBadge = container.querySelector('#pc-chk-badge');
     const chkCoords = container.querySelector('#pc-chk-coords');
@@ -1417,6 +1540,19 @@
       }
     }
 
+    function renderQuotePresets() {
+      if (!quotePresetsEl) return;
+      const prov = provinces[studioState.cityKey];
+      const presets = getProvinceQuotePresets(data, prov);
+      quotePresetsEl.innerHTML = presets
+        .map((p, idx) => {
+          const isActive = (studioState.quote || '').trim() === p.text;
+          return `<button type="button" class="pc-quote-preset-btn${isActive ? ' active' : ''}" data-quote-idx="${idx}" title="${escapeHtml(p.text)}">${escapeHtml(p.label)}</button>`;
+        })
+        .join('');
+      quotePresetsEl._presets = presets;
+    }
+
     function selectProvince(newKey) {
       if (!provinces[newKey]) return;
       studioState.cityKey = newKey;
@@ -1424,7 +1560,23 @@
       studioState.quote = prov.custom_quote || prov.quote || '';
       if (selectEl) selectEl.value = newKey;
       if (quoteInput) quoteInput.value = studioState.quote;
+      renderQuotePresets();
       updateCanvas();
+    }
+
+    if (quotePresetsEl) {
+      quotePresetsEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-quote-idx]');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-quote-idx'), 10);
+        const list = quotePresetsEl._presets || [];
+        const picked = list[idx];
+        if (!picked) return;
+        studioState.quote = picked.text;
+        if (quoteInput) quoteInput.value = picked.text;
+        renderQuotePresets();
+        updateCanvas();
+      });
     }
 
     // Event Listeners
@@ -1509,6 +1661,7 @@
     }
 
     // Initial render
+    renderQuotePresets();
     updateCanvas();
   }
 

@@ -78,6 +78,8 @@
     selectedCityKey: null,
     currentView: 'dashboard', // 'dashboard', 'city', 'route', 'gallery'
     galleryRegion: 'all',
+    galleryStatus: 'all', // 'all', 'visited', 'unvisited', 'favorites'
+    galleryQuery: '',
     routeMode: 'custom', // 'custom' (Aktif Sefer Rotam) | 'auto' (Otomatik 2-Opt)
     customRouteCities: (typeof TRAVEL_DATA !== 'undefined' && Array.isArray(TRAVEL_DATA.custom_route))
       ? [...TRAVEL_DATA.custom_route]
@@ -96,6 +98,7 @@
     currentQuote: null,
     lightboxImages: [],
     lightboxIndex: 0,
+    lightboxSlideshowTimer: null,
     favorites: loadFavorites(),
     theme: (function () {
       try { return localStorage.getItem(STORAGE_KEYS.theme) || 'dark'; } catch (e) { return 'dark'; }
@@ -439,8 +442,23 @@
     if (els.pillFavorites) els.pillFavorites.textContent = `⭐ Favori (${state.favorites.size})`;
   }
 
-  // Populate Regions Dropdown
+  // Populate Regions Dropdown & Sort Options
   function populateRegionSelect() {
+    if (els.sortSelect) {
+      const extraSorts = [
+        { value: 'landmarks', text: '🏛️ Miras Zenginliği' },
+        { value: 'region', text: '🌍 Bölgeye Göre' },
+        { value: 'photos', text: '📸 Fotoğraf & Zenginlik' }
+      ];
+      extraSorts.forEach(item => {
+        if (!els.sortSelect.querySelector(`option[value="${item.value}"]`)) {
+          const opt = document.createElement('option');
+          opt.value = item.value;
+          opt.textContent = item.text;
+          els.sortSelect.appendChild(opt);
+        }
+      });
+    }
     if (!els.regionSelect) return;
     els.regionSelect.innerHTML = '<option value="all">Tüm Bölgeler (7 Bölge)</option>';
     for (const [code, info] of Object.entries(state.data.regions)) {
@@ -483,30 +501,91 @@
         if (state.sortBy === 'visited') {
           if (a[1].visited !== b[1].visited) return a[1].visited ? -1 : 1;
         }
+        if (state.sortBy === 'landmarks') {
+          const diff = (b[1].landmarks ? b[1].landmarks.length : 0) - (a[1].landmarks ? a[1].landmarks.length : 0);
+          if (diff !== 0) return diff;
+        }
+        if (state.sortBy === 'photos') {
+          const score = p => (Array.isArray(p.images) ? p.images.length : ((p.has_banner ? 1 : 0) + (p.has_gallery ? 1 : 0))) * 10
+            + (p.landmarks ? p.landmarks.length : 0) + (p.specialties ? p.specialties.length : 0)
+            + (p.history ? p.history.length / 200 : 0);
+          const diff = score(b[1]) - score(a[1]);
+          if (diff !== 0) return diff;
+        }
+        if (state.sortBy === 'region') {
+          const rDiff = (a[1].region_code || '').localeCompare(b[1].region_code || '', 'tr');
+          if (rDiff !== 0) return rDiff;
+        }
         return a[1].name.localeCompare(b[1].name, 'tr');
       });
+  }
+
+  // Toggle City in Custom Route
+  function toggleCityInCustomRoute(cityName) {
+    if (!cityName) return;
+    const normTarget = normalizeTurkish(cityName);
+    const idx = state.customRouteCities.findIndex(c => normalizeTurkish(c) === normTarget);
+    if (idx >= 0) {
+      state.customRouteCities.splice(idx, 1);
+      showToast(`✕ ${cityName} aktif sefer rotasından çıkarıldı`);
+    } else {
+      state.customRouteCities.push(cityName);
+      showToast(`➕ ${cityName} aktif sefer rotasına eklendi`);
+    }
+    renderCitiesList();
+    if (state.currentView === 'city' && state.selectedCityKey) {
+      renderCityDetail(state.selectedCityKey);
+    } else if (state.currentView === 'route') {
+      calculateAndRenderRoute();
+    }
   }
 
   // Render Cities List in Sidebar
   function renderCitiesList() {
     if (!els.citiesList) return;
     const cities = getFilteredCities();
+    const isFilterActive = state.filter !== 'all' || state.selectedRegion !== 'all' || (state.searchQuery && state.searchQuery.trim() !== '');
+
+    const summaryBarHtml = isFilterActive ? `
+      <div class="sidebar-filter-summary" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; margin-bottom: 6px; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.22); border-radius: 8px; font-size: 0.76rem; color: var(--text-secondary);">
+        <span>🔍 <strong>${cities.length}</strong> menzil listeleniyor</span>
+        <button type="button" id="btn-clear-sidebar-filters" style="background: transparent; border: none; color: var(--accent-cyan); font-weight: 700; font-size: 0.74rem; cursor: pointer; padding: 2px 6px;">Filtreyi Temizle ✕</button>
+      </div>
+    ` : '';
 
     if (cities.length === 0) {
       els.citiesList.innerHTML = `
+        ${summaryBarHtml}
         <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
           ${state.filter === 'favorites' ? 'Henüz favori şehir eklemediniz. Bir il sayfasından ⭐ butonuna tıklayabilirsiniz.' : 'Aradığınız kriterlere uygun şehir bulunamadı.'}
         </div>
       `;
+      const clearBtn = document.getElementById('btn-clear-sidebar-filters');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          state.filter = 'all';
+          state.selectedRegion = 'all';
+          state.searchQuery = '';
+          if (els.searchInput) els.searchInput.value = '';
+          if (els.regionSelect) els.regionSelect.value = 'all';
+          els.filterPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-filter') === 'all'));
+          renderCitiesList();
+        });
+      }
       return;
     }
 
-    els.citiesList.innerHTML = cities.map(([key, p]) => {
+    const customRouteSet = new Set(state.customRouteCities.map(c => normalizeTurkish(c)));
+
+    els.citiesList.innerHTML = summaryBarHtml + cities.map(([key, p]) => {
       const isSelected = state.selectedCityKey === key;
       const isFav = state.favorites.has(key);
+      const inRoute = customRouteSet.has(normalizeTurkish(p.name));
       const statusClass = p.visited ? 'visited' : 'unvisited';
       const statusText = p.visited ? '✓ Gezildi' : '⏳';
       const thumb = p.has_banner ? p.banner_rel : 'assets/banner.jpg';
+      const lmCount = Array.isArray(p.landmarks) ? p.landmarks.length : 0;
+      const spCount = Array.isArray(p.specialties) ? p.specialties.length : 0;
 
       return `
         <div class="city-item ${isSelected ? 'active' : ''}" data-city-key="${escapeHtml(key)}">
@@ -514,16 +593,40 @@
             <img class="city-thumb" src="${escapeHtml(thumb)}" alt="${escapeHtml(p.name)}" loading="lazy" />
             <div>
               <div class="city-name-text">${String(p.plate).padStart(2, '0')} • ${escapeHtml(p.name)}</div>
-              <div class="city-region-sub">${escapeHtml(p.region)}</div>
+              <div class="city-region-sub">${escapeHtml(p.region)} • <span style="opacity: 0.85;">🏛️ ${lmCount} • 🍽️ ${spCount}</span></div>
             </div>
           </div>
-          <div class="city-right-meta">
+          <div class="city-right-meta" style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" class="city-quick-route-btn" data-quick-route="${escapeHtml(p.name)}" title="${inRoute ? 'Aktif Sefer Rotasında (Çıkarmak için tıkla)' : 'Aktif Sefer Rotasına Ekle'}" style="background: ${inRoute ? 'rgba(16,185,129,0.18)' : 'rgba(148,163,184,0.12)'}; color: ${inRoute ? '#6ee7b7' : 'var(--text-muted)'}; border: 1px solid ${inRoute ? 'rgba(16,185,129,0.4)' : 'var(--border-glass)'}; border-radius: 6px; font-size: 0.68rem; padding: 2px 6px; cursor: pointer; font-weight: 600;">
+              ${inRoute ? '🧭 Rotada' : '+ Rota'}
+            </button>
             ${isFav ? '<span class="fav-dot" title="Favori">★</span>' : ''}
             <span class="city-status-badge ${statusClass}">${statusText}</span>
           </div>
         </div>
       `;
     }).join('');
+
+    const clearBtn = document.getElementById('btn-clear-sidebar-filters');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        state.filter = 'all';
+        state.selectedRegion = 'all';
+        state.searchQuery = '';
+        if (els.searchInput) els.searchInput.value = '';
+        if (els.regionSelect) els.regionSelect.value = 'all';
+        els.filterPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-filter') === 'all'));
+        renderCitiesList();
+      });
+    }
+
+    els.citiesList.querySelectorAll('.city-quick-route-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cName = btn.getAttribute('data-quick-route');
+        toggleCityInCustomRoute(cName);
+      });
+    });
 
     els.citiesList.querySelectorAll('.city-item').forEach(el => {
       el.addEventListener('click', () => {
@@ -987,6 +1090,29 @@
     const prevEntry = curIdx > 0 ? filtered[curIdx - 1] : null;
     const nextEntry = curIdx >= 0 && curIdx < filtered.length - 1 ? filtered[curIdx + 1] : null;
 
+    // Reading Time & Discovery Summary Metrics
+    const combinedText = [
+      quoteText || '',
+      p.history || '',
+      p.reflection || '',
+      libraryText || '',
+      ...(spiritualList || []),
+      ...(planList || []),
+      ...(p.literary_quotes || []),
+      ...(p.landmarks || []),
+      ...(p.specialties || [])
+    ].join(' ');
+    const wordCount = combinedText.trim().split(/\s+/).filter(Boolean).length;
+    const readingMins = Math.max(2, Math.ceil(wordCount / 160));
+
+    const ankaraProv = state.data.provinces['04_IcAnadolu/Ankara'];
+    const istanbulProv = state.data.provinces['01_Marmara/Istanbul'];
+    const distAnkara = ankaraProv ? Math.round(calcDistKm(p.lat, p.lng, ankaraProv.lat, ankaraProv.lng) * 1.35) : 0;
+    const distIstanbul = istanbulProv ? Math.round(calcDistKm(p.lat, p.lng, istanbulProv.lat, istanbulProv.lng) * 1.35) : 0;
+    const isInCustomRoute = state.customRouteCities.some(c => normalizeTurkish(c) === normalizeTurkish(p.name));
+    const lmTotal = Array.isArray(p.landmarks) ? p.landmarks.length : 0;
+    const spTotal = Array.isArray(p.specialties) ? p.specialties.length : 0;
+
     els.viewportContent.innerHTML = `
       <div class="city-detail-view">
         <!-- Hero Header -->
@@ -999,6 +1125,25 @@
               ${statusBadge}
             </div>
             <h1 class="city-hero-title">📍 ${escapeHtml(p.name)}</h1>
+          </div>
+        </div>
+
+        <!-- Tahmini Okuma & Keşif Özeti Bar -->
+        <div class="glass-card detail-card" style="padding: 14px 18px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px;">
+              ⏱️ Tahmini Okuma & Keşif Özeti
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="tag-badge" style="font-size: 0.75rem;">📖 ~${readingMins} dk okuma (${wordCount} kelime)</span>
+              <span class="tag-badge" style="font-size: 0.75rem;">🏛️ ${lmTotal} Miras Durağı</span>
+              <span class="tag-badge" style="font-size: 0.75rem;">🍽️ ${spTotal} Yöresel Lezzet</span>
+              <span class="tag-badge" style="font-size: 0.75rem;">📍 Ankara'ya ${distAnkara === 0 ? 'Merkez' : `~${distAnkara.toLocaleString('tr-TR')} km`}</span>
+              <span class="tag-badge" style="font-size: 0.75rem;">🌉 İstanbul'a ${distIstanbul === 0 ? 'Merkez' : `~${distIstanbul.toLocaleString('tr-TR')} km`}</span>
+              <span class="tag-badge" style="font-size: 0.75rem; background: ${isInCustomRoute ? 'rgba(16,185,129,0.18)' : 'rgba(148,163,184,0.12)'}; color: ${isInCustomRoute ? '#6ee7b7' : 'var(--text-secondary)'}; border-color: ${isInCustomRoute ? 'rgba(16,185,129,0.4)' : 'var(--border-glass)'};">
+                ${isInCustomRoute ? '✓ Aktif Sefer Rotasında' : '○ Özel Rotada Değil'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -1037,10 +1182,11 @@
 
             <div style="margin-top: 16px; border-top: 1px solid var(--border-glass); padding-top: 14px;">
               <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">
-                🗺️ Koordinat Bilgisi
+                🗺️ Koordinat Bilgisi <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">(Kopyalamak için tıklayın)</span>
               </h4>
-              <p style="font-family: monospace; font-size: 0.85rem; color: var(--accent-cyan);">
-                ${p.lat.toFixed(4)}° K, ${p.lng.toFixed(4)}° D
+              <p id="city-coord-copy-badge" role="button" tabindex="0" title="Koordinatı panoya kopyala" style="font-family: monospace; font-size: 0.85rem; color: var(--accent-cyan); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 6px; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25);">
+                <span>${p.lat.toFixed(4)}° K, ${p.lng.toFixed(4)}° D</span>
+                <span style="font-size: 0.75rem;">📋</span>
               </p>
             </div>
           </div>
@@ -1080,6 +1226,10 @@
             <button class="btn btn-outline ${state.favorites.has(key) ? 'btn-fav-active' : ''}" id="city-fav-btn">
               ${state.favorites.has(key) ? '★ Favoride' : '☆ Favorile'}
             </button>
+            <button class="btn btn-outline" id="city-toggle-custom-route-btn" style="${isInCustomRoute ? 'border-color: var(--accent-emerald); color: #6ee7b7;' : ''}">
+              ${isInCustomRoute ? '✓ Rotada' : '➕ Aktif Sefer Rotasına Ekle'}
+            </button>
+            <button class="btn btn-outline" id="city-compare-btn">⚖️ Bu Şehri Karşılaştır</button>
             <button class="btn btn-outline" id="city-share-btn">🔗 Paylaş</button>
             <button class="btn btn-outline" id="city-route-btn">🧭 Buradan Rota Planla</button>
             <a href="${escapeHtml(p.readme_rel)}" target="_blank" class="btn btn-primary">
@@ -1096,6 +1246,40 @@
 
     const favBtn = document.getElementById('city-fav-btn');
     if (favBtn) favBtn.addEventListener('click', () => toggleFavorite(key));
+
+    const toggleCustomRouteBtn = document.getElementById('city-toggle-custom-route-btn');
+    if (toggleCustomRouteBtn) {
+      toggleCustomRouteBtn.addEventListener('click', () => toggleCityInCustomRoute(p.name));
+    }
+
+    const compareBtn = document.getElementById('city-compare-btn');
+    if (compareBtn) {
+      compareBtn.addEventListener('click', () => {
+        state.compareCityA = key;
+        openView('compare');
+      });
+    }
+
+    const coordBadge = document.getElementById('city-coord-copy-badge');
+    if (coordBadge) {
+      const copyCoords = () => {
+        const coordText = `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(coordText).then(() => {
+            showToast(`📍 Koordinat kopyalandı: ${coordText}`);
+          }).catch(() => showToast('Koordinat kopyalanamadı'));
+        } else {
+          showToast(`📍 Koordinat: ${coordText}`);
+        }
+      };
+      coordBadge.addEventListener('click', copyCoords);
+      coordBadge.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          copyCoords();
+        }
+      });
+    }
 
     const shareBtn = document.getElementById('city-share-btn');
     if (shareBtn) {
@@ -1201,7 +1385,21 @@
     // Polyline for route
     const pointsAttr = route.map(s => `${projX(s.lng).toFixed(1)},${projY(s.lat).toFixed(1)}`).join(' ');
 
-    // Numbered route stops
+    // Segment distance midpoint labels
+    const segmentLabels = route.slice(1).map((stop, idx) => {
+      const prev = route[idx];
+      const mx = (projX(prev.lng) + projX(stop.lng)) / 2;
+      const my = (projY(prev.lat) + projY(stop.lat)) / 2;
+      if (!stop.distFromPrev) return '';
+      return `
+        <g pointer-events="none">
+          <rect x="${(mx - 24).toFixed(1)}" y="${(my - 8).toFixed(1)}" width="48" height="14" rx="4" fill="rgba(4, 18, 29, 0.85)" stroke="rgba(0, 242, 254, 0.35)" stroke-width="0.8" />
+          <text x="${mx.toFixed(1)}" y="${(my + 2).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="700" fill="#67e8f9" font-family="Plus Jakarta Sans, sans-serif">+${stop.distFromPrev} km</text>
+        </g>
+      `;
+    }).join('');
+
+    // Numbered clickable route stops
     const routeNodes = route.map((s, idx) => {
       const x = projX(s.lng);
       const y = projY(s.lat);
@@ -1209,8 +1407,9 @@
       const fill = isStart ? '#f59e0b' : '#00f2fe';
       const labelY = y - 12;
       return `
-        <g>
-          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isStart ? 9 : 7.5}" fill="${fill}" stroke="#04121d" stroke-width="2" />
+        <g class="route-svg-stop-node" data-svg-stop-key="${escapeHtml(s._key || '')}" style="cursor: pointer;" role="button" tabindex="0">
+          <title>${escapeHtml(s.name)} (${idx === 0 ? 'Başlangıç' : `+${s.distFromPrev} km`}) — Şehri İncele</title>
+          <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isStart ? 9.5 : 8}" fill="${fill}" stroke="#04121d" stroke-width="2" />
           <text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="800" fill="#04121d" font-family="Outfit, sans-serif">${idx + 1}</text>
           <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="#f8fafc" font-family="Plus Jakarta Sans, sans-serif">${escapeHtml(s.name)}</text>
         </g>
@@ -1220,7 +1419,11 @@
     return `
       <svg class="route-svg-map" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anadolu Rota Haritası Önizlemesi">
         ${bgDots}
-        <polyline points="${pointsAttr}" fill="none" stroke="#00f2fe" stroke-width="2.5" stroke-dasharray="6,5" stroke-opacity="0.85" />
+        <polyline points="${pointsAttr}" fill="none" stroke="rgba(0, 242, 254, 0.25)" stroke-width="4" />
+        <polyline points="${pointsAttr}" fill="none" stroke="#00f2fe" stroke-width="2.5" stroke-dasharray="7,5" stroke-opacity="0.92">
+          <animate attributeName="stroke-dashoffset" from="24" to="0" dur="1.4s" repeatCount="indefinite" />
+        </polyline>
+        ${segmentLabels}
         ${routeNodes}
       </svg>
     `;
@@ -1235,8 +1438,25 @@
     renderCitiesList();
     if (els.viewportContent) els.viewportContent.scrollTop = 0;
 
+    const qNorm = normalizeTurkish(state.galleryQuery || '');
     const allEntries = Object.entries(state.data.provinces)
-      .filter(([, p]) => state.galleryRegion === 'all' || p.region_code === state.galleryRegion)
+      .filter(([key, p]) => {
+        if (state.galleryRegion !== 'all' && p.region_code !== state.galleryRegion) return false;
+        if (state.galleryStatus === 'visited' && !p.visited) return false;
+        if (state.galleryStatus === 'unvisited' && p.visited) return false;
+        if (state.galleryStatus === 'favorites' && !state.favorites.has(key)) return false;
+        if (qNorm) {
+          const hay = normalizeTurkish([
+            p.name,
+            p.region,
+            String(p.plate),
+            ...(p.landmarks || []),
+            ...(p.specialties || [])
+          ].join(' '));
+          if (!hay.includes(qNorm)) return false;
+        }
+        return true;
+      })
       .sort((a, b) => a[1].name.localeCompare(b[1].name, 'tr'));
 
     const galleryPhotos = [];
@@ -1270,7 +1490,14 @@
       `).join('')}
     `;
 
-    const cardsHtml = galleryPhotos.map((item, idx) => `
+    const statusButtonsHtml = `
+      <button class="filter-pill ${state.galleryStatus === 'all' ? 'active' : ''}" data-g-status="all">Tümü</button>
+      <button class="filter-pill ${state.galleryStatus === 'visited' ? 'active' : ''}" data-g-status="visited">✅ Gezilen İller</button>
+      <button class="filter-pill ${state.galleryStatus === 'unvisited' ? 'active' : ''}" data-g-status="unvisited">⏳ Bekleyen İller</button>
+      <button class="filter-pill ${state.galleryStatus === 'favorites' ? 'active' : ''}" data-g-status="favorites">⭐ Favoriler</button>
+    `;
+
+    const cardsHtml = galleryPhotos.length > 0 ? galleryPhotos.map((item, idx) => `
       <div class="glass-card mega-gallery-card">
         <div class="mega-gallery-img-wrap" data-mega-idx="${idx}">
           <img src="${escapeHtml(item.src)}" alt="${escapeHtml(item.caption)}" loading="lazy" />
@@ -1284,7 +1511,11 @@
           <button class="mega-gallery-city-btn" data-open-city="${escapeHtml(item.key)}">İncele ➔</button>
         </div>
       </div>
-    `).join('');
+    `).join('') : `
+      <div class="glass-card detail-card" style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 32px;">
+        Aradığınız filtre veya arama sorgusuna uygun fotoğraf bulunamadı.
+      </div>
+    `;
 
     els.viewportContent.innerHTML = `
       <div class="dashboard-view">
@@ -1298,10 +1529,23 @@
                 81 ilin tamamına ait yüksek çözünürlüklü kapak ve şehir vitrini fotoğrafları. Tam ekran Lightbox için herhangi bir fotoğrafa tıklayın.
               </p>
             </div>
-            <button class="btn btn-outline" id="gallery-back-btn">🏠 Genel Bakış</button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-primary" id="gallery-slideshow-btn" ${galleryPhotos.length === 0 ? 'disabled' : ''}>🎬 Slayt Gösterisi Başlat</button>
+              <button class="btn btn-outline" id="gallery-back-btn">🏠 Genel Bakış</button>
+            </div>
           </div>
-          <div class="gallery-filter-bar">
-            ${regionButtonsHtml}
+          <div class="gallery-filter-bar" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+              <div style="flex: 1; min-width: 220px; max-width: 360px;">
+                <input type="search" id="gallery-search-input" class="search-input" placeholder="🔍 Şehir, miras veya bölge ara..." value="${escapeHtml(state.galleryQuery)}" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-glass); background: rgba(15, 23, 42, 0.55); color: var(--text-primary); font-size: 0.84rem;" />
+              </div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                ${statusButtonsHtml}
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              ${regionButtonsHtml}
+            </div>
           </div>
         </div>
 
@@ -1314,9 +1558,40 @@
     const backBtn = document.getElementById('gallery-back-btn');
     if (backBtn) backBtn.addEventListener('click', () => renderDashboard());
 
+    const slideshowBtn = document.getElementById('gallery-slideshow-btn');
+    if (slideshowBtn) {
+      slideshowBtn.addEventListener('click', () => {
+        if (galleryPhotos.length > 0) {
+          openLightbox(galleryPhotos, 0);
+          toggleLightboxSlideshow(true);
+        }
+      });
+    }
+
+    const searchEl = document.getElementById('gallery-search-input');
+    if (searchEl) {
+      searchEl.addEventListener('input', (e) => {
+        state.galleryQuery = e.target.value;
+        const pos = e.target.selectionStart;
+        renderGalleryView(false);
+        const nextInput = document.getElementById('gallery-search-input');
+        if (nextInput) {
+          nextInput.focus();
+          try { nextInput.setSelectionRange(pos, pos); } catch (err) {}
+        }
+      });
+    }
+
     els.viewportContent.querySelectorAll('[data-g-region]').forEach(btn => {
       btn.addEventListener('click', () => {
         state.galleryRegion = btn.getAttribute('data-g-region');
+        renderGalleryView(false);
+      });
+    });
+
+    els.viewportContent.querySelectorAll('[data-g-status]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.galleryStatus = btn.getAttribute('data-g-status');
         renderGalleryView(false);
       });
     });
@@ -1388,7 +1663,7 @@
           </p>
 
           ${isCustom ? `
-            <div style="display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; align-items: flex-end;">
               <div style="flex: 1; min-width: 220px;">
                 <label style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Rotaya Durak Ekle</label>
                 <select id="custom-add-select" class="region-select" style="margin-top: 4px;">
@@ -1396,6 +1671,8 @@
                 </select>
               </div>
               <button class="btn btn-primary" id="btn-custom-add">➕ Durak Ekle</button>
+              <button class="btn btn-outline" id="btn-custom-two-opt">⚡ Özel Rotayı 2-Opt ile Sırala</button>
+              <button class="btn btn-outline" id="btn-custom-reverse">🔄 Rotayı Ters Çevir</button>
               <button class="btn btn-outline" id="btn-custom-reset">↺ Varsayılan Rotaya Dön</button>
             </div>
           ` : `
@@ -1454,16 +1731,44 @@
         if (city && !state.customRouteCities.includes(city)) {
           state.customRouteCities.push(city);
           showToast(`➕ ${city} rotaya eklendi`);
+          renderCitiesList();
           calculateAndRenderRoute();
         } else if (city) {
           showToast(`ℹ️ ${city} zaten rotada yer alıyor`);
         }
       });
+      const btnCustomTwoOpt = document.getElementById('btn-custom-two-opt');
+      if (btnCustomTwoOpt) {
+        btnCustomTwoOpt.addEventListener('click', () => {
+          const allEntries = Object.entries(state.data.provinces).map(([key, p]) => ({ ...p, _key: key }));
+          const currentStops = state.customRouteCities
+            .map(name => allEntries.find(p => normalizeTurkish(p.name) === normalizeTurkish(name)))
+            .filter(Boolean);
+          if (currentStops.length <= 3) {
+            showToast('ℹ️ 2-Opt sıralaması için en az 4 durak gereklidir');
+            return;
+          }
+          const optimized = twoOptOptimize(currentStops);
+          state.customRouteCities = optimized.map(s => s.name);
+          showToast('⚡ Özel sefer rotası 2-Opt algoritması ile en kısa mesafeye göre sıralandı');
+          calculateAndRenderRoute();
+        });
+      }
+      const btnCustomReverse = document.getElementById('btn-custom-reverse');
+      if (btnCustomReverse) {
+        btnCustomReverse.addEventListener('click', () => {
+          if (state.customRouteCities.length < 2) return;
+          state.customRouteCities.reverse();
+          showToast(`🔄 Rota ters çevrildi (${state.customRouteCities[0]} ➔ ${state.customRouteCities[state.customRouteCities.length - 1]})`);
+          calculateAndRenderRoute();
+        });
+      }
       document.getElementById('btn-custom-reset').addEventListener('click', () => {
         state.customRouteCities = Array.isArray(state.data.custom_route)
           ? [...state.data.custom_route]
           : ['Ankara', 'Çankırı', 'Kastamonu', 'Karabük', 'Bartın', 'Zonguldak', 'Düzce', 'Sakarya', 'İstanbul', 'Edirne'];
         showToast('↺ Varsayılan Ankara ➔ Edirne rotasına dönüldü');
+        renderCitiesList();
         calculateAndRenderRoute();
       });
     } else {
@@ -1588,14 +1893,20 @@
             </div>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
           <div style="text-align: right;">
             <div style="font-family: var(--font-heading); font-weight: 700; color: var(--accent-gold); font-size: 0.9rem;">
               ${idx === 0 ? 'BAŞLANGIÇ' : `+${stop.distFromPrev.toLocaleString('tr-TR')} km`}
             </div>
             ${idx > 0 ? `<div style="font-size: 0.72rem; color: var(--text-muted);">Toplam ${stop.cumulativeKm.toLocaleString('tr-TR')} km</div>` : ''}
           </div>
-          ${isCustom ? `<button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" data-remove-stop="${escapeHtml(stop.name)}" title="Durağı Rotadan Çıkar">✕</button>` : ''}
+          ${isCustom ? `
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <button class="btn btn-outline" style="padding: 4px 7px; font-size: 0.75rem;" data-move-stop-up="${idx}" ${idx === 0 ? 'disabled' : ''} title="Yukarı Taşı">↑</button>
+              <button class="btn btn-outline" style="padding: 4px 7px; font-size: 0.75rem;" data-move-stop-down="${idx}" ${idx === route.length - 1 ? 'disabled' : ''} title="Aşağı Taşı">↓</button>
+              <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" data-remove-stop="${escapeHtml(stop.name)}" title="Durağı Rotadan Çıkar">✕</button>
+            </div>
+          ` : ''}
         </div>
       </div>
     `).join('');
@@ -1630,13 +1941,54 @@
       routeToolsMod.bindToolbarEvents(container, route, getModuleCtx());
     }
 
+    container.querySelectorAll('[data-move-stop-up]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-move-stop-up'), 10);
+        if (idx > 0 && idx < state.customRouteCities.length) {
+          const temp = state.customRouteCities[idx - 1];
+          state.customRouteCities[idx - 1] = state.customRouteCities[idx];
+          state.customRouteCities[idx] = temp;
+          calculateAndRenderRoute();
+        }
+      });
+    });
+
+    container.querySelectorAll('[data-move-stop-down]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-move-stop-down'), 10);
+        if (idx >= 0 && idx < state.customRouteCities.length - 1) {
+          const temp = state.customRouteCities[idx + 1];
+          state.customRouteCities[idx + 1] = state.customRouteCities[idx];
+          state.customRouteCities[idx] = temp;
+          calculateAndRenderRoute();
+        }
+      });
+    });
+
     container.querySelectorAll('[data-remove-stop]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const name = btn.getAttribute('data-remove-stop');
         state.customRouteCities = state.customRouteCities.filter(c => c !== name);
         showToast(`✕ ${name} rotadan çıkarıldı`);
+        renderCitiesList();
         calculateAndRenderRoute();
+      });
+    });
+
+    container.querySelectorAll('[data-svg-stop-key]').forEach(node => {
+      const openNodeCity = () => {
+        const sk = node.getAttribute('data-svg-stop-key');
+        if (sk) selectCity(sk);
+      };
+      node.addEventListener('click', openNodeCity);
+      node.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openNodeCity();
+        }
       });
     });
 
@@ -2137,10 +2489,64 @@
     }
   }
 
+  function stopLightboxSlideshow() {
+    if (state.lightboxSlideshowTimer) {
+      clearInterval(state.lightboxSlideshowTimer);
+      state.lightboxSlideshowTimer = null;
+    }
+    const btn = document.getElementById('lightbox-slideshow-toggle-btn');
+    if (btn) {
+      btn.textContent = '▶️ Otomatik Geçiş';
+      btn.classList.remove('active');
+    }
+  }
+
+  function toggleLightboxSlideshow(forceState) {
+    if (state.lightboxImages.length <= 1) return;
+    const willPlay = typeof forceState === 'boolean' ? forceState : !state.lightboxSlideshowTimer;
+    stopLightboxSlideshow();
+    if (willPlay) {
+      state.lightboxSlideshowTimer = setInterval(() => {
+        if (!els.lightboxModal || !els.lightboxModal.classList.contains('active')) {
+          stopLightboxSlideshow();
+          return;
+        }
+        navigateLightbox(1);
+      }, 3500);
+      const btn = document.getElementById('lightbox-slideshow-toggle-btn');
+      if (btn) {
+        btn.textContent = '⏸️ Durdur';
+        btn.classList.add('active');
+      }
+      showToast('▶️ Otomatik slayt geçişi başlatıldı (3.5 sn)');
+    }
+  }
+
+  function ensureLightboxSlideshowButton() {
+    if (!els.lightboxModal) return;
+    const contentEl = els.lightboxModal.querySelector('.lightbox-content') || els.lightboxModal;
+    let btn = document.getElementById('lightbox-slideshow-toggle-btn');
+    if (!btn && contentEl) {
+      btn = document.createElement('button');
+      btn.id = 'lightbox-slideshow-toggle-btn';
+      btn.type = 'button';
+      btn.className = 'btn btn-outline';
+      btn.style.cssText = 'margin-top: 8px; padding: 6px 14px; font-size: 0.78rem; align-self: center;';
+      btn.textContent = '▶️ Otomatik Geçiş';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleLightboxSlideshow();
+      });
+      contentEl.appendChild(btn);
+    }
+  }
+
   function openLightbox(items, index = 0) {
     if (!items || !items.length || !els.lightboxModal) return;
+    stopLightboxSlideshow();
     state.lightboxImages = items;
     state.lightboxIndex = Math.max(0, Math.min(index, items.length - 1));
+    ensureLightboxSlideshowButton();
     renderLightboxImage();
     els.lightboxModal.classList.add('active');
   }
@@ -2160,6 +2566,11 @@
     const hideNav = items.length <= 1;
     if (els.lightboxPrevBtn) els.lightboxPrevBtn.classList.toggle('hidden', hideNav);
     if (els.lightboxNextBtn) els.lightboxNextBtn.classList.toggle('hidden', hideNav);
+    const slideBtn = document.getElementById('lightbox-slideshow-toggle-btn');
+    if (slideBtn) {
+      slideBtn.style.display = hideNav ? 'none' : 'inline-flex';
+      slideBtn.textContent = state.lightboxSlideshowTimer ? '⏸️ Durdur' : '▶️ Otomatik Geçiş';
+    }
   }
 
   function navigateLightbox(delta) {
@@ -2170,6 +2581,7 @@
   }
 
   function closeModals() {
+    stopLightboxSlideshow();
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
     toggleAmbientPopover(false);
   }

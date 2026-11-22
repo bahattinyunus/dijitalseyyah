@@ -87,13 +87,35 @@
     return acc;
   }, {});
 
+  const SAVED_LANDMARKS_STORAGE_KEY = 'dijital_seyyah_saved_landmarks_v1';
+
   // Module-scoped UI state so filters persist across re-renders
   const uiState = {
     categoryId: 'all',
     regionCode: 'all',
-    status: 'all', // 'all' | 'visited' | 'pending'
-    searchQuery: ''
+    status: 'all', // 'all' | 'visited' | 'pending' | 'saved'
+    searchQuery: '',
+    spotlightId: null
   };
+
+  function loadSavedLandmarkIds() {
+    try {
+      if (typeof localStorage === 'undefined') return new Set();
+      const raw = localStorage.getItem(SAVED_LANDMARKS_STORAGE_KEY);
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? new Set(parsed) : new Set();
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function saveSavedLandmarkIds(setObj) {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(SAVED_LANDMARKS_STORAGE_KEY, JSON.stringify(Array.from(setObj)));
+    } catch (_) {}
+  }
 
   function classifyLandmark(name, normalizeFn) {
     const norm = normalizeFn(name);
@@ -572,6 +594,87 @@
         color: var(--text-secondary);
       }
 
+      /* Bookmark Button & Random Spotlight */
+      .landmark-bookmark-btn {
+        pointer-events: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: var(--radius-full, 9999px);
+        background: rgba(10, 15, 29, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #cbd5e1;
+        font-family: var(--font-heading);
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: pointer;
+        backdrop-filter: blur(6px);
+        transition: all 0.2s ease;
+      }
+
+      .landmark-bookmark-btn:hover {
+        border-color: var(--accent-gold, #f59e0b);
+        color: #fde68a;
+        transform: scale(1.04);
+      }
+
+      .landmark-bookmark-btn.is-saved {
+        background: rgba(245, 158, 11, 0.9);
+        border-color: #fde68a;
+        color: #0f172a;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
+      }
+
+      .landmark-random-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 14px;
+        border-radius: var(--radius-md, 12px);
+        border: 1px solid rgba(245, 158, 11, 0.45);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(168, 85, 247, 0.2));
+        color: var(--text-primary);
+        font-family: var(--font-heading);
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+      }
+
+      .landmark-random-btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent-gold, #f59e0b);
+        box-shadow: 0 6px 18px rgba(245, 158, 11, 0.25);
+      }
+
+      .landmark-spotlight-card {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 20px;
+        border-radius: var(--radius-lg, 18px);
+        background:
+          radial-gradient(circle at 90% 20%, rgba(245, 158, 11, 0.2), transparent 50%),
+          linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.85));
+        border: 1px solid rgba(245, 158, 11, 0.48);
+        box-shadow: 0 12px 28px -10px rgba(245, 158, 11, 0.3);
+        animation: modFadeSlideUp 0.26s ease-out;
+      }
+
+      body.light-theme .landmark-spotlight-card {
+        background: linear-gradient(135deg, rgba(255, 251, 235, 0.96), rgba(254, 243, 199, 0.92));
+        border-color: rgba(217, 119, 6, 0.45);
+      }
+
+      .landmark-card.is-saved-card {
+        border-color: rgba(245, 158, 11, 0.45);
+      }
+
       @media (max-width: 640px) {
         .landmark-cat-pills {
           grid-template-columns: 1fr 1fr;
@@ -678,6 +781,7 @@
     const selectCity = typeof safeCtx.selectCity === 'function' ? safeCtx.selectCity : function () {};
 
     const allLandmarks = buildLandmarkItems(data, normalizeTurkish);
+    let savedSet = loadSavedLandmarkIds();
     const totalCount = allLandmarks.length;
     const visitedCount = allLandmarks.filter(l => l.visited).length;
     const pendingCount = totalCount - visitedCount;
@@ -707,7 +811,7 @@
           <div>
             <h1 class="landmark-title">🕌 Anadolu Miras &amp; Durak Ansiklopedisi</h1>
             <p class="landmark-sub">
-              81 ilin ${totalCount} kadim cami, kale, antik kent ve doğa harikasını kategori, bölge ve ziyaret durumuna göre keşfet.
+              81 ilin ${totalCount} kadim cami, kale, antik kent ve doğa harikasını kategori, bölge ve ziyaret durumuna göre keşfet; favori duraklarını ⭐ Miras Koleksiyonum'a kaydet.
             </p>
           </div>
           <div class="landmark-kpi-row">
@@ -715,6 +819,7 @@
             <span class="landmark-kpi-pill">📍 <strong>${totalCities}</strong> İl</span>
             <span class="landmark-kpi-pill" style="color: #10b981;">✓ <strong>${visitedCount}</strong> Gezildi</span>
             <span class="landmark-kpi-pill" style="color: #f59e0b;">⏳ <strong>${pendingCount}</strong> Bekliyor</span>
+            <span class="landmark-kpi-pill" id="landmark-saved-kpi" style="color: #fbbf24;">⭐ <strong id="landmark-saved-count">${savedSet.size}</strong> Kaydedilen</span>
           </div>
         </header>
 
@@ -727,6 +832,13 @@
             </span>
             <span class="landmark-cat-count" data-cat-count="all">${totalCount}</span>
           </button>
+          <button type="button" class="landmark-cat-pill ${uiState.categoryId === 'saved' ? 'active' : ''}" data-category="saved">
+            <span class="landmark-cat-pill-left">
+              <span class="landmark-cat-icon" aria-hidden="true">⭐</span>
+              <span class="landmark-cat-name">⭐ Kaydedilenler (Miras Koleksiyonum)</span>
+            </span>
+            <span class="landmark-cat-count" data-cat-count="saved">${savedSet.size}</span>
+          </button>
           ${CATEGORIES.map(cat => `
             <button type="button" class="landmark-cat-pill ${uiState.categoryId === cat.id ? 'active' : ''}" data-category="${escapeHtml(cat.id)}">
               <span class="landmark-cat-pill-left">
@@ -738,7 +850,7 @@
           `).join('')}
         </div>
 
-        <!-- Search, Region & Status Controls -->
+        <!-- Search, Region, Status & Random Discovery Controls -->
         <div class="glass-card landmark-controls">
           <div class="landmark-search-wrap">
             <span class="landmark-search-icon" aria-hidden="true">🔍</span>
@@ -775,9 +887,17 @@
             <button type="button" class="landmark-status-btn ${uiState.status === 'pending' ? 'active' : ''}" data-status="pending">
               ⏳ Bekliyor
             </button>
+            <button type="button" class="landmark-status-btn ${uiState.status === 'saved' ? 'active' : ''}" data-status="saved">
+              ⭐ Kaydedilenler
+            </button>
           </div>
+
+          <button type="button" id="landmark-random-btn" class="landmark-random-btn" title="Rastgele bir Anadolu mirasını keşfet">
+            🎲 Rastgele Miras Keşfet
+          </button>
         </div>
 
+        <div id="landmark-spotlight-host"></div>
         <div class="landmark-results-bar" id="landmark-results-bar"></div>
         <div class="landmark-grid" id="landmark-grid"></div>
       </section>
@@ -788,8 +908,101 @@
     const searchClearEl = container.querySelector('#landmark-search-clear');
     const regionSelectEl = container.querySelector('#landmark-region-select');
     const statusGroupEl = container.querySelector('#landmark-status-group');
+    const randomBtnEl = container.querySelector('#landmark-random-btn');
+    const spotlightHostEl = container.querySelector('#landmark-spotlight-host');
+    const savedCountEl = container.querySelector('#landmark-saved-count');
     const resultsBarEl = container.querySelector('#landmark-results-bar');
     const gridEl = container.querySelector('#landmark-grid');
+
+    function toggleLandmarkBookmark(landmarkId) {
+      if (!landmarkId) return;
+      if (savedSet.has(landmarkId)) {
+        savedSet.delete(landmarkId);
+        if (typeof safeCtx.showToast === 'function') {
+          safeCtx.showToast('Miras durağı koleksiyonunuzdan çıkarıldı.');
+        }
+      } else {
+        savedSet.add(landmarkId);
+        if (typeof safeCtx.showToast === 'function') {
+          safeCtx.showToast('⭐ Miras durağı "Miras Koleksiyonum" listesine kaydedildi!');
+        }
+      }
+      saveSavedLandmarkIds(savedSet);
+      if (savedCountEl) savedCountEl.textContent = String(savedSet.size);
+      renderSpotlight();
+      renderGrid();
+    }
+
+    function renderSpotlight() {
+      if (!spotlightHostEl) return;
+      if (!uiState.spotlightId) {
+        spotlightHostEl.innerHTML = '';
+        return;
+      }
+      const item = allLandmarks.find(l => l.id === uiState.spotlightId);
+      if (!item) {
+        spotlightHostEl.innerHTML = '';
+        return;
+      }
+      const isSaved = savedSet.has(item.id);
+      spotlightHostEl.innerHTML = `
+        <div class="landmark-spotlight-card">
+          <div style="display:flex; flex-direction:column; gap:5px;">
+            <span style="font-size:0.74rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent-gold, #f59e0b);">
+              🎲 Günün Rastgele Miras Keşfi · Plaka ${escapeHtml(item.plateStr)}
+            </span>
+            <h3 style="margin:0; font-family:var(--font-heading); font-size:1.22rem; font-weight:800; color:var(--text-primary);">
+              ${escapeHtml(item.categoryIcon)} ${escapeHtml(item.title)}
+            </h3>
+            <div style="font-size:0.84rem; color:var(--text-secondary);">
+              📍 <strong>${escapeHtml(item.cityName)}</strong> · ${escapeHtml(item.regionIcon)} ${escapeHtml(item.regionName)} · ${escapeHtml(item.categoryLabel)}
+              (${item.visited ? '✓ Gezilen İl' : '⏳ Keşif Bekleyen İl'})
+            </div>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+            <button type="button" class="landmark-bookmark-btn ${isSaved ? 'is-saved' : ''}" data-spot-bookmark="${escapeHtml(item.id)}">
+              ${isSaved ? '⭐ Koleksiyonda' : '☆ Koleksiyona Kaydet'}
+            </button>
+            <button type="button" class="landmark-random-btn" data-spot-another="1">
+              🎲 Başka Öner
+            </button>
+            <button type="button" class="landmark-random-btn" data-spot-city="${escapeHtml(item.key)}" style="border-color:var(--accent-cyan);">
+              📍 Şehre Git →
+            </button>
+            <button type="button" class="landmark-status-btn" data-spot-close="1" title="Kapat">✕</button>
+          </div>
+        </div>
+      `;
+
+      const bmBtn = spotlightHostEl.querySelector('[data-spot-bookmark]');
+      if (bmBtn) {
+        bmBtn.addEventListener('click', () => toggleLandmarkBookmark(item.id));
+      }
+      const anotherBtn = spotlightHostEl.querySelector('[data-spot-another]');
+      if (anotherBtn) {
+        anotherBtn.addEventListener('click', pickRandomSpotlight);
+      }
+      const cityBtn = spotlightHostEl.querySelector('[data-spot-city]');
+      if (cityBtn) {
+        cityBtn.addEventListener('click', () => selectCity(item.key));
+      }
+      const closeBtn = spotlightHostEl.querySelector('[data-spot-close]');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          uiState.spotlightId = null;
+          renderSpotlight();
+        });
+      }
+    }
+
+    function pickRandomSpotlight() {
+      const pool = allLandmarks.filter(matchesBaseFilters);
+      const source = pool.length ? pool : allLandmarks;
+      if (!source.length) return;
+      const picked = source[Math.floor(Math.random() * source.length)];
+      uiState.spotlightId = picked.id;
+      renderSpotlight();
+    }
 
     function matchesBaseFilters(item) {
       if (uiState.regionCode !== 'all' && item.regionCode !== uiState.regionCode) {
@@ -799,6 +1012,9 @@
         return false;
       }
       if (uiState.status === 'pending' && item.visited) {
+        return false;
+      }
+      if (uiState.status === 'saved' && !savedSet.has(item.id)) {
         return false;
       }
       const q = normalizeTurkish(uiState.searchQuery);
@@ -843,10 +1059,11 @@
 
     function updateLiveCategoryCounts(baseItems) {
       if (!catPillsEl) return;
-      const counts = { all: baseItems.length };
+      const counts = { all: baseItems.length, saved: 0 };
       CATEGORIES.forEach(c => { counts[c.id] = 0; });
       baseItems.forEach(item => {
         counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
+        if (savedSet.has(item.id)) counts.saved += 1;
       });
 
       catPillsEl.querySelectorAll('[data-cat-count]').forEach(badge => {
@@ -859,9 +1076,12 @@
       const baseItems = allLandmarks.filter(matchesBaseFilters);
       updateLiveCategoryCounts(baseItems);
 
-      const filtered = uiState.categoryId === 'all'
-        ? baseItems
-        : baseItems.filter(item => item.categoryId === uiState.categoryId);
+      let filtered = baseItems;
+      if (uiState.categoryId === 'saved') {
+        filtered = baseItems.filter(item => savedSet.has(item.id));
+      } else if (uiState.categoryId !== 'all') {
+        filtered = baseItems.filter(item => item.categoryId === uiState.categoryId);
+      }
 
       const uniqueCities = new Set(filtered.map(item => item.key)).size;
 
@@ -869,11 +1089,11 @@
         resultsBarEl.innerHTML = `
           <span>
             <strong style="color: var(--text-primary);">${filtered.length}</strong> / ${totalCount} miras noktası gösteriliyor
-            <span style="color: var(--text-muted);">(${uniqueCities} il)</span>
+            <span style="color: var(--text-muted);">(${uniqueCities} il · ⭐ ${savedSet.size} koleksiyonda)</span>
           </span>
           ${hasActiveFilters()
             ? '<button type="button" class="btn btn-outline" id="landmark-reset-btn" style="padding: 4px 10px; font-size: 0.75rem;">↺ Filtreleri Sıfırla</button>'
-            : '<span style="color: var(--text-muted); font-size: 0.76rem;">Şehir detayını açmak için herhangi bir miras kartına tıklayın</span>'
+            : '<span style="color: var(--text-muted); font-size: 0.76rem;">Şehir detayını açmak için karta, kaydetmek için ⭐ butonuna tıklayın</span>'
           }
         `;
         const resetBtn = resultsBarEl.querySelector('#landmark-reset-btn');
@@ -888,7 +1108,7 @@
               Filtrelerinizle eşleşen miras noktası bulunamadı
             </div>
             <p style="font-size: 0.85rem; max-width: 420px; margin: 0;">
-              Farklı bir arama kelimesi deneyebilir veya aktif kategori, bölge ve ziyaret durumu filtrelerini sıfırlayabilirsiniz.
+              Farklı bir arama kelimesi deneyebilir, ⭐ Kaydedilenler filtresini değiştirebilir veya aktif filtreleri sıfırlayabilirsiniz.
             </p>
             <button type="button" class="btn btn-primary" id="landmark-empty-reset">↺ Tüm Mirasları Göster</button>
           </div>
@@ -898,9 +1118,11 @@
         return;
       }
 
-      gridEl.innerHTML = filtered.map(item => `
+      gridEl.innerHTML = filtered.map(item => {
+        const isSaved = savedSet.has(item.id);
+        return `
         <article
-          class="glass-card landmark-card"
+          class="glass-card landmark-card ${isSaved ? 'is-saved-card' : ''}"
           data-city-key="${escapeHtml(item.key)}"
           role="button"
           tabindex="0"
@@ -914,9 +1136,20 @@
             <div class="landmark-card-overlay"></div>
             <div class="landmark-card-top">
               <span class="landmark-plate-badge">${escapeHtml(item.plateStr)}</span>
-              <span class="city-status-badge ${item.visited ? 'visited' : 'unvisited'}">
-                ${item.visited ? '✓ Gezildi' : '⏳ Bekliyor'}
-              </span>
+              <div style="display:flex; align-items:center; gap:5px; pointer-events:auto;">
+                <button
+                  type="button"
+                  class="landmark-bookmark-btn ${isSaved ? 'is-saved' : ''}"
+                  data-bookmark-id="${escapeHtml(item.id)}"
+                  aria-pressed="${isSaved ? 'true' : 'false'}"
+                  title="⭐ Miras Koleksiyonum (Kaydedilen Duraklar) listesine ekle/çıkar"
+                >
+                  ${isSaved ? '⭐ Kayıtlı' : '☆ Kaydet'}
+                </button>
+                <span class="city-status-badge ${item.visited ? 'visited' : 'unvisited'}">
+                  ${item.visited ? '✓ Gezildi' : '⏳ Bekliyor'}
+                </span>
+              </div>
             </div>
             <span class="landmark-card-cat-tag" style="border-color: ${escapeHtml(item.categoryColor)}66;">
               <span aria-hidden="true">${escapeHtml(item.categoryIcon)}</span>
@@ -938,10 +1171,15 @@
             </div>
           </div>
         </article>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // Event Listeners
+    if (randomBtnEl) {
+      randomBtnEl.addEventListener('click', pickRandomSpotlight);
+    }
+
     if (catPillsEl) {
       catPillsEl.addEventListener('click', (e) => {
         const pill = e.target.closest('[data-category]');
@@ -998,6 +1236,12 @@
 
     if (gridEl) {
       gridEl.addEventListener('click', (e) => {
+        const bmBtn = e.target.closest('[data-bookmark-id]');
+        if (bmBtn) {
+          e.stopPropagation();
+          toggleLandmarkBookmark(bmBtn.getAttribute('data-bookmark-id'));
+          return;
+        }
         const card = e.target.closest('.landmark-card');
         if (!card) return;
         const cityKey = card.getAttribute('data-city-key');
@@ -1006,6 +1250,7 @@
 
       gridEl.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.target.closest('[data-bookmark-id]')) return;
         const card = e.target.closest('.landmark-card');
         if (!card) return;
         e.preventDefault();
@@ -1014,6 +1259,7 @@
       });
     }
 
+    renderSpotlight();
     renderGrid();
   }
 

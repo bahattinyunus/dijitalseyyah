@@ -193,7 +193,15 @@ def cmd_plan_route(args):
     sefer_days = (len(route) - 1) * 5
     print("  " + "-" * 86)
     print(f"  🛣️ Toplam Planlanan Yolculuk: {total_km:,} km (~{est_hours} saat sürüş)")
-    print(f"  ⛺ 5 Gün Kuralı Sefer Süresi: {sefer_days} gün ({len(route) - 1} yeni menzil)\n")
+    print(f"  ⛺ 5 Gün Kuralı Sefer Süresi: {sefer_days} gün ({len(route) - 1} yeni menzil)")
+
+    gpx_file = getattr(args, "gpx", None)
+    if gpx_file:
+        gpx_path = Path(gpx_file)
+        gpx_xml = engine.export_gpx_route(route)
+        gpx_path.write_text(gpx_xml, encoding="utf-8")
+        print(f"  📡 GPX 1.1 Rotası Dışa Aktarıldı: {gpx_path}")
+    print()
 
 
 def cmd_export_book(args):
@@ -268,6 +276,79 @@ def cmd_badges(args):
     print()
 
 
+def cmd_compare(args):
+    print_banner()
+    engine = SeyyahEngine()
+    comp = engine.compare_provinces(args.city_a, args.city_b)
+    if not comp:
+        print(f"✗ '{args.city_a}' veya '{args.city_b}' adına/plaka koduna sahip il bulunamadı.\n")
+        return
+
+    ca = comp["city_a"]
+    cb = comp["city_b"]
+    st_a = "✅ Ziyaret Edildi" if ca["visited"] else "⏳ Bekliyor"
+    st_b = "✅ Ziyaret Edildi" if cb["visited"] else "⏳ Bekliyor"
+    same_reg_str = "Evet (Aynı Bölge)" if comp["same_region"] else "Hayır (Farklı Bölgeler)"
+
+    print("=" * 84)
+    print(f" ⚖️  İL KARŞILAŞTIRMA ANALİZİ: {ca['name'].upper()} ({ca['plate']:02d})  ↔  {cb['name'].upper()} ({cb['plate']:02d})")
+    print("=" * 84)
+    print(f" {'KRİTER':<22} | {ca['name']:<26} | {cb['name']:<26}")
+    print("-" * 84)
+    print(f" {'Plaka Kodu':<22} | {ca['plate']:02d}{'':<24} | {cb['plate']:02d}")
+    print(f" {'Coğrafi Bölge':<22} | {ca['region']:<26} | {cb['region']:<26}")
+    print(f" {'Ziyaret Durumu':<22} | {st_a:<25} | {st_b:<25}")
+    print(f" {'Miras Sayısı':<22} | {comp['landmarks_a_count']} durak{'':<19} | {comp['landmarks_b_count']} durak")
+    print(f" {'Yöresel Lezzet Sayısı':<22} | {comp['specialties_a_count']} lezzet{'':<18} | {comp['specialties_b_count']} lezzet")
+    print("-" * 84)
+    print(f" ✈️  Kuş Uçuşu Mesafe   : {comp['air_distance_km']} km")
+    print(f" 🛣️  Tahmini Karayolu   : {comp['road_distance_km']} km (~{comp['est_drive_hours']} saat sürüş)")
+    print(f" 🗺️  Bölge Ortaklığı    : {same_reg_str}")
+    print("-" * 84)
+    print(f" 🏛️  {ca['name']} Mirasları : {', '.join(ca.get('landmarks', []))}")
+    print(f" 🏛️  {cb['name']} Mirasları : {', '.join(cb.get('landmarks', []))}")
+    print(f" 🍽️  {ca['name']} Lezzetleri: {', '.join(ca.get('specialties', []))}")
+    print(f" 🍽️  {cb['name']} Lezzetleri: {', '.join(cb.get('specialties', []))}")
+    print(f" 📖 {ca['name']} Kütüphane : {ca.get('custom_library', ca.get('library', ''))}")
+    print(f" 📖 {cb['name']} Kütüphane : {cb.get('custom_library', cb.get('library', ''))}")
+    print("=" * 84 + "\n")
+
+
+def cmd_region(args):
+    print_banner()
+    engine = SeyyahEngine()
+    summary = engine.get_region_summary(args.region)
+    if not summary:
+        print(f"✗ '{args.region}' koduna veya adına sahip coğrafi bölge bulunamadı.\n")
+        return
+
+    print("=" * 82)
+    print(f" {summary['icon']} {summary['name'].upper()} KEŞİF DOSYASI ({summary['region_code']})")
+    print("=" * 82)
+    print(f" 📜 {summary['desc']}")
+    print("-" * 82)
+    print(f" 📊 Keşif Oranı         : %{summary['percentage']} ({summary['visited']} / {summary['total']} İl Ziyaret Edildi, {summary['unvisited']} Bekleyen)")
+    print(f" 🏛️  Toplam Miras Durağı : {summary['total_landmarks']} tarihi ve doğal miras")
+    print(f" 🍽️  Yöresel Lezzetler   : {summary['total_specialties']} tescilli/yöresel tat")
+    print("-" * 82)
+
+    visited_names = [f"{p['name']} ({p['plate']:02d})" for p in summary["visited_provinces"]]
+    unvisited_names = [f"{p['name']} ({p['plate']:02d})" for p in summary["unvisited_provinces"]]
+    print(f" ✅ Ziyaret Edilen İller ({summary['visited']}):")
+    print(f"    {', '.join(visited_names) if visited_names else 'Henüz ziyaret edilen il yok.'}\n")
+    print(f" ⏳ Keşfedilmeyi Bekleyen İller ({summary['unvisited']}):")
+    print(f"    {', '.join(unvisited_names) if unvisited_names else 'Bölgedeki tüm iller tamamlandı!'}")
+
+    corridor = summary.get("optimal_corridor", [])
+    if len(corridor) >= 2:
+        corridor_names = " ➔ ".join(f"{s['name']}" for s in corridor)
+        total_km = corridor[-1].get("cumulative_km", 0)
+        print("-" * 82)
+        print(f" 🧭 Önerilen Bölgesel Keşif Koridoru ({total_km:,} km):")
+        print(f"    {corridor_names}")
+    print("=" * 82 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Dijital Seyyah - Anadolu Seyahatnamesi CLI")
     subparsers = parser.add_subparsers(dest="command", help="Komutlar")
@@ -286,6 +367,7 @@ def main():
     p_route.add_argument("--stops", type=int, default=7, help="Durak sayısı")
     p_route.add_argument("--region", choices=list(REGIONS_INFO.keys()), help="Belirli bir bölgeye odaklan")
     p_route.add_argument("--no-optimize", action="store_true", help="2-Opt optimizasyonunu devre dışı bırak")
+    p_route.add_argument("--gpx", help="Planlanan rotayı GPX 1.1 (.gpx) dosyasına dışa aktar")
     p_route.set_defaults(func=cmd_plan_route)
 
     # export-book
@@ -306,6 +388,17 @@ def main():
     # badges
     p_badges = subparsers.add_parser("badges", help="Seyyah rütbesi ve başarım rozetlerini göster")
     p_badges.set_defaults(func=cmd_badges)
+
+    # compare
+    p_compare = subparsers.add_parser("compare", help="İki ili mesafe, bölge, miras ve lezzet açısından karşılaştır")
+    p_compare.add_argument("city_a", help="Birinci il adı veya plaka kodu (örn: Ankara, 06)")
+    p_compare.add_argument("city_b", help="İkinci il adı veya plaka kodu (örn: Konya, 42)")
+    p_compare.set_defaults(func=cmd_compare)
+
+    # region
+    p_region = subparsers.add_parser("region", help="Belirli bir coğrafi bölgenin detaylı keşif dosyasını göster")
+    p_region.add_argument("region", help="Bölge kodu veya adı (örn: 01_Marmara, Marmara, Karadeniz)")
+    p_region.set_defaults(func=cmd_region)
 
     args = parser.parse_args()
     if args.command and hasattr(args, "func"):

@@ -554,6 +554,75 @@
     return fallbackRenderMarkdown(md, esc);
   }
 
+  function dispatchRouteCities(ctx, provinceKeys, toastMsg) {
+    const uniqueKeys = [];
+    (provinceKeys || []).forEach(function (k) {
+      if (k && uniqueKeys.indexOf(k) === -1) uniqueKeys.push(k);
+    });
+    if (!uniqueKeys.length) return;
+    if (ctx && ctx.state) {
+      ctx.state.customRouteCities = uniqueKeys.slice();
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('seyyah_custom_route', JSON.stringify(uniqueKeys));
+      }
+    } catch (_) {}
+    if (ctx && typeof ctx.showToast === 'function' && toastMsg) {
+      ctx.showToast(toastMsg);
+    }
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.hash = '#route';
+    }
+  }
+
+  function copyCraftCardText(item, provName, showToast) {
+    if (!item) return;
+    const text = [
+      `${item.icon} ${item.title} (${item.cityName})`,
+      `Kategori: ${item.category} · Dönem: ${item.era}`,
+      `Tarihi Çarşı: ${item.bazaar}`,
+      `Hammadde & Teknik: ${item.material}`,
+      `Miras Statüsü: ${item.heritage}`,
+      `Hikâye: ${item.story}`,
+      `Ahîlik Notu: "${item.ahilikNote}"`,
+      `Gezi İpucu: ${item.visitTip}`,
+      `— Anadolu Seyahatnamesi · Dijital Seyyah (${provName})`
+    ].join('\n');
+
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(text).then(function () {
+        if (typeof showToast === 'function') {
+          showToast('📋 ' + item.title + ' bilgi kartı panoya kopyalandı!');
+        }
+      }).catch(function () {
+        fallbackCopy(text, item.title, showToast);
+      });
+    } else {
+      fallbackCopy(text, item.title, showToast);
+    }
+  }
+
+  function fallbackCopy(text, title, showToast) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (typeof showToast === 'function') {
+        showToast('📋 ' + title + ' bilgi kartı panoya kopyalandı!');
+      }
+    } catch (_) {
+      if (typeof showToast === 'function') {
+        showToast('⚠️ Pano kopyalaması bu tarayıcıda desteklenmiyor.');
+      }
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Module-scoped UI State
   // ---------------------------------------------------------------------------
@@ -1238,7 +1307,59 @@
         color: var(--text-secondary, #94a3b8);
       }
 
+      .sbz-route-cta {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 15px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 242, 254, 0.45);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.24), rgba(0, 242, 254, 0.22));
+        color: #ffffff;
+        font-family: var(--font-heading, inherit);
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .sbz-route-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(0, 242, 254, 0.24);
+        filter: brightness(1.08);
+      }
+
+      .sbz-btn-copy {
+        background: rgba(16, 185, 129, 0.14);
+        border: 1px solid rgba(16, 185, 129, 0.36);
+        color: #6ee7b7;
+      }
+
+      .sbz-btn-copy:hover {
+        background: rgba(16, 185, 129, 0.26);
+        border-color: #10b981;
+        color: #ffffff;
+      }
+
       /* Light Theme Overrides */
+      body.light-theme .sbz-route-cta {
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(2, 132, 199, 0.16));
+        border-color: rgba(2, 132, 199, 0.42);
+        color: #0f172a;
+      }
+
+      body.light-theme .sbz-btn-copy {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(5, 150, 105, 0.35);
+        color: #047857;
+      }
+
+      body.light-theme .sbz-btn-copy:hover {
+        background: rgba(16, 185, 129, 0.22);
+        color: #064e3b;
+      }
+
       body.light-theme .sbz-root {
         color: var(--text-primary, #0f172a);
       }
@@ -1549,6 +1670,7 @@
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button type="button" class="sbz-btn sbz-btn-city" data-sbz-goto="${esc(item.provinceKey)}">📍 Şehre Git (${esc(getProvinceName(item))})</button>
+              <button type="button" class="sbz-btn sbz-btn-copy" data-sbz-copy="${esc(item.id)}">📋 Zanaat Bilgi Kartı Kopyala</button>
               <button type="button" class="sbz-btn sbz-btn-ai" data-sbz-ai="${esc(item.id)}">✨ AI Usta Hikâyesi</button>
               <button type="button" class="sbz-btn sbz-btn-detail" data-sbz-close-detail="1">✕ Kapat</button>
             </div>
@@ -1627,6 +1749,7 @@
             <div class="sbz-card-actions">
               <button type="button" class="sbz-btn sbz-btn-city" data-sbz-goto="${esc(item.provinceKey)}" title="${esc(provName)} il sayfasına git">📍 Şehre Git</button>
               <button type="button" class="sbz-btn sbz-btn-detail" data-sbz-detail="${esc(item.id)}">🔍 Detay</button>
+              <button type="button" class="sbz-btn sbz-btn-copy" data-sbz-copy="${esc(item.id)}" title="Zanaat bilgi kartını panoya kopyala">📋 Bilgi Kartı Kopyala</button>
               <button type="button" class="sbz-btn sbz-btn-ai" data-sbz-ai="${esc(item.id)}">✨ Ustanın Hikâyesi</button>
             </div>
           </article>
@@ -1684,11 +1807,17 @@
       const list = getFilteredCrafts();
       const gridHost = container.querySelector('#sbz-grid-host');
       const countEl = container.querySelector('#sbz-results-count');
+      const routeBtn = container.querySelector('#sbz-build-route-btn');
       if (gridHost) {
         gridHost.innerHTML = buildCardsHtml(list);
       }
       if (countEl) {
         countEl.textContent = `${list.length} / ${totalCrafts} zanaat & tarihi çarşı listeleniyor`;
+      }
+      if (routeBtn) {
+        const uniqueProvs = new Set(list.map(function (c) { return c.provinceKey; }).filter(Boolean)).size;
+        routeBtn.disabled = uniqueProvs === 0;
+        routeBtn.textContent = '🧭 Tarihi Bedesten & Zanaat Rotası Oluştur (' + uniqueProvs + ' İl)';
       }
     }
 
@@ -1788,7 +1917,17 @@
 
             <div class="sbz-results-meta">
               <span id="sbz-results-count">${filtered.length} / ${totalCrafts} zanaat &amp; tarihi çarşı listeleniyor</span>
-              ${hasActiveFilters ? '<button type="button" class="sbz-reset-btn" data-sbz-reset="1">✕ Filtreleri Temizle</button>' : ''}
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button
+                  type="button"
+                  id="sbz-build-route-btn"
+                  class="sbz-route-cta"
+                  ${filtered.length ? '' : 'disabled'}
+                >
+                  🧭 Tarihi Bedesten &amp; Zanaat Rotası Oluştur (${new Set(filtered.map(function (c) { return c.provinceKey; }).filter(Boolean)).size} İl)
+                </button>
+                ${hasActiveFilters ? '<button type="button" class="sbz-reset-btn" data-sbz-reset="1">✕ Filtreleri Temizle</button>' : ''}
+              </div>
             </div>
           </section>
 
@@ -2018,6 +2157,35 @@
           uiState.visitedOnly = false;
           uiState.searchQuery = '';
           paint();
+          return;
+        }
+
+        const routeCtaBtn = target.closest('#sbz-build-route-btn');
+        if (routeCtaBtn) {
+          const list = getFilteredCrafts();
+          const keys = [];
+          list.forEach(function (c) {
+            if (c.provinceKey && keys.indexOf(c.provinceKey) === -1) {
+              keys.push(c.provinceKey);
+            }
+          });
+          if (keys.length) {
+            dispatchRouteCities(
+              safeCtx,
+              keys,
+              '🧭 ' + keys.length + ' illik Tarihi Bedesten & Zanaat rotası oluşturuldu!'
+            );
+          }
+          return;
+        }
+
+        const copyBtn = target.closest('[data-sbz-copy]');
+        if (copyBtn) {
+          const craftId = copyBtn.getAttribute('data-sbz-copy');
+          const craftItem = craftId ? CRAFT_BY_ID.get(craftId) : null;
+          if (craftItem) {
+            copyCraftCardText(craftItem, getProvinceName(craftItem), safeCtx.showToast);
+          }
           return;
         }
 

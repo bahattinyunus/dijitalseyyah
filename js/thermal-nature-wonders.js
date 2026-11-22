@@ -75,6 +75,64 @@
     CATEGORY_MAP[c.id] = c;
   });
 
+  const SEASONS = [
+    { id: 'all', label: '🗓️ Tüm Mevsimler' },
+    { id: 'ilkbahar', label: '🌸 İlkbahar' },
+    { id: 'yaz', label: '☀️ Yaz' },
+    { id: 'sonbahar', label: '🍂 Sonbahar' },
+    { id: 'kis', label: '❄️ Kış' }
+  ];
+
+  function matchesSeason(wonder, seasonId, normFn) {
+    if (!seasonId || seasonId === 'all') return true;
+    const raw = normFn((wonder && wonder.season) || '');
+    if (!raw) return true;
+    if (raw.indexOf('4 mevsim') !== -1 || raw.indexOf('yil boyu') !== -1) return true;
+    if (seasonId === 'ilkbahar') {
+      return raw.indexOf('ilkbahar') !== -1 || raw.indexOf('nisan') !== -1 || raw.indexOf('mayis') !== -1 || raw.indexOf('mart') !== -1;
+    }
+    if (seasonId === 'yaz') {
+      return (
+        raw.indexOf('yaz') !== -1 ||
+        raw.indexOf('haziran') !== -1 ||
+        raw.indexOf('temmuz') !== -1 ||
+        raw.indexOf('agustos') !== -1 ||
+        raw.indexOf('mayis') !== -1 ||
+        raw.indexOf('nisan') !== -1 ||
+        (raw.indexOf('ilkbahar') !== -1 && raw.indexOf('sonbahar') !== -1 && raw.indexOf('&') === -1)
+      );
+    }
+    if (seasonId === 'sonbahar') {
+      return raw.indexOf('sonbahar') !== -1 || raw.indexOf('eylul') !== -1 || raw.indexOf('ekim') !== -1 || raw.indexOf('kasim') !== -1;
+    }
+    if (seasonId === 'kis') {
+      return raw.indexOf('kis') !== -1 || raw.indexOf('aralik') !== -1 || raw.indexOf('ocak') !== -1 || raw.indexOf('subat') !== -1;
+    }
+    return true;
+  }
+
+  function dispatchRouteCities(ctx, provinceKeys, toastMsg) {
+    const uniqueKeys = [];
+    (provinceKeys || []).forEach(function (k) {
+      if (k && uniqueKeys.indexOf(k) === -1) uniqueKeys.push(k);
+    });
+    if (!uniqueKeys.length) return;
+    if (ctx && ctx.state) {
+      ctx.state.customRouteCities = uniqueKeys.slice();
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('seyyah_custom_route', JSON.stringify(uniqueKeys));
+      }
+    } catch (_) {}
+    if (ctx && typeof ctx.showToast === 'function' && toastMsg) {
+      ctx.showToast(toastMsg);
+    }
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.hash = '#route';
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Philosophical Section: "Âfâkî Tefekkür: Tabiat Kitabını Okumak (Kâinat Âyetleri)"
   // ---------------------------------------------------------------------------
@@ -1509,7 +1567,54 @@
         gap: 12px;
       }
 
+      .tnw-chip.active-season {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.24), rgba(16, 185, 129, 0.2));
+        border-color: var(--accent-gold, #f59e0b);
+        color: #fef3c7;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.22);
+      }
+
+      .tnw-route-cta {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 15px;
+        border-radius: 999px;
+        border: 1px solid rgba(16, 185, 129, 0.48);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.24), rgba(6, 182, 212, 0.22));
+        color: #ffffff;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .tnw-route-cta:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.24);
+        filter: brightness(1.08);
+      }
+
+      .tnw-route-cta:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       /* Light Theme Compatibility */
+      body.light-theme .tnw-chip.active-season {
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(5, 150, 105, 0.14));
+        border-color: #d97706;
+        color: #78350f;
+      }
+
+      body.light-theme .tnw-route-cta {
+        background: linear-gradient(135deg, rgba(5, 150, 105, 0.18), rgba(2, 132, 199, 0.16));
+        border-color: rgba(5, 150, 105, 0.42);
+        color: #064e3b;
+      }
+
       body.light-theme .tnw-studio {
         color: var(--text-primary, #0f172a);
       }
@@ -1929,6 +2034,7 @@
     const uiState = {
       category: 'all',
       region: 'all',
+      season: 'all',
       search: '',
       onlyVisited: 'all', // 'all' | 'visited' | 'pending'
       pillarId: TEFEKKUR_PILLARS[0].id,
@@ -1957,6 +2063,7 @@
       return enrichedWonders.filter(function (w) {
         if (uiState.category !== 'all' && w.category !== uiState.category) return false;
         if (uiState.region !== 'all' && w.regionCode !== uiState.region) return false;
+        if (uiState.season !== 'all' && !matchesSeason(w, uiState.season, norm)) return false;
         if (uiState.onlyVisited === 'visited' && !w.visited) return false;
         if (uiState.onlyVisited === 'pending' && w.visited) return false;
 
@@ -1969,6 +2076,7 @@
               w.district,
               w.featureType,
               w.metric,
+              w.season,
               w.summary,
               w.tefekkurNote,
               w.highlights.join(' '),
@@ -1986,6 +2094,7 @@
       let visitedWonders = 0;
       const catCounts = { all: enrichedWonders.length };
       const regCounts = { all: enrichedWonders.length };
+      const seasonCounts = { all: enrichedWonders.length };
 
       CATEGORIES.forEach(function (c) {
         if (c.id !== 'all') catCounts[c.id] = 0;
@@ -1993,12 +2102,20 @@
       REGIONS.forEach(function (r) {
         if (r.code !== 'all') regCounts[r.code] = 0;
       });
+      SEASONS.forEach(function (s) {
+        if (s.id !== 'all') seasonCounts[s.id] = 0;
+      });
 
       enrichedWonders.forEach(function (w) {
         uniqueProvinces.add(w.provinceKey);
         if (w.visited) visitedWonders += 1;
         catCounts[w.category] = (catCounts[w.category] || 0) + 1;
         regCounts[w.regionCode] = (regCounts[w.regionCode] || 0) + 1;
+        SEASONS.forEach(function (s) {
+          if (s.id !== 'all' && matchesSeason(w, s.id, norm)) {
+            seasonCounts[s.id] = (seasonCounts[s.id] || 0) + 1;
+          }
+        });
       });
 
       // Southeast region has complementary inventory highlights
@@ -2009,7 +2126,8 @@
         uniqueProvinces: uniqueProvinces.size,
         visitedWonders: visitedWonders,
         catCounts: catCounts,
-        regCounts: regCounts
+        regCounts: regCounts,
+        seasonCounts: seasonCounts
       };
     }
 
@@ -2151,12 +2269,33 @@
     function updateGrid() {
       const gridWrap = container.querySelector('#tnw-grid-container');
       const countEl = container.querySelector('#tnw-results-count');
+      const routeCtaBtn = container.querySelector('#tnw-build-route-btn');
       if (!gridWrap) return;
 
       const filtered = getFilteredWonders();
+      const routeSourceKeys = [];
+      if (uiState.region === '07_GuneydoguAnadolu' && filtered.length === 0) {
+        SOUTHEAST_COMPLEMENTARY.forEach(function (item) {
+          if (item.provinceKey && provinces[item.provinceKey] && routeSourceKeys.indexOf(item.provinceKey) === -1) {
+            routeSourceKeys.push(item.provinceKey);
+          }
+        });
+      } else {
+        filtered.forEach(function (w) {
+          if (w.provinceKey && routeSourceKeys.indexOf(w.provinceKey) === -1) {
+            routeSourceKeys.push(w.provinceKey);
+          }
+        });
+      }
+
       if (countEl) {
         countEl.textContent =
           filtered.length + ' tabiat & şifa harikası listeleniyor (Toplam ' + WONDERS.length + ' kürasyon)';
+      }
+
+      if (routeCtaBtn) {
+        routeCtaBtn.disabled = routeSourceKeys.length === 0;
+        routeCtaBtn.textContent = '🧭 Seçili Tabiat Harikalarından Rota Oluştur (' + routeSourceKeys.length + ' İl)';
       }
 
       if (uiState.region === '07_GuneydoguAnadolu' && filtered.length === 0) {
@@ -2490,9 +2629,24 @@
             }).join('') +
           '</div>' +
 
+          '<div class="tnw-chip-bar" id="tnw-season-chips">' +
+            '<span class="tnw-chip-label">Mevsim:</span>' +
+            SEASONS.map(function (s) {
+              return (
+                '<button type="button" class="tnw-chip ' + (s.id === 'all' ? 'active-season' : '') + '" data-season="' + esc(s.id) + '">' +
+                  esc(s.label) +
+                  '<span class="tnw-chip-count">' + (stats.seasonCounts[s.id] || 0) + '</span>' +
+                '</button>'
+              );
+            }).join('') +
+          '</div>' +
+
           '<div class="tnw-results-meta">' +
             '<span id="tnw-results-count"></span>' +
-            '<button type="button" id="tnw-reset-filters" class="tnw-mini-btn">↺ Filtreleri Sıfırla</button>' +
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+              '<button type="button" id="tnw-build-route-btn" class="tnw-route-cta">🧭 Seçili Tabiat Harikalarından Rota Oluştur</button>' +
+              '<button type="button" id="tnw-reset-filters" class="tnw-mini-btn">↺ Filtreleri Sıfırla</button>' +
+            '</div>' +
           '</div>' +
         '</section>' +
 
@@ -2614,10 +2768,49 @@
       });
     });
 
+    container.querySelectorAll('#tnw-season-chips .tnw-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        uiState.season = chip.getAttribute('data-season') || 'all';
+        container.querySelectorAll('#tnw-season-chips .tnw-chip').forEach(function (c) {
+          c.classList.toggle('active-season', c === chip);
+        });
+        updateGrid();
+      });
+    });
+
+    const buildRouteBtn = container.querySelector('#tnw-build-route-btn');
+    if (buildRouteBtn) {
+      buildRouteBtn.addEventListener('click', function () {
+        const filtered = getFilteredWonders();
+        const keys = [];
+        if (uiState.region === '07_GuneydoguAnadolu' && filtered.length === 0) {
+          SOUTHEAST_COMPLEMENTARY.forEach(function (item) {
+            if (item.provinceKey && provinces[item.provinceKey] && keys.indexOf(item.provinceKey) === -1) {
+              keys.push(item.provinceKey);
+            }
+          });
+        } else {
+          filtered.forEach(function (w) {
+            if (w.provinceKey && keys.indexOf(w.provinceKey) === -1) {
+              keys.push(w.provinceKey);
+            }
+          });
+        }
+        if (keys.length) {
+          dispatchRouteCities(
+            safeCtx,
+            keys,
+            '🧭 ' + keys.length + ' illik Tabiat & Şifa rotası oluşturuldu!'
+          );
+        }
+      });
+    }
+
     if (resetBtn) {
       resetBtn.addEventListener('click', function () {
         uiState.category = 'all';
         uiState.region = 'all';
+        uiState.season = 'all';
         uiState.search = '';
         uiState.onlyVisited = 'all';
         if (searchInput) searchInput.value = '';
@@ -2627,6 +2820,9 @@
         });
         container.querySelectorAll('#tnw-region-chips .tnw-chip').forEach(function (c) {
           c.classList.toggle('active-region', c.getAttribute('data-region') === 'all');
+        });
+        container.querySelectorAll('#tnw-season-chips .tnw-chip').forEach(function (c) {
+          c.classList.toggle('active-season', c.getAttribute('data-season') === 'all');
         });
         updateGrid();
       });

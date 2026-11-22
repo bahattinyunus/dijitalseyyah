@@ -192,7 +192,11 @@
     draftText: '',
     isStreaming: false,
     streamRunId: 0,
-    conversations: {}
+    conversations: {},
+    musavereMode: false,
+    musavereQuestion: '',
+    musavereLoading: false,
+    musavereResult: null // { question, cityLabel, source, cards: { [sageId]: md }, hulasa: md }
   };
 
   function getPersona(sageId) {
@@ -1641,6 +1645,174 @@
         background: rgba(239, 68, 68, 0.1);
       }
 
+      /* Meclis Müşaveresi (5 Bilge Ortak Divanı) */
+      .hm-musavere-toggle {
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 15px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #0f172a;
+        background: linear-gradient(135deg, #fbbf24, #00f2fe);
+        border: none;
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.22);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .hm-musavere-toggle:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(0, 242, 254, 0.28);
+      }
+      .hm-musavere-toggle.active {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fde68a;
+        border: 1px solid rgba(245, 158, 11, 0.48);
+        box-shadow: none;
+      }
+
+      .hm-musavere-studio {
+        border-radius: 20px;
+        padding: 20px 22px;
+        background: var(--bg-card, rgba(20, 30, 52, 0.78));
+        border: 1px solid rgba(245, 158, 11, 0.32);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .hm-musavere-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .hm-musavere-head h2 {
+        margin: 0 0 4px;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.2rem;
+        font-weight: 800;
+      }
+
+      .hm-musavere-head p {
+        margin: 0;
+        font-size: 0.86rem;
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      .hm-musavere-form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .hm-musavere-form .hm-input {
+        flex: 1 1 320px;
+        min-height: 44px;
+      }
+
+      .hm-musavere-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .hm-musavere-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+
+      .hm-musavere-card {
+        border-radius: 16px;
+        padding: 15px 16px;
+        background: rgba(15, 23, 42, 0.56);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        border-top: 3px solid var(--hm-card-accent, #f59e0b);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .hm-musavere-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .hm-musavere-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-weight: 700;
+        font-size: 0.96rem;
+      }
+
+      .hm-musavere-card-body {
+        font-size: 0.86rem;
+        line-height: 1.62;
+        color: var(--text-secondary, #cbd5e1);
+      }
+
+      .hm-musavere-hulasa {
+        border-radius: 16px;
+        padding: 16px 18px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(0, 242, 254, 0.1));
+        border: 1px solid rgba(245, 158, 11, 0.38);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .hm-musavere-hulasa-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-weight: 800;
+        font-size: 0.98rem;
+      }
+
+      body.light-theme .hm-musavere-toggle.active {
+        color: #92400e;
+        background: rgba(245, 158, 11, 0.16);
+      }
+
+      body.light-theme .hm-musavere-studio {
+        background: #ffffff;
+        border-color: rgba(180, 83, 9, 0.25);
+        color: #0f172a;
+      }
+
+      body.light-theme .hm-musavere-card {
+        background: #f8fafc;
+        border-color: rgba(15, 23, 42, 0.1);
+        color: #0f172a;
+      }
+
+      body.light-theme .hm-musavere-card-head {
+        border-bottom-color: rgba(15, 23, 42, 0.08);
+      }
+
+      body.light-theme .hm-musavere-card-body {
+        color: #334155;
+      }
+
+      body.light-theme .hm-musavere-hulasa {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(2, 132, 199, 0.08));
+        color: #0f172a;
+      }
+
       /* Responsive Breakpoints */
       @media (max-width: 1180px) {
         .hm-sage-grid {
@@ -1701,6 +1873,67 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Meclis Müşaveresi (5 Bilge Ortak Divanı) — Offline Synthesis & Live Parser
+  // ---------------------------------------------------------------------------
+  function buildMusavereOfflineResponses(question, cityObj, ctx) {
+    const cards = {};
+    SAGES.forEach((sage) => {
+      cards[sage.id] = buildTopicOfflineResponse(sage, question, cityObj, ctx);
+    });
+    const citySuffix = cityObj ? ` (${cityObj.name} bağlamında)` : '';
+    const hulasa =
+      `Beş kadim bilge **“${question}”** sualine${citySuffix} kendi meşreplerinden bakarak ortak bir pusula çizdi:\n\n` +
+      `- **Evliya Çelebi** gözlemin hayretini ve şehirlerin canlı ruhunu;\n` +
+      `- **İbn Battûta** gurbette kardeşliği, kervansaray adabını ve ilim meclislerini;\n` +
+      `- **İbnü’l-Arabî** zahirî adımın batınî sırrını ve perdelerin kalkışını (*isfâr*);\n` +
+      `- **Yunus Emre** tevazuyu, duru dili ve gönül yapmayı;\n` +
+      `- **İbn Haldûn** ise coğrafya, umran ve irade disiplinini öne çıkardı.\n\n` +
+      `> *Ortak Hülâsa: Hakiki sefer; gözle ibret almak, kalple derinleşmek ve akılla medeniyeti okumak arasında kurulan ahenktir.*`;
+    return {
+      question: question,
+      cityLabel: cityObj ? `${cityObj.name} (${formatPlate(cityObj.plate)})` : 'Anadolu Geneli',
+      source: 'archive',
+      model: '',
+      cards: cards,
+      hulasa: hulasa
+    };
+  }
+
+  function parseMusavereAiResponse(rawText, fallbackObj) {
+    const tags = [
+      { id: 'evliya', marker: '===EVLIYA===' },
+      { id: 'ibn_battuta', marker: '===IBN_BATTUTA===' },
+      { id: 'ibn_arabi', marker: '===IBN_ARABI===' },
+      { id: 'yunus', marker: '===YUNUS===' },
+      { id: 'ibn_haldun', marker: '===IBN_HALDUN===' },
+      { id: 'hulasa', marker: '===HULASA===' }
+    ];
+    const text = String(rawText || '');
+    const positions = tags
+      .map((t) => ({ id: t.id, marker: t.marker, idx: text.indexOf(t.marker) }))
+      .filter((p) => p.idx >= 0)
+      .sort((a, b) => a.idx - b.idx);
+
+    const cards = Object.assign({}, fallbackObj.cards);
+    let hulasa = fallbackObj.hulasa;
+
+    for (let i = 0; i < positions.length; i++) {
+      const cur = positions[i];
+      const start = cur.idx + cur.marker.length;
+      const end = i + 1 < positions.length ? positions[i + 1].idx : text.length;
+      const slice = text.slice(start, end).trim();
+      if (slice) {
+        if (cur.id === 'hulasa') {
+          hulasa = slice;
+        } else {
+          cards[cur.id] = slice;
+        }
+      }
+    }
+    return { cards: cards, hulasa: hulasa };
+  }
+
+  // ---------------------------------------------------------------------------
   // Main Studio Renderer
   // ---------------------------------------------------------------------------
   function render(container, ctx) {
@@ -1731,6 +1964,120 @@
       });
     }
 
+    function buildMusavereHtml(cityPromptLabel) {
+      const res = uiState.musavereResult;
+      const sampleQuestions = [
+        'Yolculuk insanın nefsini nasıl terbiye eder?',
+        'Bir şehirde 5 gün kalmanın hikmeti nedir?',
+        'Modern çağda kalabalık içinde yalnızlık (Halvet der Encümen) nasıl korunur?',
+        selectedCity ? `${selectedCity.name} şehrinin ruhunu kendi üslubunla anlat` : cityPromptLabel
+      ];
+
+      return `
+        <section class="hm-musavere-studio" aria-label="Meclis Müşaveresi — 5 Bilge Ortak Divanı">
+          <div class="hm-musavere-head">
+            <div>
+              <h2>🤝 Meclis Müşaveresi (5 Bilge Ortak Divanı)</h2>
+              <p>
+                Tek bir sual sor; <strong>Evliya Çelebi</strong>, <strong>İbn Battûta</strong>, <strong>İbnü’l-Arabî</strong>,
+                <strong>Yunus Emre</strong> ve <strong>İbn Haldûn</strong> yan yana kendi meşreplerinden cevaplasın.
+                ${selectedCity ? ` · 📍 Aktif Şehir Bağlamı: <strong>${esc(ctx, selectedCity.name)}</strong>` : ''}
+              </p>
+            </div>
+            <span class="hm-msg-source ${liveKeyReady ? '' : 'offline'}">
+              ${liveKeyReady ? '⚡ Canlı Gemini Müşaveresi' : '📜 Çevrimdışı Klasik Sentez Motoru'}
+            </span>
+          </div>
+
+          <div class="hm-musavere-form">
+            <input
+              type="text"
+              id="hm-musavere-input"
+              class="hm-input"
+              placeholder="Beş bilgenin aynı anda istişare etmesini istediğin soruyu yaz..."
+              value="${esc(ctx, uiState.musavereQuestion)}"
+              ${uiState.musavereLoading ? 'disabled' : ''}
+            />
+            <button
+              type="button"
+              id="hm-musavere-submit"
+              class="hm-send-btn"
+              ${uiState.musavereLoading ? 'disabled' : ''}
+            >
+              ${uiState.musavereLoading ? '⏳ 5 Bilge İstişare Ediyor...' : '🤝 5 Bilgeye Sor'}
+            </button>
+          </div>
+
+          <div class="hm-musavere-chips">
+            ${sampleQuestions.map((q) => `
+              <button
+                type="button"
+                class="hm-prompt-chip"
+                data-hm-musavere-sample="${esc(ctx, q)}"
+                ${uiState.musavereLoading ? 'disabled' : ''}
+              >✨ ${esc(ctx, q)}</button>
+            `).join('')}
+          </div>
+
+          ${
+            uiState.musavereLoading
+              ? `<div class="hm-musavere-hulasa"><strong>⏳ Beş kadim bilge sorunuzu tefekkür ediyor...</strong></div>`
+              : res
+                ? `
+                  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                    <div style="font-size:0.88rem;">
+                      <strong>Sual:</strong> “${esc(ctx, res.question)}”
+                      <span style="opacity:0.75;">(${esc(ctx, res.cityLabel)})</span>
+                    </div>
+                    <button type="button" class="hm-mini-btn" id="hm-musavere-copy">📋 Tüm Müşavereyi Kopyala</button>
+                  </div>
+
+                  <div class="hm-musavere-grid">
+                    ${SAGES.map((sage) => `
+                      <article class="hm-musavere-card" style="--hm-card-accent:${esc(ctx, sage.accent)};">
+                        <div class="hm-musavere-card-head">
+                          <span class="hm-musavere-card-title">${sage.icon} ${esc(ctx, sage.shortTitle)}</span>
+                          <span class="hm-sage-era">${esc(ctx, sage.era)}</span>
+                        </div>
+                        <div class="hm-musavere-card-body">
+                          ${renderMdSafe(res.cards[sage.id] || '', ctx)}
+                        </div>
+                      </article>
+                    `).join('')}
+                  </div>
+
+                  <div class="hm-musavere-hulasa">
+                    <div class="hm-musavere-hulasa-head">
+                      <span>🌟 Meclisin Ortak Hülâsası</span>
+                      <span class="hm-msg-source ${res.source === 'gemini' ? '' : 'offline'}">
+                        ${res.source === 'gemini' ? `⚡ Gemini AI${res.model ? ' · ' + esc(ctx, res.model) : ''}` : '📜 Kadim Külliyat Sentezi'}
+                      </span>
+                    </div>
+                    <div class="hm-musavere-card-body">
+                      ${renderMdSafe(res.hulasa, ctx)}
+                    </div>
+                  </div>
+                `
+                : `
+                  <div class="hm-musavere-grid">
+                    ${SAGES.map((sage) => `
+                      <article class="hm-musavere-card" style="--hm-card-accent:${esc(ctx, sage.accent)};">
+                        <div class="hm-musavere-card-head">
+                          <span class="hm-musavere-card-title">${sage.icon} ${esc(ctx, sage.shortTitle)}</span>
+                          <span class="hm-sage-era">${esc(ctx, sage.era)}</span>
+                        </div>
+                        <div class="hm-musavere-card-body">
+                          <em>${esc(ctx, sage.motto)}</em>
+                        </div>
+                      </article>
+                    `).join('')}
+                  </div>
+                `
+          }
+        </section>
+      `;
+    }
+
     function buildFullHtml() {
       const filteredProvs = getFilteredProvinces();
       const cityPromptLabel = selectedCity
@@ -1749,13 +2096,23 @@
                   seçtiğin şehrin tarihini, kütüphane sükûnetini ve yolun hikmetini kendi özgün üsluplarından dinle.
                 </p>
               </div>
-              <div class="hm-status-pill" title="${liveKeyReady ? 'Gemini API anahtarı aktif' : 'API anahtarı bulunamadı — Kadim Külliyat çevrimdışı modu aktif'}">
-                <span class="hm-status-dot ${liveKeyReady ? '' : 'offline'}"></span>
-                <span>${liveKeyReady ? 'Canlı AI Akışı Hazır' : 'Çevrimdışı Hikmet Modu'}</span>
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <button
+                  type="button"
+                  class="hm-musavere-toggle ${uiState.musavereMode ? 'active' : ''}"
+                  id="hm-toggle-musavere"
+                >
+                  ${uiState.musavereMode ? '← Tekil Bilge Sohbetine Dön' : '🤝 Meclis Müşaveresi (5 Bilge Ortak Divanı)'}
+                </button>
+                <div class="hm-status-pill" title="${liveKeyReady ? 'Gemini API anahtarı aktif' : 'API anahtarı bulunamadı — Kadim Külliyat çevrimdışı modu aktif'}">
+                  <span class="hm-status-dot ${liveKeyReady ? '' : 'offline'}"></span>
+                  <span>${liveKeyReady ? 'Canlı AI Akışı Hazır' : 'Çevrimdışı Hikmet Modu'}</span>
+                </div>
               </div>
             </div>
           </section>
 
+          ${uiState.musavereMode ? buildMusavereHtml(cityPromptLabel) : `
           <!-- 5 Sages + Council of Five Selector -->
           <section class="hm-sage-grid" aria-label="Bilge Seçimi">
             ${ALL_PERSONAS.map((sage) => {
@@ -1904,6 +2261,7 @@
               </div>
             </section>
           </div>
+          `}
         </div>
       `;
     }
@@ -2103,7 +2461,117 @@
       paint();
     }
 
+    async function handleMusavereSend(rawQuestion) {
+      const q = String(rawQuestion || '').trim();
+      if (!q || uiState.musavereLoading) return;
+
+      const cityObj = uiState.selectedCityKey ? provincesMap[uiState.selectedCityKey] : null;
+      uiState.musavereQuestion = q;
+      uiState.musavereLoading = true;
+      paint();
+
+      const offlineFallback = buildMusavereOfflineResponses(q, cityObj, ctx);
+
+      if (hasLiveAiKey()) {
+        try {
+          const cityCtxBlock = cityObj ? buildCityContextSummary(cityObj) : '';
+          const musavereSystem =
+            'Sen Anadolu Seyahatnamesi "Meclis Müşaveresi (5 Bilge Ortak Divanı)" yöneticisisin. ' +
+            'Kullanıcının sorusunu 5 kadim bilgenin HER BİRİ kendi özgün tarihî üslubuyla (3-4 yoğun, edebî Türkçe cümle) yanıtlamalı, ardından ortak bir hülâsa yazılmalı. ' +
+            'Çıktıyı TAM OLARAK şu ayraçlarla böl (başka ayraç veya önsöz ekleme):\n' +
+            '===EVLIYA===\n(Evliya Çelebi yanıtı)\n' +
+            '===IBN_BATTUTA===\n(İbn Battûta yanıtı)\n' +
+            '===IBN_ARABI===\n(Muhyiddin İbnü’l-Arabî yanıtı)\n' +
+            '===YUNUS===\n(Yunus Emre yanıtı)\n' +
+            '===IBN_HALDUN===\n(İbn Haldûn yanıtı)\n' +
+            '===HULASA===\n(2-3 cümlelik ortak sentez hikmet)';
+
+          const musaverePrompt =
+            (cityCtxBlock ? `[Şehir Bağlamı]\n${cityCtxBlock}\n\n` : '') +
+            `Kullanıcının Meclis Müşaveresi Suali: ${q}`;
+
+          const aiCall = typeof global.SEYYAH_AI.ask === 'function'
+            ? global.SEYYAH_AI.ask({ prompt: musaverePrompt, system: musavereSystem, temperature: 0.78, maxTokens: 1800 })
+            : global.SEYYAH_AI.stream({ prompt: musaverePrompt, system: musavereSystem, temperature: 0.78, maxTokens: 1800 });
+
+          const res = await aiCall;
+          const rawText = res && res.text ? res.text : '';
+          if (rawText.trim()) {
+            const parsed = parseMusavereAiResponse(rawText, offlineFallback);
+            uiState.musavereResult = {
+              question: q,
+              cityLabel: offlineFallback.cityLabel,
+              source: 'gemini',
+              model: (res && res.model) || '',
+              cards: parsed.cards,
+              hulasa: parsed.hulasa
+            };
+          } else {
+            uiState.musavereResult = offlineFallback;
+          }
+        } catch (_) {
+          uiState.musavereResult = offlineFallback;
+          notify(ctx, 'Canlı Gemini müşaveresi aksadı; Klasik Sentez Motoru sunuldu.', 'warning');
+        }
+      } else {
+        await new Promise((r) => setTimeout(r, 220));
+        uiState.musavereResult = offlineFallback;
+      }
+
+      uiState.musavereLoading = false;
+      paint();
+    }
+
     function bindEvents() {
+      // Toggle Meclis Müşaveresi (5 Bilge Ortak Divanı)
+      const toggleMusavereBtn = container.querySelector('#hm-toggle-musavere');
+      if (toggleMusavereBtn) {
+        toggleMusavereBtn.addEventListener('click', () => {
+          if (uiState.isStreaming) stopStreaming();
+          uiState.musavereMode = !uiState.musavereMode;
+          paint();
+        });
+      }
+
+      // Meclis Müşaveresi Controls
+      const musavereInput = container.querySelector('#hm-musavere-input');
+      const musavereSubmit = container.querySelector('#hm-musavere-submit');
+      if (musavereInput) {
+        musavereInput.addEventListener('input', () => {
+          uiState.musavereQuestion = musavereInput.value;
+        });
+        musavereInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            handleMusavereSend(musavereInput.value);
+          }
+        });
+      }
+      if (musavereSubmit) {
+        musavereSubmit.addEventListener('click', () => {
+          handleMusavereSend(musavereInput ? musavereInput.value : uiState.musavereQuestion);
+        });
+      }
+      container.querySelectorAll('[data-hm-musavere-sample]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const sampleQ = btn.getAttribute('data-hm-musavere-sample');
+          if (sampleQ) handleMusavereSend(sampleQ);
+        });
+      });
+      const musavereCopyBtn = container.querySelector('#hm-musavere-copy');
+      if (musavereCopyBtn) {
+        musavereCopyBtn.addEventListener('click', async () => {
+          const res = uiState.musavereResult;
+          if (!res) return;
+          const compiled =
+            `# 🤝 Meclis Müşaveresi: ${res.question}\n\n` +
+            SAGES.map((s) => `## ${s.icon} ${s.name}\n\n${res.cards[s.id] || ''}`).join('\n\n---\n\n') +
+            `\n\n---\n\n## 🌟 Meclisin Ortak Hülâsası\n\n${res.hulasa}`;
+          const ok = await copyToClipboard(compiled);
+          notify(ctx, ok ? '📋 5 Bilge müşaveresi panoya kopyalandı!' : 'Panoya kopyalanamadı.');
+        });
+      }
+
       // Sage selection
       container.querySelectorAll('[data-hm-sage]').forEach((btn) => {
         btn.addEventListener('click', () => {

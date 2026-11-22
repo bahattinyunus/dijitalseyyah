@@ -17,37 +17,41 @@
 
   const STYLE_ID = 'seyyah-halvet-styles';
   const JOURNAL_ENTRIES_STORAGE = 'dijital_seyyah_journal_entries';
+  const HALVET_MINUTES_STORAGE = 'dijital_seyyah_halvet_minutes_v1';
   const GEMINI_KEY_STORAGE = 'dijital_seyyah_gemini_api_key';
   const GEMINI_MODEL_STORAGE = 'dijital_seyyah_gemini_model';
   const NEY_AUDIO_SRC = 'assets/ney_tasavvuf.mp3';
 
   // ---------------------------------------------------------------------------
-  // Breathing Rhythms (Default: 4-4-6 Sükûnet)
+  // 3 Breathing Cadence Modes
   // ---------------------------------------------------------------------------
   const BREATH_RHYTHMS = [
     {
-      id: 'sukunet-446',
-      label: '4 • 4 • 6 Sükûnet',
-      tagline: '4 sn Nefes Al • 4 sn Tut • 6 sn Yavaşça Ver',
+      id: 'kutu-4444',
+      label: '4-4-4-4 Kutu Nefesi',
+      tagline: '4 sn Nefes Al • 4 sn Tut • 4 sn Yavaşça Ver • 4 sn Sükûtta Kal',
       inhale: 4,
       hold: 4,
-      exhale: 6
+      exhale: 4,
+      holdAfter: 4
     },
     {
-      id: 'uzlet-478',
-      label: '4 • 7 • 8 Uzlet',
+      id: 'sukunet-478',
+      label: '4-7-8 Sükûnet Nefesi',
       tagline: '4 sn Nefes Al • 7 sn Tut • 8 sn Yavaşça Ver',
       inhale: 4,
       hold: 7,
-      exhale: 8
+      exhale: 8,
+      holdAfter: 0
     },
     {
-      id: 'denge-444',
-      label: '4 • 4 • 4 Mîzan',
-      tagline: '4 sn Nefes Al • 4 sn Tut • 4 sn Yavaşça Ver',
-      inhale: 4,
-      hold: 4,
-      exhale: 4
+      id: 'dergah-626',
+      label: '6-2-6 Dergâh Ritim Nefesi',
+      tagline: '6 sn Nefes Al • 2 sn Tut • 6 sn Yavaşça Ver',
+      inhale: 6,
+      hold: 2,
+      exhale: 6,
+      holdAfter: 0
     }
   ];
 
@@ -303,6 +307,7 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
   let ambientObserver = null;
   let fallbackAudio = null;
   let streamAbortController = null;
+  let fullscreenHandler = null;
 
   const ui = {
     // Breathing state
@@ -420,6 +425,39 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
     } catch (_) {
       return false;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Halvet Session Minutes Log (dijital_seyyah_halvet_minutes_v1)
+  // ---------------------------------------------------------------------------
+  function readHalvetLog() {
+    try {
+      const raw = localStorage.getItem(HALVET_MINUTES_STORAGE);
+      if (!raw) return { totalMinutes: 0, lastDate: '' };
+      const parsed = JSON.parse(raw);
+      if (typeof parsed === 'number' && Number.isFinite(parsed)) {
+        return { totalMinutes: Math.max(0, Math.floor(parsed)), lastDate: '' };
+      }
+      if (parsed && typeof parsed === 'object') {
+        return {
+          totalMinutes: Math.max(0, Math.floor(Number(parsed.totalMinutes) || 0)),
+          lastDate: typeof parsed.lastDate === 'string' ? parsed.lastDate : ''
+        };
+      }
+      return { totalMinutes: 0, lastDate: '' };
+    } catch (_) {
+      return { totalMinutes: 0, lastDate: '' };
+    }
+  }
+
+  function incrementHalvetMinute() {
+    const log = readHalvetLog();
+    log.totalMinutes += 1;
+    log.lastDate = new Date().toLocaleDateString('tr-TR');
+    try {
+      localStorage.setItem(HALVET_MINUTES_STORAGE, JSON.stringify(log));
+    } catch (_) {}
+    return log;
   }
 
   function matchProvinceFromText(text) {
@@ -1421,6 +1459,91 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
         background: rgba(245, 158, 11, 0.1);
       }
 
+      /* Live Visual Phase Cues & Total Halvet Log */
+      .hlv-phase-cues {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 2px;
+      }
+      .hlv-phase-cue {
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--hlv-border);
+        color: var(--hlv-text-muted);
+        transition: all 0.25s ease;
+      }
+      .hlv-phase-cue.active-inhale {
+        background: rgba(0, 242, 254, 0.18);
+        border-color: rgba(0, 242, 254, 0.55);
+        color: #67e8f9;
+        transform: scale(1.06);
+      }
+      .hlv-phase-cue.active-hold,
+      .hlv-phase-cue.active-holdAfter {
+        background: rgba(245, 158, 11, 0.2);
+        border-color: rgba(245, 158, 11, 0.55);
+        color: #fde68a;
+        transform: scale(1.06);
+      }
+      .hlv-phase-cue.active-exhale {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.55);
+        color: #6ee7b7;
+        transform: scale(1.06);
+      }
+
+      .hlv-total-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 13px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid var(--hlv-border-gold);
+        color: var(--hlv-gold);
+      }
+
+      .hlv-root:fullscreen,
+      .hlv-root:-webkit-full-screen {
+        max-width: none;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        padding: 24px 28px 40px;
+        background: radial-gradient(circle at 50% 20%, #0f1c34 0%, #070d19 72%);
+      }
+      body.light-theme .hlv-root:fullscreen,
+      body.light-theme .hlv-root:-webkit-full-screen {
+        background: radial-gradient(circle at 50% 20%, #f8fafc 0%, #e2e8f0 85%);
+      }
+      body.light-theme .hlv-phase-cue {
+        background: rgba(15, 23, 42, 0.05);
+        border-color: rgba(15, 23, 42, 0.12);
+        color: #475569;
+      }
+      body.light-theme .hlv-phase-cue.active-inhale {
+        color: #0369a1;
+      }
+      body.light-theme .hlv-phase-cue.active-hold,
+      body.light-theme .hlv-phase-cue.active-holdAfter {
+        color: #92400e;
+      }
+      body.light-theme .hlv-phase-cue.active-exhale {
+        color: #047857;
+      }
+      body.light-theme .hlv-total-pill {
+        color: #92400e;
+        background: rgba(245, 158, 11, 0.14);
+      }
+
       @media (max-width: 960px) {
         .hlv-grid,
         .hlv-ai-split {
@@ -1451,6 +1574,11 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
       ambientObserver.disconnect();
       ambientObserver = null;
     }
+    if (fullscreenHandler) {
+      document.removeEventListener('fullscreenchange', fullscreenHandler);
+      document.removeEventListener('webkitfullscreenchange', fullscreenHandler);
+      fullscreenHandler = null;
+    }
     if (streamAbortController) {
       try { streamAbortController.abort(); } catch (_) {}
       streamAbortController = null;
@@ -1478,6 +1606,7 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
     const currentRhythm = BREATH_RHYTHMS[ui.rhythmIndex] || BREATH_RHYTHMS[0];
     const currentHikmet = HIKMET_CORPUS[ui.hikmetIndex] || HIKMET_CORPUS[0];
     const currentTheme = TEFEKKUR_THEMES.find(t => t.id === ui.selectedThemeId) || TEFEKKUR_THEMES[0];
+    const halvetLog = readHalvetLog();
 
     container.innerHTML = `
       <div class="hlv-root ${ui.zenDim ? 'hlv-zen-dim' : ''}" id="hlv-root">
@@ -1496,8 +1625,14 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
             <button type="button" class="hlv-btn" id="hlv-btn-zen-dim">
               ${ui.zenDim ? '☀️ Işığı Aç' : '🕯️ Halvet Işığı'}
             </button>
-            <div class="hlv-session-pill" title="Halvet odasında geçirilen süre">
+            <button type="button" class="hlv-btn" id="hlv-btn-fullscreen">
+              ⛶ Tam Ekran Halvet Modu
+            </button>
+            <div class="hlv-session-pill" title="Bu oturumda Halvet odasında geçirilen süre">
               ⏳ <span id="hlv-session-clock">${formatMMSS(ui.sessionSeconds)}</span>
+            </div>
+            <div class="hlv-total-pill" title="Tarayıcıda kayıtlı toplam Halvet tefekkür süresi (dijital_seyyah_halvet_minutes_v1)">
+              🕯️ Toplam: <span id="hlv-total-minutes">${halvetLog.totalMinutes}</span> dk
             </div>
           </div>
         </section>
@@ -1576,6 +1711,7 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
               </div>
 
               <div class="hlv-breath-tagline" id="hlv-breath-tagline">${esc(currentRhythm.tagline)}</div>
+              <div class="hlv-phase-cues" id="hlv-phase-cues"></div>
             </div>
 
             <div class="hlv-rhythm-pills" id="hlv-rhythm-pills">
@@ -1761,6 +1897,11 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
       ui.sessionSeconds += 1;
       const el = containerRef.querySelector('#hlv-session-clock');
       if (el) el.textContent = formatMMSS(ui.sessionSeconds);
+      if (ui.sessionSeconds > 0 && ui.sessionSeconds % 60 === 0) {
+        const updatedLog = incrementHalvetMinute();
+        const totEl = containerRef.querySelector('#hlv-total-minutes');
+        if (totEl) totEl.textContent = String(updatedLog.totalMinutes);
+      }
     }, 1000);
   }
 
@@ -1774,12 +1915,27 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
     const cycleEl = containerRef.querySelector('#hlv-cycle-stat');
     const toggleBtn = containerRef.querySelector('#hlv-btn-breath-toggle');
     const taglineEl = containerRef.querySelector('#hlv-breath-tagline');
+    const cuesEl = containerRef.querySelector('#hlv-phase-cues');
 
     const rhythm = BREATH_RHYTHMS[ui.rhythmIndex] || BREATH_RHYTHMS[0];
     if (taglineEl) taglineEl.textContent = rhythm.tagline;
     if (cycleEl) cycleEl.innerHTML = `Döngü: <strong>${ui.breathCycles}</strong>`;
     if (toggleBtn) {
       toggleBtn.textContent = ui.breathingRunning ? '⏸ Nefesi Duraklat' : '▶ Nefes Rehberini Başlat';
+    }
+
+    if (cuesEl) {
+      const steps = [
+        { key: 'inhale', label: `↑ Nefes Al (${rhythm.inhale}s)` },
+        { key: 'hold', label: `◎ Tut (${rhythm.hold}s)` },
+        { key: 'exhale', label: `↓ Yavaşça Ver (${rhythm.exhale}s)` }
+      ];
+      if (rhythm.holdAfter && rhythm.holdAfter > 0) {
+        steps.push({ key: 'holdAfter', label: `◌ Sükûtta Kal (${rhythm.holdAfter}s)` });
+      }
+      cuesEl.innerHTML = steps
+        .map((st) => `<span class="hlv-phase-cue ${ui.phase === st.key ? 'active-' + st.key : ''}">${esc(st.label)}</span>`)
+        .join('');
     }
 
     let label = 'Hazır';
@@ -1806,6 +1962,12 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
       auraScale = 0.82;
       auraOpacity = 0.4;
       transitionSec = rhythm.exhale;
+    } else if (ui.phase === 'holdAfter') {
+      label = 'Sükûtta Kal';
+      scale = 0.84;
+      auraScale = 0.78;
+      auraOpacity = 0.35;
+      transitionSec = 0.6;
     }
 
     if (phaseLbl) phaseLbl.textContent = label;
@@ -1840,6 +2002,9 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
       ui.phaseTotal = rhythm.exhale;
       ui.phaseRemaining = rhythm.exhale;
       ui.starAngle += 22.5;
+    } else if (nextPhase === 'holdAfter') {
+      ui.phaseTotal = rhythm.holdAfter || 4;
+      ui.phaseRemaining = rhythm.holdAfter || 4;
     }
     paintBreathingVisuals();
   }
@@ -1860,12 +2025,15 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
       }
       if (!ui.breathingRunning) return;
 
+      const rhythm = BREATH_RHYTHMS[ui.rhythmIndex] || BREATH_RHYTHMS[0];
       ui.phaseRemaining -= 1;
       if (ui.phaseRemaining <= 0) {
         if (ui.phase === 'inhale') {
           advanceBreathPhase('hold');
         } else if (ui.phase === 'hold') {
           advanceBreathPhase('exhale');
+        } else if (ui.phase === 'exhale' && rhythm.holdAfter && rhythm.holdAfter > 0) {
+          advanceBreathPhase('holdAfter');
         } else {
           ui.breathCycles += 1;
           advanceBreathPhase('inhale');
@@ -1994,6 +2162,39 @@ Bugün hayatından veya zihninden bırakabileceğin tek bir fazlalığı düşü
         const root = container.querySelector('#hlv-root');
         if (root) root.classList.toggle('hlv-zen-dim', ui.zenDim);
         btnZenDim.textContent = ui.zenDim ? '☀️ Işığı Aç' : '🕯️ Halvet Işığı';
+      });
+    }
+
+    // Fullscreen Halvet Mode Toggle (requestFullscreen)
+    const btnFullscreen = container.querySelector('#hlv-btn-fullscreen');
+    if (btnFullscreen) {
+      const updateFsBtn = () => {
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        btnFullscreen.textContent = fsEl ? '✕ Tam Ekrandan Çık' : '⛶ Tam Ekran Halvet Modu';
+      };
+      fullscreenHandler = updateFsBtn;
+      document.addEventListener('fullscreenchange', updateFsBtn);
+      document.addEventListener('webkitfullscreenchange', updateFsBtn);
+      updateFsBtn();
+
+      btnFullscreen.addEventListener('click', () => {
+        const root = container.querySelector('#hlv-root');
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (fsEl) {
+          const exitFn = document.exitFullscreen || document.webkitExitFullscreen;
+          if (exitFn) {
+            Promise.resolve(exitFn.call(document)).catch(() => {});
+          }
+        } else if (root) {
+          const reqFn = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (reqFn) {
+            Promise.resolve(reqFn.call(root))
+              .then(() => notify('⛶ Tam Ekran Halvet Modu açıldı (ESC ile çıkabilirsiniz)'))
+              .catch(() => notify('⚠️ Tam ekran modu tarayıcı tarafından desteklenmiyor veya engellendi.'));
+          } else {
+            notify('⚠️ Tarayıcınız tam ekran modunu desteklemiyor.');
+          }
+        }
       });
     }
 

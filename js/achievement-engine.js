@@ -1632,6 +1632,92 @@
         color: var(--text-secondary, #cbd5e1);
       }
 
+      /* === CLOSEST NEXT BADGES BANNER === */
+      .ach-next-banner {
+        border-radius: 18px;
+        padding: 18px 20px;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(245, 158, 11, 0.14), transparent 50%),
+          radial-gradient(circle at 100% 100%, rgba(0, 242, 254, 0.12), transparent 50%),
+          var(--bg-card, rgba(15, 23, 42, 0.8));
+        border: 1px solid rgba(245, 158, 11, 0.34);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .ach-next-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .ach-next-card {
+        padding: 13px 14px;
+        border-radius: 13px;
+        background: rgba(15, 23, 42, 0.52);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+      }
+
+      .ach-next-card:hover {
+        border-color: rgba(245, 158, 11, 0.5);
+        transform: translateY(-2px);
+      }
+
+      .ach-next-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .ach-next-rank {
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(0, 242, 254, 0.14);
+        color: var(--accent-cyan, #00f2fe);
+        border: 1px solid rgba(0, 242, 254, 0.32);
+      }
+
+      .ach-next-title {
+        font-family: var(--font-heading, sans-serif);
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+        line-height: 1.25;
+      }
+
+      .ach-next-rem {
+        font-size: 0.76rem;
+        color: var(--text-secondary, #94a3b8);
+        line-height: 1.35;
+      }
+
+      body.light-theme .ach-next-banner {
+        background:
+          radial-gradient(circle at 0% 0%, rgba(217, 119, 6, 0.1), transparent 50%),
+          radial-gradient(circle at 100% 100%, rgba(2, 132, 199, 0.08), transparent 50%),
+          rgba(255, 255, 255, 0.94);
+        border-color: rgba(217, 119, 6, 0.35);
+      }
+
+      body.light-theme .ach-next-card {
+        background: rgba(248, 250, 252, 0.95);
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      @media (max-width: 960px) {
+        .ach-next-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       /* === LIGHT THEME OVERRIDES === */
       body.light-theme .ach-hero {
         background:
@@ -1744,6 +1830,51 @@
     const nextRankSummary = nextRank
       ? `Sonraki Rütbe: ${nextRank.icon} <strong>${safeEscape(nextRank.title, ctx)}</strong> (${metrics.visitedCount}/${nextRank.min} il • ${rankInfo.citiesToNext} il kaldı)`
       : `👑 <strong>Zirve Mertebe Tamamlandı!</strong> (81/81 İl)`;
+
+    // Top 3 locked badges closest to 100% completion
+    const closestLocked = badges
+      .filter((b) => !b.unlocked)
+      .slice()
+      .sort((a, b) => b.pct - a.pct || (a.target - a.current) - (b.target - b.current) || b.xp - a.xp)
+      .slice(0, 3);
+
+    const closestBannerHtml = closestLocked.length
+      ? `
+        <section class="ach-next-banner" aria-label="Sonraki Rozete En Yakın Hedefler">
+          <div class="ach-section-head" style="margin-bottom:0;">
+            <div class="ach-section-title">🏆 Sonraki Rozete En Yakın Hedefler</div>
+            <div class="ach-section-sub">%100’e en yakın ilk ${closestLocked.length} kilitli başarım</div>
+          </div>
+          <div class="ach-next-grid">
+            ${closestLocked.map((b, idx) => {
+              const rem = Math.max(1, b.target - b.current);
+              return `
+                <div class="ach-next-card">
+                  <div class="ach-next-top">
+                    <span class="ach-next-rank">#${idx + 1} • %${b.pct}</span>
+                    <span class="ach-xp-tag">+${b.xp} XP</span>
+                  </div>
+                  <div class="ach-next-title">${safeEscape(b.title, ctx)}</div>
+                  <div class="ach-prog-track">
+                    <div class="ach-prog-fill" style="width:${b.pct}%;background:${b.accent};"></div>
+                  </div>
+                  <div class="ach-next-rem">
+                    <strong>${b.current.toLocaleString('tr-TR')} / ${b.target.toLocaleString('tr-TR')}</strong> (${rem.toLocaleString('tr-TR')} kaldı) · ${safeEscape(b.unlockCondition, ctx)}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      `
+      : `
+        <section class="ach-next-banner" aria-label="Tüm Başarımlar Tamamlandı">
+          <div class="ach-section-head" style="margin-bottom:0;">
+            <div class="ach-section-title">🏆 Sonraki Rozete En Yakın Hedefler</div>
+            <div class="ach-section-sub">👑 Tebrikler! Tüm ${totalBadges} başarım eksiksiz açıldı!</div>
+          </div>
+        </section>
+      `;
 
     const ladderHtml = RANK_LADDER.map((tier, idx) => {
       const stateClass = idx < rankInfo.rankIndex
@@ -1881,6 +2012,8 @@
             <button type="button" class="ach-refresh-btn" id="ach-live-eval-btn">🔄 Canlı Değerlendir</button>
           </div>
         </section>
+
+        ${closestBannerHtml}
 
         <section class="ach-section-card">
           <div class="ach-section-head">

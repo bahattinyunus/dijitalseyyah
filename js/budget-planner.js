@@ -147,6 +147,92 @@
       .replace(/'/g, '&#39;');
   }
 
+  function fallbackNormalizeTr(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/İ/g, 'i')
+      .replace(/I/g, 'ı')
+      .toLowerCase()
+      .replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ş/g, 's')
+      .replace(/ü/g, 'u')
+      .trim();
+  }
+
+  function fallbackHaversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371.0;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function computeRouteSyncData(safeCtx) {
+    const rawCities =
+      (safeCtx && safeCtx.state && Array.isArray(safeCtx.state.customRouteCities) && safeCtx.state.customRouteCities) ||
+      (safeCtx && safeCtx.data && Array.isArray(safeCtx.data.custom_route) && safeCtx.data.custom_route) ||
+      [];
+    if (!rawCities.length) return null;
+
+    const provinces =
+      (safeCtx && safeCtx.data && safeCtx.data.provinces) ||
+      (typeof window !== 'undefined' && window.TRAVEL_DATA && window.TRAVEL_DATA.provinces) ||
+      {};
+    const normFn = typeof safeCtx.normalizeTurkish === 'function' ? safeCtx.normalizeTurkish : fallbackNormalizeTr;
+    const distFn = typeof safeCtx.calcDistKm === 'function' ? safeCtx.calcDistKm : fallbackHaversineKm;
+
+    const provList = Object.values(provinces);
+    const byNormName = new Map();
+    provList.forEach((p) => {
+      if (p && p.name) byNormName.set(normFn(p.name), p);
+    });
+
+    const matchedProvs = [];
+    rawCities.forEach((name) => {
+      const p = byNormName.get(normFn(name));
+      if (p) matchedProvs.push(p);
+    });
+
+    let airKm = 0;
+    for (let i = 1; i < matchedProvs.length; i++) {
+      const prev = matchedProvs[i - 1];
+      const curr = matchedProvs[i];
+      if (Number.isFinite(Number(prev.lat)) && Number.isFinite(Number(prev.lng)) && Number.isFinite(Number(curr.lat)) && Number.isFinite(Number(curr.lng))) {
+        airKm += distFn(Number(prev.lat), Number(prev.lng), Number(curr.lat), Number(curr.lng));
+      }
+    }
+
+    const roadKm = Math.round(airKm * 1.35);
+    const cityNames = matchedProvs.length ? matchedProvs.map((p) => p.name) : rawCities.slice();
+    return {
+      cityCount: cityNames.length,
+      days: cityNames.length * 5,
+      airKm: Math.round(airKm),
+      roadKm,
+      cityNames
+    };
+  }
+
+  function triggerMarkdownDownload(filename, content) {
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   function formatTL(amount) {
     const val = Math.round(Number(amount) || 0);
     return val.toLocaleString('tr-TR') + ' ₺';
@@ -233,6 +319,50 @@
         border-color: var(--accent-cyan, #00f2fe);
         background: rgba(0, 242, 254, 0.14);
         transform: translateY(-1px);
+      }
+
+      .bp-action-btn-sync {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(16, 185, 129, 0.2));
+        border-color: rgba(0, 242, 254, 0.45);
+        color: #ecfeff;
+      }
+
+      .bp-action-btn-md {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(79, 172, 254, 0.2));
+        border-color: rgba(168, 85, 247, 0.45);
+        color: #f5f3ff;
+      }
+
+      .bp-route-sync-banner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: var(--radius-md, 12px);
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.12), rgba(16, 185, 129, 0.1));
+        border: 1px solid rgba(0, 242, 254, 0.35);
+        font-size: 0.82rem;
+        color: var(--text-primary, #f8fafc);
+      }
+
+      .bp-route-sync-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .bp-route-sync-pill {
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(0, 242, 254, 0.3);
+        font-family: var(--font-heading, sans-serif);
+        font-weight: 700;
+        font-size: 0.76rem;
+        color: var(--accent-cyan, #00f2fe);
       }
 
       .bp-presets {
@@ -912,6 +1042,30 @@
         background: rgba(16, 185, 129, 0.14);
       }
 
+      body.light-theme .bp-action-btn-sync {
+        background: linear-gradient(135deg, #0284c7, #059669);
+        border-color: #0284c7;
+        color: #ffffff;
+      }
+
+      body.light-theme .bp-action-btn-md {
+        background: linear-gradient(135deg, #7c3aed, #2563eb);
+        border-color: #7c3aed;
+        color: #ffffff;
+      }
+
+      body.light-theme .bp-route-sync-banner {
+        background: linear-gradient(135deg, rgba(2, 132, 199, 0.1), rgba(16, 185, 129, 0.08));
+        border-color: rgba(2, 132, 199, 0.35);
+        color: #0f172a;
+      }
+
+      body.light-theme .bp-route-sync-pill {
+        background: #ffffff;
+        color: #0284c7;
+        border-color: rgba(2, 132, 199, 0.3);
+      }
+
       body.light-theme .bp-bar-track {
         background: rgba(15, 23, 42, 0.12);
       }
@@ -938,7 +1092,7 @@
   }
 
   function calculateBudget(state) {
-    const cities = Math.max(1, Math.min(20, Number(state.cities) || 9));
+    const cities = Math.max(1, Math.min(81, Number(state.cities) || 9));
     const daysPerCity = Math.max(1, Math.min(7, Number(state.daysPerCity) || 5));
     const totalDays = cities * daysPerCity;
     const totalNights = totalDays;
@@ -1074,17 +1228,82 @@
   }
 
   function buildSummaryText(calc, state) {
-    return [
+    const lines = [
       `💰 Anadolu Seyahatnamesi — Sefer Bütçe Simülasyonu`,
       `• Rota Ölçeği: ${calc.cities} İl × ${calc.daysPerCity} Gün = ${calc.totalDays} Gün`,
-      `• Kütüphane Mesaisi: ${formatNum(calc.libraryHours)} saat (${LIBRARY_HOURS_PER_DAY} saat/gün)`,
+      `• Kütüphane Mesaisi: ${formatNum(calc.libraryHours)} saat (${LIBRARY_HOURS_PER_DAY} saat/gün)`
+    ];
+    if (state.syncedRoute && state.syncedRoute.roadKm > 0) {
+      lines.push(`• Aktif Sefer Rotası: ${state.syncedRoute.cityNames.join(' ➔ ')} (~${formatNum(state.syncedRoute.roadKm)} km karayolu)`);
+    }
+    lines.push(
       `• Konaklama: ${calc.accommOpt.label} — ${formatTL(calc.costs.accomm)}`,
       `• Yemek & Çay: ${calc.foodOpt.label} — ${formatTL(calc.costs.food)}`,
       `• Ulaşım: ${calc.transportOpt.label} — ${formatTL(calc.costs.transport)}`,
       `• Müze & Şehir İçi (${state.muzeKart ? 'MüzeKart' : 'Normal Giriş'}): ${formatTL(calc.costs.museum)}`,
       `• TOPLAM BÜTÇE: ${formatTL(calc.totalCost)} (Günlük: ${formatTL(calc.costPerDay)})`,
       `• 💚 Standart Otel Turizmine Göre Tasarruf: ${formatTL(calc.totalSaved)} (%${calc.savedPct})`
-    ].join('\n');
+    );
+    return lines.join('\n');
+  }
+
+  function buildBudgetMarkdown(calc, state) {
+    const today = new Date().toISOString().slice(0, 10);
+    const lines = [
+      '# 💰 Anadolu Seyahatnamesi — Sefer Bütçe & Tasarruf Planı',
+      '',
+      `> **Tarih:** ${today} | **Rota Ölçeği:** ${calc.cities} İl × ${calc.daysPerCity} Gün = **${calc.totalDays} Gün**`,
+      `> **Kütüphane Çalışma Mesaisi:** ${formatNum(calc.libraryHours)} saat (${LIBRARY_HOURS_PER_DAY} saat/gün)`
+    ];
+
+    if (state.syncedRoute && state.syncedRoute.cityNames && state.syncedRoute.cityNames.length) {
+      lines.push(
+        `> **Eşitlenen Aktif Sefer Rotası (${state.syncedRoute.cityCount} İl):** ${state.syncedRoute.cityNames.join(' ➔ ')}`,
+        `> **Tahmini Karayolu Mesafesi:** ${formatNum(state.syncedRoute.roadKm)} km (Kuş uçuşu: ${formatNum(state.syncedRoute.airKm)} km)`
+      );
+    }
+
+    lines.push(
+      '',
+      '## 📊 Maliyet Dağılım Tablosu',
+      '',
+      '| Kalem | Seçenek / Detay | Formül | Tutar | Pay |',
+      '| :--- | :--- | :--- | ---: | ---: |'
+    );
+
+    CATEGORY_META.forEach((cat) => {
+      const amount = calc.costs[cat.key] || 0;
+      const pct = calc.totalCost > 0 ? Math.round((amount / calc.totalCost) * 100) : 0;
+      const optLabel =
+        cat.key === 'accomm'
+          ? calc.accommOpt.label
+          : cat.key === 'food'
+            ? calc.foodOpt.label
+            : cat.key === 'transport'
+              ? calc.transportOpt.label
+              : state.muzeKart
+                ? 'MüzeKart + Şehir İçi'
+                : 'Standart Giriş + Şehir İçi';
+      lines.push(
+        `| ${cat.icon} ${cat.label} | ${optLabel} | ${calc.formulas[cat.key]} | **${formatTL(amount)}** | ${amount === 0 ? 'Ücretsiz' : `%${pct}`} |`
+      );
+    });
+
+    lines.push(
+      `| **TOPLAM** | **${calc.cities} İl / ${calc.totalDays} Gün** | Günlük: ${formatTL(calc.costPerDay)} · İl başı: ${formatTL(calc.costPerCity)} | **${formatTL(calc.totalCost)}** | **%100** |`,
+      '',
+      '## 💚 GSB Seyahatsever KYK Tasarruf Kıyaslaması',
+      '',
+      `- **Senin Sefer Planın:** ${formatTL(calc.totalCost)}`,
+      `- **Standart Otel Turizmi (${formatTL(STANDARD_HOTEL_RATE)}/gece):** ${formatTL(calc.hotelBaselineTotal)}`,
+      `- **Net Tasarruf:** **${formatTL(calc.totalSaved)} (%${calc.savedPct})**`,
+      `- **Konaklama Tasarrufu:** ${formatTL(calc.accommSaved)} | **MüzeKart Tasarrufu:** ${formatTL(calc.muzeSaved)}`,
+      '',
+      '---',
+      '*Anadolu Seyahatnamesi · Dijital Seyyah Sefer Bütçe Simülatörü ile oluşturuldu.*'
+    );
+
+    return lines.join('\n');
   }
 
   function render(container, ctx) {
@@ -1103,7 +1322,8 @@
       foodId: 'esnaf',
       transportId: 'bus',
       muzeKart: true,
-      hoveredCat: null
+      hoveredCat: null,
+      syncedRoute: null
     };
 
     const statsNote = stats
@@ -1119,10 +1339,14 @@
             <p>Anadolu seferini il sayısı, 5 Gün Kuralı, GSB Seyahatsever KYK ve ulaşım tercihlerine göre canlı hesapla; standart otel turizmiyle kıyasla.</p>
           </div>
           <div class="bp-hero-actions">
+            <button type="button" class="bp-action-btn bp-action-btn-sync" data-bp-action="sync-route" title="Aktif sefer rotanızdaki il sayısı, 5 Gün Kuralı ve tahmini karayolu mesafesini otomatik aktar">📊 Aktif Sefer Rotamdan Hesapla</button>
+            <button type="button" class="bp-action-btn bp-action-btn-md" data-bp-action="download-md" title="Bütçe planını Markdown (.md) dosyası olarak indir">📥 Bütçe Planını Markdown İndir</button>
             <button type="button" class="bp-action-btn" data-bp-action="copy">📋 Özeti Kopyala</button>
             <button type="button" class="bp-action-btn" data-bp-action="reset">🔄 Varsayılana Dön</button>
           </div>
         </div>
+
+        <div data-bp-route-banner style="display:none;"></div>
 
         <div class="bp-presets" role="group" aria-label="Hızlı Sefer Şablonları">
           ${PRESETS.map((p) => `
@@ -1280,6 +1504,7 @@
     `;
 
     const outputEl = container.querySelector('[data-bp-output]');
+    const routeBannerEl = container.querySelector('[data-bp-route-banner]');
 
     function syncControlsAndOutput() {
       const calc = calculateBudget(state);
@@ -1289,9 +1514,39 @@
       const citiesSlider = container.querySelector('[data-bp-slider="cities"]');
       const daysSlider = container.querySelector('[data-bp-slider="daysPerCity"]');
       const muzeChk = container.querySelector('[data-bp-toggle="muzeKart"]');
-      if (citiesSlider && Number(citiesSlider.value) !== calc.cities) citiesSlider.value = String(calc.cities);
+      if (citiesSlider) {
+        if (calc.cities > Number(citiesSlider.max)) citiesSlider.max = String(calc.cities);
+        if (Number(citiesSlider.value) !== calc.cities) citiesSlider.value = String(calc.cities);
+      }
       if (daysSlider && Number(daysSlider.value) !== calc.daysPerCity) daysSlider.value = String(calc.daysPerCity);
       if (muzeChk) muzeChk.checked = Boolean(state.muzeKart);
+
+      if (routeBannerEl) {
+        if (state.syncedRoute && state.syncedRoute.cityCount > 0) {
+          const r = state.syncedRoute;
+          const previewChain =
+            r.cityNames.length > 6
+              ? `${r.cityNames.slice(0, 3).join(' ➔ ')} ➔ … ➔ ${r.cityNames.slice(-2).join(' ➔ ')}`
+              : r.cityNames.join(' ➔ ');
+          routeBannerEl.style.display = 'block';
+          routeBannerEl.innerHTML = `
+            <div class="bp-route-sync-banner">
+              <div>
+                <strong>🧭 Aktif Sefer Rotası Eşitlendi:</strong>
+                <span>${escapeHtml(previewChain)}</span>
+              </div>
+              <div class="bp-route-sync-meta">
+                <span class="bp-route-sync-pill">${formatNum(r.cityCount)} İl</span>
+                <span class="bp-route-sync-pill">${formatNum(r.days)} Gün (×5)</span>
+                <span class="bp-route-sync-pill">🛣️ ~${formatNum(r.roadKm)} km</span>
+              </div>
+            </div>
+          `;
+        } else {
+          routeBannerEl.style.display = 'none';
+          routeBannerEl.innerHTML = '';
+        }
+      }
 
       const bindText = (key, text) => {
         const el = container.querySelector(`[data-bp-bind="${key}"]`);
@@ -1551,9 +1806,29 @@
     container.querySelectorAll('[data-bp-action]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const action = e.currentTarget.getAttribute('data-bp-action');
-        if (action === 'reset') {
+        if (action === 'sync-route') {
+          const synced = computeRouteSyncData(safeCtx);
+          if (!synced || !synced.cityCount) {
+            showToast('⚠️ Aktif sefer rotasında kayıtlı il bulunamadı. Önce Rota Planlayıcıdan il ekleyin.');
+            return;
+          }
+          state.cities = synced.cityCount;
+          state.daysPerCity = 5;
+          state.syncedRoute = synced;
+          state.hoveredCat = null;
+          syncControlsAndOutput();
+          showToast(
+            `📊 Aktif rota eşitlendi: ${synced.cityCount} il · ${synced.days} gün · ~${formatNum(synced.roadKm)} km karayolu`
+          );
+        } else if (action === 'download-md') {
+          const calc = calculateBudget(state);
+          const md = buildBudgetMarkdown(calc, state);
+          triggerMarkdownDownload('sefer_butce_plani.md', md);
+          showToast('📥 sefer_butce_plani.md indirildi!');
+        } else if (action === 'reset') {
           Object.assign(state, PRESETS[0].state);
           state.hoveredCat = null;
+          state.syncedRoute = null;
           syncControlsAndOutput();
           showToast('Ankara→Edirne Seferi varsayılanlarına dönüldü.');
         } else if (action === 'copy') {

@@ -138,6 +138,7 @@
     searchFilter: '',
     mealId: 'ogle',
     dietId: 'geleneksel',
+    matchRegionFilter: 'selected',
     isStreaming: false,
     streamRunId: 0,
     abortController: null,
@@ -1507,6 +1508,194 @@
         color: var(--text-secondary, #cbd5e1);
       }
 
+      /* Matching Real Flavor Cards Grid (TRAVEL_DATA) */
+      .agc-flavors-section {
+        padding: 20px 22px;
+        border-radius: 20px;
+        background: var(--bg-card, rgba(30, 41, 59, 0.72));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        backdrop-filter: blur(14px);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      body.light-theme .agc-flavors-section {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      .agc-flavors-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .agc-flavors-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.08rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+        margin: 0;
+      }
+
+      .agc-region-filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .agc-region-chip {
+        padding: 5px 11px;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.14));
+        background: rgba(15, 23, 42, 0.52);
+        color: var(--text-secondary, #94a3b8);
+        cursor: pointer;
+        transition: all 0.16s ease;
+      }
+
+      .agc-region-chip:hover,
+      .agc-region-chip.active {
+        background: rgba(245, 158, 11, 0.2);
+        border-color: var(--accent-gold, #f59e0b);
+        color: var(--accent-gold, #fbbf24);
+      }
+
+      body.light-theme .agc-region-chip {
+        background: #f1f5f9;
+        color: #334155;
+        border-color: rgba(15, 23, 42, 0.14);
+      }
+
+      body.light-theme .agc-region-chip.active {
+        background: rgba(254, 243, 199, 0.95);
+        color: #b45309;
+        border-color: #d97706;
+      }
+
+      .agc-flavor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+        gap: 12px;
+      }
+
+      .agc-flavor-card {
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(15, 23, 42, 0.64);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.18s ease, border-color 0.18s ease;
+      }
+
+      .agc-flavor-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(245, 158, 11, 0.45);
+      }
+
+      .agc-flavor-card.is-selected {
+        border-color: var(--accent-gold, #f59e0b);
+        box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
+      }
+
+      body.light-theme .agc-flavor-card {
+        background: #f8fafc;
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      .agc-flavor-card-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 12px 8px;
+      }
+
+      .agc-flavor-thumb {
+        width: 48px;
+        height: 40px;
+        border-radius: 9px;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+      }
+
+      .agc-flavor-body {
+        padding: 0 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .agc-flavor-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .agc-flavor-tag {
+        font-size: 0.73rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.13);
+        color: #fcd34d;
+        border: 1px solid rgba(245, 158, 11, 0.28);
+      }
+
+      .agc-flavor-tag.is-meal-hit {
+        background: rgba(16, 185, 129, 0.16);
+        color: #6ee7b7;
+        border-color: rgba(16, 185, 129, 0.38);
+      }
+
+      body.light-theme .agc-flavor-tag {
+        background: rgba(254, 243, 199, 0.9);
+        color: #92400e;
+      }
+
+      body.light-theme .agc-flavor-tag.is-meal-hit {
+        background: rgba(209, 250, 229, 0.95);
+        color: #065f46;
+      }
+
+      .agc-flavor-actions {
+        margin-top: auto;
+        display: flex;
+        gap: 6px;
+        padding-top: 6px;
+      }
+
+      .agc-flavor-mini-btn {
+        flex: 1;
+        padding: 6px 8px;
+        border-radius: 8px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.14));
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary, #f8fafc);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .agc-flavor-mini-btn:hover {
+        border-color: var(--accent-gold, #f59e0b);
+        color: var(--accent-gold, #fbbf24);
+      }
+
+      body.light-theme .agc-flavor-mini-btn {
+        background: #ffffff;
+        color: #0f172a;
+        border-color: rgba(15, 23, 42, 0.14);
+      }
+
       @media (max-width: 900px) {
         .agc-studio-grid {
           grid-template-columns: 1fr;
@@ -1684,8 +1873,16 @@
               <span style="max-width:560px; font-size:0.86rem; line-height:1.5;">
                 Yukarıdan il, öğün vakti ve beslenme/bütçe tarzını seçip
                 <strong>“✨ AI Gurme Rotası Oluştur”</strong> butonuna basın; otantik yemekler,
-                tarihî köken, ideal tadım sırası, çay/kahve eşleşmesi ve bütçe tahmini canlı aksın.
+                tarihî köken, ideal tadım sırası, çay/kahve eşleşmesi ve bütçe tahmini anında hazırlansın.
               </span>
+              <div class="agc-output-actions" style="margin-top:8px;justify-content:center;">
+                <button type="button" class="agc-action-btn" data-agc-copy>
+                  🧾 Gurme Tadım Menüsünü Kopyala
+                </button>
+                <button type="button" class="agc-action-btn" data-agc-download>
+                  📥 Gurme Tadım Menüsünü İndir (.md)
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -1710,10 +1907,10 @@
             </div>
             <div class="agc-output-actions">
               <button type="button" class="agc-action-btn" data-agc-copy ${!hasOutput ? 'disabled' : ''}>
-                📋 Kopyala
+                🧾 Gurme Tadım Menüsünü Kopyala
               </button>
               <button type="button" class="agc-action-btn" data-agc-download ${!hasOutput ? 'disabled' : ''}>
-                📥 Markdown İndir
+                📥 Gurme Tadım Menüsünü İndir
               </button>
               <button type="button" class="agc-action-btn is-city" data-agc-go-city="${esc(targetKey)}">
                 📍 İlin Sayfasına Git
@@ -1727,6 +1924,109 @@
             ${renderMarkdownToHtml(uiState.outputMarkdown, esc)}${uiState.isStreaming ? '<span class="agc-stream-cursor" aria-hidden="true"></span>' : ''}
           </div>
         </div>
+      `;
+    }
+
+    function renderMatchingFlavorCardsHtml(selectedProv) {
+      const meal = getOption(MEAL_TIMES, uiState.mealId);
+      const regionCodes = [
+        { id: 'selected', label: `📍 ${selectedProv.region}` },
+        { id: 'all', label: '🇹🇷 Tüm 81 İl' },
+        { id: '07_GuneydoguAnadolu', label: 'Güneydoğu' },
+        { id: '03_Akdeniz', label: 'Akdeniz' },
+        { id: '02_Ege', label: 'Ege' },
+        { id: '04_IcAnadolu', label: 'İç Anadolu' },
+        { id: '01_Marmara', label: 'Marmara' },
+        { id: '05_Karadeniz', label: 'Karadeniz' },
+        { id: '06_DoguAnadolu', label: 'Doğu Anadolu' }
+      ];
+
+      const activeRegionCode = uiState.matchRegionFilter === 'selected'
+        ? selectedProv.region_code
+        : uiState.matchRegionFilter;
+
+      const filtered = provinces.filter((p) => {
+        if (!p.specialties.length) return false;
+        if (activeRegionCode === 'all' || !activeRegionCode) return true;
+        return p.region_code === activeRegionCode;
+      });
+
+      const ranked = filtered
+        .map((p) => {
+          const g = classifySpecialties(p.specialties, norm);
+          let mealHits = [];
+          if (meal.id === 'kahvalti') mealHits = g.pastries.concat(g.drinks);
+          else if (meal.id === 'tatli') mealHits = g.sweets.concat(g.drinks);
+          else if (meal.id === 'ogle') mealHits = g.soups.concat(g.mains, g.pastries);
+          else mealHits = g.mains.concat(g.soups, g.sweets);
+
+          const hitSet = new Set(mealHits);
+          const score = mealHits.length * 12 + p.specialties.length * 3 + (p.key === selectedProv.key ? 15 : 0);
+          return { p, hitSet, score };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+
+      const cardsHtml = ranked.map(({ p, hitSet }) => {
+        const orderedSpecs = p.specialties
+          .slice()
+          .sort((a, b) => (hitSet.has(b) ? 1 : 0) - (hitSet.has(a) ? 1 : 0))
+          .slice(0, 4);
+
+        return `
+          <article class="agc-flavor-card ${p.key === selectedProv.key ? 'is-selected' : ''}">
+            <div class="agc-flavor-card-top">
+              <img
+                class="agc-flavor-thumb"
+                src="${esc(p.banner_rel || 'assets/banner.jpg')}"
+                alt="${esc(p.name)}"
+                loading="lazy"
+                onerror="if(this.dataset.fb!=='1'){this.dataset.fb='1';this.src='assets/banner.jpg';}"
+              />
+              <div style="min-width:0;flex:1;">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <span class="agc-plate-pill">${esc(padPlate(p.plate))}</span>
+                  <strong style="font-family:var(--font-heading);font-size:0.94rem;color:var(--text-primary);">${esc(p.name)}</strong>
+                </div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${esc(p.region)} • ${p.specialties.length} lezzet</div>
+              </div>
+            </div>
+            <div class="agc-flavor-body">
+              <div class="agc-flavor-tags">
+                ${orderedSpecs.map((sp) => `<span class="agc-flavor-tag ${hitSet.has(sp) ? 'is-meal-hit' : ''}">${hitSet.has(sp) ? '★ ' : '🍴 '}${esc(sp)}</span>`).join('')}
+              </div>
+              <div class="agc-flavor-actions">
+                <button type="button" class="agc-flavor-mini-btn" data-agc-pick-city="${esc(p.key)}">👨‍🍳 Şehir Seç</button>
+                <button type="button" class="agc-flavor-mini-btn" data-agc-go-city="${esc(p.key)}">📍 İncele</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      return `
+        <section class="agc-flavors-section" aria-label="Şehirlerin Eşleşen Gerçek Lezzet Kartları">
+          <div class="agc-flavors-head">
+            <div>
+              <h3 class="agc-flavors-title">🍽️ Şehirlerin Eşleşen Gerçek Lezzet Kartları</h3>
+              <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;">
+                <strong>${esc(meal.shortLabel)}</strong> için TRAVEL_DATA envanterinden eşleşen gerçek yöresel tatlar (★ seçili öğünle birebir uyumlu)
+              </div>
+            </div>
+            <div class="agc-region-filter-bar">
+              ${regionCodes.map((rc) => `
+                <button
+                  type="button"
+                  class="agc-region-chip ${uiState.matchRegionFilter === rc.id ? 'active' : ''}"
+                  data-agc-region-filter="${esc(rc.id)}"
+                >${esc(rc.label)}</button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="agc-flavor-grid">
+            ${cardsHtml || '<div style="font-size:0.84rem;color:var(--text-muted);">Bu filtrede eşleşen lezzet kartı bulunamadı.</div>'}
+          </div>
+        </section>
       `;
     }
 
@@ -1818,9 +2118,28 @@
 
       try {
         let aiResult = null;
+        const aiObj = typeof window !== 'undefined' ? window.SEYYAH_AI : null;
+        const hasConfiguredKey = Boolean(
+          (aiObj && typeof aiObj.hasKey === 'function' && aiObj.hasKey()) ||
+          getStoredGeminiKey()
+        );
+
+        // Instant API-keyless local gourmet menu synthesis (zero network wait)
+        if (!hasConfiguredKey) {
+          const offlineMarkdown = buildOfflineChefGuide(prov, meal, diet, norm);
+          uiState.outputMarkdown = offlineMarkdown;
+          uiState.sourceMode = 'offline';
+          uiState.sourceLabel = '⚡ Anlık Bilgi Grafiği Şefi (TRAVEL_DATA)';
+          uiState.errorNote = '';
+          uiState.isStreaming = false;
+          uiState.abortController = null;
+          renderFull();
+          notify(`🍽️ ${prov.name} gurme tadım menüsü anında hazırlandı!`);
+          return;
+        }
 
         // 1. Primary Engine: window.SEYYAH_AI.stream
-        if (typeof window !== 'undefined' && window.SEYYAH_AI) {
+        if (aiObj) {
           const cacheKey = `aiChef:${prov.key}:${meal.id}:${diet.id}`;
           try {
             aiResult = await trySeyyahAiStream(systemPrompt, userPrompt, cacheKey, signal, onChunk);
@@ -1937,6 +2256,11 @@
           const prov = getSelectedProvince();
           const previewBox = container.querySelector('[data-agc-preview-card]');
           if (previewBox) previewBox.innerHTML = renderProvincePreviewHtml(prov);
+          const flavorsWrap = container.querySelector('[data-agc-flavors-wrap]');
+          if (flavorsWrap) {
+            flavorsWrap.innerHTML = renderMatchingFlavorCardsHtml(prov);
+            bindFlavorCardEvents();
+          }
           container.querySelectorAll('[data-agc-quick-city]').forEach((btn) => {
             btn.classList.toggle('active', btn.getAttribute('data-agc-quick-city') === nextKey);
           });
@@ -1961,6 +2285,11 @@
           container.querySelectorAll('[data-agc-meal]').forEach((b) =>
             b.classList.toggle('active', b === btn)
           );
+          const flavorsWrap = container.querySelector('[data-agc-flavors-wrap]');
+          if (flavorsWrap) {
+            flavorsWrap.innerHTML = renderMatchingFlavorCardsHtml(getSelectedProvince());
+            bindFlavorCardEvents();
+          }
         });
       });
 
@@ -1985,15 +2314,27 @@
         });
       }
 
+      function getExportableMenuMarkdown() {
+        if (uiState.outputMarkdown && uiState.outputMarkdown.trim()) {
+          return uiState.outputMarkdown;
+        }
+        const prov = getSelectedProvince();
+        const meal = getOption(MEAL_TIMES, uiState.mealId);
+        const diet = getOption(DIET_STYLES, uiState.dietId);
+        return buildOfflineChefGuide(prov, meal, diet, norm);
+      }
+
       if (copyBtn) {
         copyBtn.addEventListener('click', async () => {
-          if (!uiState.outputMarkdown.trim()) return;
-          const ok = await copyToClipboard(uiState.outputMarkdown);
+          const textToCopy = getExportableMenuMarkdown();
+          if (!textToCopy.trim()) return;
+          const ok = await copyToClipboard(textToCopy);
           if (ok) {
-            copyBtn.textContent = '✅ Kopyalandı';
-            notify('📋 Gurme rehberi panoya kopyalandı!');
+            const origText = copyBtn.textContent;
+            copyBtn.textContent = '✅ Menü Kopyalandı';
+            notify('🧾 Gurme tadım menüsü panoya kopyalandı!');
             setTimeout(() => {
-              if (copyBtn.isConnected) copyBtn.textContent = '📋 Kopyala';
+              if (copyBtn.isConnected) copyBtn.textContent = origText;
             }, 1800);
           } else {
             notify('⚠️ Pano erişimi sağlanamadı.');
@@ -2003,16 +2344,44 @@
 
       if (downloadBtn) {
         downloadBtn.addEventListener('click', () => {
-          if (!uiState.outputMarkdown.trim()) return;
+          const textToSave = getExportableMenuMarkdown();
+          if (!textToSave.trim()) return;
           const prov = getSelectedProvince();
           const m = uiState.generatedMeta || { slug: prov.slug, mealId: uiState.mealId };
-          const filename = `gurme-rehberi-${m.slug || 'anadolu'}-${m.mealId || 'sofra'}.md`;
-          downloadMarkdown(filename, uiState.outputMarkdown);
-          notify(`📥 ${filename} indirildi!`);
+          const filename = `gurme-tadim-menusu-${m.slug || 'anadolu'}-${m.mealId || 'sofra'}.md`;
+          downloadMarkdown(filename, textToSave);
+          notify(`🧾 ${filename} indirildi!`);
         });
       }
 
+      bindFlavorCardEvents();
       bindCityNavigationButtons();
+    }
+
+    function bindFlavorCardEvents() {
+      container.querySelectorAll('[data-agc-region-filter]').forEach((btn) => {
+        btn.onclick = () => {
+          uiState.matchRegionFilter = btn.getAttribute('data-agc-region-filter') || 'selected';
+          const flavorsWrap = container.querySelector('[data-agc-flavors-wrap]');
+          if (flavorsWrap) {
+            flavorsWrap.innerHTML = renderMatchingFlavorCardsHtml(getSelectedProvince());
+            bindFlavorCardEvents();
+            bindCityNavigationButtons();
+          }
+        };
+      });
+
+      container.querySelectorAll('[data-agc-pick-city]').forEach((btn) => {
+        btn.onclick = () => {
+          const nextKey = btn.getAttribute('data-agc-pick-city');
+          if (!provinceMap.has(nextKey)) return;
+          uiState.selectedKey = nextKey;
+          uiState.searchFilter = '';
+          saveLastCityKey(nextKey);
+          renderFull();
+          notify(`👨‍🍳 ${provinceMap.get(nextKey).name} gurme stüdyosuna seçildi!`);
+        };
+      });
     }
 
     function bindCityNavigationButtons() {
@@ -2159,6 +2528,10 @@
 
           <div data-agc-output-wrap>
             ${renderOutputCardHtml()}
+          </div>
+
+          <div data-agc-flavors-wrap>
+            ${renderMatchingFlavorCardsHtml(prov)}
           </div>
         </section>
       `;

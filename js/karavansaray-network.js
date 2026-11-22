@@ -421,6 +421,70 @@
     HAN_BY_PROVINCE.get(han.provinceKey).push(han);
   });
 
+  // Fallback coordinates for Sultan Hans (used if province lacks lat/lon)
+  const HAN_FALLBACK_COORDS = {
+    'aksaray-sultanhani': [38.247, 33.547],
+    'agzikara-han': [38.445, 34.142],
+    'kayseri-karatay-han': [38.641, 35.948],
+    'konya-zazadin-han': [38.015, 32.685],
+    'konya-obruk-han': [38.175, 33.182],
+    'antalya-alara-han': [36.692, 31.673],
+    'antalya-evdir-han': [37.022, 30.601],
+    'sivas-ciftlik-han': [39.965, 36.578],
+    'malatya-silahtar-mustafa-pasa': [38.423, 38.367],
+    'erzincan-mama-hatun': [39.777, 40.388],
+    'edirne-rustem-pasa': [41.676, 26.556],
+    'bursa-koza-han': [40.184, 29.062],
+    'izmir-kizlaragasi-hani': [38.421, 27.133]
+  };
+
+  function getHanCoords(han, provincesMap) {
+    if (han && HAN_FALLBACK_COORDS[han.id]) {
+      return HAN_FALLBACK_COORDS[han.id];
+    }
+    const p = han && provincesMap ? provincesMap[han.provinceKey] : null;
+    if (p) {
+      if (Array.isArray(p.coords) && p.coords.length >= 2) return [Number(p.coords[0]), Number(p.coords[1])];
+      if (Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lon))) return [Number(p.lat), Number(p.lon)];
+    }
+    return [39.0, 35.0];
+  }
+
+  function calcRoadDistanceKm(coordA, coordB) {
+    const toRad = function (d) { return (d * Math.PI) / 180; };
+    const lat1 = toRad(coordA[0]);
+    const lat2 = toRad(coordB[0]);
+    const dLat = lat2 - lat1;
+    const dLon = toRad(coordB[1] - coordA[1]);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const straightKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(straightKm * 1.24);
+  }
+
+  function dispatchRouteCities(ctx, provinceKeys, toastMsg) {
+    const uniqueKeys = [];
+    (provinceKeys || []).forEach(function (k) {
+      if (k && uniqueKeys.indexOf(k) === -1) uniqueKeys.push(k);
+    });
+    if (!uniqueKeys.length) return;
+    if (ctx && ctx.state) {
+      ctx.state.customRouteCities = uniqueKeys.slice();
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('seyyah_custom_route', JSON.stringify(uniqueKeys));
+      }
+    } catch (_) {}
+    if (ctx && typeof ctx.showToast === 'function' && toastMsg) {
+      ctx.showToast(toastMsg);
+    }
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.hash = '#route';
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Module-level State
   // ---------------------------------------------------------------------------
@@ -430,6 +494,8 @@
     regionFilter: 'all',
     visitedFilter: 'all', // 'all' | 'visited' | 'unvisited' | 'han-only'
     searchQuery: '',
+    calcFromId: 'konya-zazadin-han',
+    calcToId: 'kayseri-karatay-han',
     aiFocusId: 'general', // 'general' | caravanserai.id | 'prov:<key>'
     aiStatus: 'idle', // 'idle' | 'streaming' | 'done'
     aiText: '',
@@ -1279,6 +1345,156 @@
         border-color: rgba(217, 119, 6, 0.32);
       }
 
+      /* Menzil Distance Calculator & Silk Road Route CTA */
+      .skn-calc-panel {
+        border-radius: 22px;
+        padding: 20px 24px;
+        background:
+          radial-gradient(circle at 8% 12%, rgba(245, 158, 11, 0.14), transparent 45%),
+          radial-gradient(circle at 92% 88%, rgba(16, 185, 129, 0.12), transparent 45%),
+          var(--bg-card, rgba(30, 41, 59, 0.78));
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .skn-calc-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .skn-calc-swap {
+        appearance: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        background: rgba(245, 158, 11, 0.14);
+        color: #fde68a;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .skn-calc-swap:hover {
+        background: rgba(245, 158, 11, 0.28);
+        transform: rotate(180deg);
+      }
+
+      .skn-calc-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+        gap: 10px;
+      }
+
+      .skn-calc-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .skn-calc-card.accent {
+        border-color: rgba(245, 158, 11, 0.38);
+        background: rgba(245, 158, 11, 0.1);
+      }
+
+      .skn-calc-card.cyan {
+        border-color: rgba(0, 242, 254, 0.34);
+        background: rgba(0, 242, 254, 0.08);
+      }
+
+      .skn-calc-lbl {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary, #94a3b8);
+        font-weight: 700;
+      }
+
+      .skn-calc-val {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.18rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+      }
+
+      .skn-calc-sub {
+        font-size: 0.75rem;
+        color: var(--text-secondary, #cbd5e1);
+      }
+
+      .skn-route-cta {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(16, 185, 129, 0.48);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.24), rgba(16, 185, 129, 0.24));
+        color: #ffffff;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.84rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .skn-route-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.24);
+        filter: brightness(1.08);
+      }
+
+      body.light-theme .skn-calc-panel {
+        background: rgba(255, 255, 255, 0.94);
+        border-color: rgba(217, 119, 6, 0.28);
+      }
+
+      body.light-theme .skn-calc-card {
+        background: rgba(241, 245, 249, 0.92);
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      body.light-theme .skn-calc-card.accent {
+        background: rgba(254, 243, 199, 0.72);
+        border-color: rgba(217, 119, 6, 0.34);
+      }
+
+      body.light-theme .skn-calc-card.cyan {
+        background: rgba(224, 242, 254, 0.78);
+        border-color: rgba(2, 132, 199, 0.32);
+      }
+
+      body.light-theme .skn-calc-val {
+        color: #0f172a;
+      }
+
+      body.light-theme .skn-calc-lbl,
+      body.light-theme .skn-calc-sub {
+        color: #334155;
+      }
+
+      body.light-theme .skn-calc-swap {
+        background: rgba(254, 243, 199, 0.9);
+        color: #92400e;
+        border-color: rgba(217, 119, 6, 0.4);
+      }
+
+      body.light-theme .skn-route-cta {
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(5, 150, 105, 0.18));
+        border-color: rgba(5, 150, 105, 0.42);
+        color: #0f172a;
+      }
+
       body.light-theme .skn-section,
       body.light-theme .skn-ai-panel {
         background: rgba(255, 255, 255, 0.94);
@@ -1574,6 +1790,46 @@
       });
     }
 
+    function buildMenzilCalcResultHtml() {
+      const fromHan = CARAVANSERAIS.find(function (h) { return h.id === uiState.calcFromId; }) || CARAVANSERAIS[3];
+      const toHan = CARAVANSERAIS.find(function (h) { return h.id === uiState.calcToId; }) || CARAVANSERAIS[2];
+      const same = fromHan.id === toHan.id;
+      const roadKm = same ? 0 : Math.max(25, calcRoadDistanceKm(getHanCoords(fromHan, provincesMap), getHanCoords(toHan, provincesMap)));
+      const menzilExact = roadKm / 35;
+      const caravanDays = same ? 0 : Math.max(1, Math.ceil(menzilExact));
+      const drivingTotalMins = same ? 0 : Math.round((roadKm / 85) * 60);
+      const driveH = Math.floor(drivingTotalMins / 60);
+      const driveM = drivingTotalMins % 60;
+      const driveText = same ? '0 dk' : (driveH > 0 ? `${driveH} sa ${driveM} dk` : `${driveM} dk`);
+      const caravanHours = caravanDays * 9; // ~9 saatlik günlük kervan yürüyüşü
+      const speedRatio = drivingTotalMins > 0 ? Math.max(1, Math.round((caravanHours * 60) / drivingTotalMins)) : 1;
+
+      return `
+        <div class="skn-calc-metrics">
+          <div class="skn-calc-card">
+            <span class="skn-calc-lbl">🛣️ Tahmini İpek Yolu Mesafesi</span>
+            <span class="skn-calc-val">${formatTL(roadKm)} km</span>
+            <span class="skn-calc-sub">${esc(fromHan.provinceName)} → ${esc(toHan.provinceName)}</span>
+          </div>
+          <div class="skn-calc-card accent">
+            <span class="skn-calc-lbl">🐪 Kervan Menzili (~35 km / gün)</span>
+            <span class="skn-calc-val">${same ? 'Aynı Menzil' : `${caravanDays} Gün (${menzilExact.toFixed(1)} menzil)`}</span>
+            <span class="skn-calc-sub">${same ? 'Başlangıç ve bitiş için farklı han seçin' : `~${caravanDays > 1 ? caravanDays - 1 : 0} ara kervansaray konaklaması`}</span>
+          </div>
+          <div class="skn-calc-card cyan">
+            <span class="skn-calc-lbl">🚗 Modern Karayolu (~85 km/sa)</span>
+            <span class="skn-calc-val">${esc(driveText)}</span>
+            <span class="skn-calc-sub">${same ? 'Sürüş gerekmiyor' : `Geleneksel kervana göre ~${speedRatio}× daha hızlı`}</span>
+          </div>
+          <div class="skn-calc-card">
+            <span class="skn-calc-lbl">🏕️ İki Uçta GSB 5 Gün Tasarrufu</span>
+            <span class="skn-calc-val">${fromHan.provinceKey === toHan.provinceKey ? formatTL(FIVE_DAY_SAVING_TL) : formatTL(FIVE_DAY_SAVING_TL * 2)} ₺</span>
+            <span class="skn-calc-sub">${fromHan.provinceKey === toHan.provinceKey ? '1 il × 5 gece GSB menzili' : '2 il × 5 gece GSB menzili'}</span>
+          </div>
+        </div>
+      `;
+    }
+
     function buildHanCardsHtml(hans) {
       if (!hans.length) {
         return '<div class="skn-empty">Seçili dönem veya İpek Yolu koridoru için eşleşen tarihi kervansaray bulunamadı.</div>';
@@ -1831,6 +2087,39 @@
             ${buildAiOutputHtml()}
           </section>
 
+          <!-- Menzil Distance Calculator & Silk Road Route Loader -->
+          <section class="skn-calc-panel" id="skn-calc-panel" aria-label="Tarihi Sultan Hanları Menzil Mesafe Hesaplayıcı">
+            <div class="skn-section-head" style="margin-bottom:0;">
+              <div>
+                <h3 class="skn-section-title">🐪 Tarihi Sultan Hanları Menzil Mesafe Hesaplayıcı</h3>
+                <p class="skn-section-desc">
+                  XIII. yüzyıl kervanlarının günde ortalama <strong>~35 km (1 menzil)</strong> yürüdüğü İpek Yolu etaplarını modern karayolu sürüş saatleriyle karşılaştırın.
+                </p>
+              </div>
+              <button type="button" class="skn-route-cta" id="skn-load-silkroad-btn">
+                🧭 Selçuklu Kervansaray Rotasını Yükle
+              </button>
+            </div>
+
+            <div class="skn-calc-controls">
+              <select class="skn-select" id="skn-calc-from" aria-label="Başlangıç Sultan Hanı">
+                ${CARAVANSERAIS.map(function (h) {
+                  return `<option value="${esc(h.id)}" ${uiState.calcFromId === h.id ? 'selected' : ''}>🚩 ${esc(h.name)} (${esc(h.provinceName)})</option>`;
+                }).join('')}
+              </select>
+              <button type="button" class="skn-calc-swap" id="skn-calc-swap" title="Başlangıç ve varış hanlarını değiştir" aria-label="Hanları değiştir">⇄</button>
+              <select class="skn-select" id="skn-calc-to" aria-label="Varış Sultan Hanı">
+                ${CARAVANSERAIS.map(function (h) {
+                  return `<option value="${esc(h.id)}" ${uiState.calcToId === h.id ? 'selected' : ''}>🏁 ${esc(h.name)} (${esc(h.provinceName)})</option>`;
+                }).join('')}
+              </select>
+            </div>
+
+            <div id="skn-calc-output">
+              ${buildMenzilCalcResultHtml()}
+            </div>
+          </section>
+
           <!-- Section 1: Historical Sultan Hans & Caravanserais -->
           <section class="skn-section">
             <div class="skn-section-head">
@@ -2073,6 +2362,76 @@
     function bindEvents() {
       const root = container.querySelector('#skn-root');
       if (!root) return;
+
+      // Menzil Distance Calculator selects & swap
+      function updateCalcOnly() {
+        const out = root.querySelector('#skn-calc-output');
+        if (out) out.innerHTML = buildMenzilCalcResultHtml();
+      }
+
+      const calcFromSel = root.querySelector('#skn-calc-from');
+      if (calcFromSel) {
+        calcFromSel.addEventListener('change', function (e) {
+          uiState.calcFromId = e.target.value || CARAVANSERAIS[0].id;
+          updateCalcOnly();
+        });
+      }
+
+      const calcToSel = root.querySelector('#skn-calc-to');
+      if (calcToSel) {
+        calcToSel.addEventListener('change', function (e) {
+          uiState.calcToId = e.target.value || CARAVANSERAIS[2].id;
+          updateCalcOnly();
+        });
+      }
+
+      const calcSwapBtn = root.querySelector('#skn-calc-swap');
+      if (calcSwapBtn) {
+        calcSwapBtn.addEventListener('click', function () {
+          const tmp = uiState.calcFromId;
+          uiState.calcFromId = uiState.calcToId;
+          uiState.calcToId = tmp;
+          if (calcFromSel) calcFromSel.value = uiState.calcFromId;
+          if (calcToSel) calcToSel.value = uiState.calcToId;
+          updateCalcOnly();
+        });
+      }
+
+      // Selçuklu Kervansaray / Silk Road Route Loader
+      const loadSilkRoadBtn = root.querySelector('#skn-load-silkroad-btn');
+      if (loadSilkRoadBtn) {
+        loadSilkRoadBtn.addEventListener('click', function () {
+          const activeHans = getFilteredHans();
+          const sourceList = activeHans.length ? activeHans : CARAVANSERAIS;
+          // Prioritize historical Silk Road sequence
+          const orderedPreferred = [
+            '03_Akdeniz/Antalya',
+            '04_IcAnadolu/Konya',
+            '04_IcAnadolu/Aksaray',
+            '04_IcAnadolu/Kayseri',
+            '04_IcAnadolu/Sivas',
+            '06_DoguAnadolu/Erzincan',
+            '06_DoguAnadolu/Malatya',
+            '01_Marmara/Bursa',
+            '01_Marmara/Edirne',
+            '02_Ege/Izmir'
+          ];
+          const presentSet = new Set(sourceList.map(function (h) { return h.provinceKey; }).filter(Boolean));
+          const routeKeys = orderedPreferred.filter(function (k) { return presentSet.has(k); });
+          sourceList.forEach(function (h) {
+            if (h.provinceKey && routeKeys.indexOf(h.provinceKey) === -1) {
+              routeKeys.push(h.provinceKey);
+            }
+          });
+          if (routeKeys.length) {
+            dispatchRouteCities(
+              safeCtx,
+              routeKeys,
+              '🧭 ' + routeKeys.length + ' illik Selçuklu & İpek Yolu Kervansaray rotası yüklendi!'
+            );
+          }
+        });
+      }
 
       // Search input (updates grid in-place to preserve cursor & IME)
       const searchInput = root.querySelector('#skn-prov-search');

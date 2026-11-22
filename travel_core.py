@@ -5,6 +5,7 @@ Anadolu Seyahatnamesi - Dijital Seyyah Core Engine
 
 import os
 import copy
+import html
 import json
 import re
 import math
@@ -915,6 +916,19 @@ class SeyyahEngine:
             if p.get("has_banner") and p.get("has_gallery")
         )
 
+        # Toplam miras ve yöresel lezzet sayıları (81 il genelinde)
+        total_landmarks = sum(len(p.get("landmarks", [])) for p in self.provinces.values())
+        total_specialties = sum(len(p.get("specialties", [])) for p in self.provinces.values())
+
+        # Ziyaret edilen illerin coğrafi ağırlık merkezi (ortalama lat / lng)
+        visited_list = list(self.visited_provinces.values())
+        if visited_list:
+            avg_lat = round(sum(p["lat"] for p in visited_list) / len(visited_list), 4)
+            avg_lng = round(sum(p["lng"] for p in visited_list) / len(visited_list), 4)
+        else:
+            avg_lat = 39.0
+            avg_lng = 35.3
+
         self.stats = {
             "total_cities": total,
             "visited_cities": visited,
@@ -927,6 +941,9 @@ class SeyyahEngine:
             "library_hours": visited * 5 * 4,
             "total_photos": total_photos,
             "provinces_with_two_photos": provinces_with_two_photos,
+            "total_landmarks": total_landmarks,
+            "total_specialties": total_specialties,
+            "geographic_center": {"lat": avg_lat, "lng": avg_lng},
             "regional_breakdown": reg_stats
         }
 
@@ -1236,6 +1253,177 @@ class SeyyahEngine:
             stop_copy["est_drive_hours"] = round(stop_copy["distance_from_prev_km"] / 80.0, 1)
             route.append(stop_copy)
         return route
+
+    def get_region_summary(self, region_code):
+        """Verilen bölge kodu veya adına göre zengin bölgesel istatistik ve keşif dosyası döndürür."""
+        if not region_code:
+            return None
+        resolved_code = None
+        if region_code in REGIONS_INFO:
+            resolved_code = region_code
+        else:
+            q_norm = normalize_turkish(str(region_code))
+            for code, r_info in REGIONS_INFO.items():
+                short_name = r_info["name"].replace(" Bölgesi", "")
+                if (
+                    normalize_turkish(code) == q_norm
+                    or normalize_turkish(r_info["name"]) == q_norm
+                    or normalize_turkish(short_name) == q_norm
+                    or q_norm in normalize_turkish(code)
+                    or q_norm in normalize_turkish(r_info["name"])
+                ):
+                    resolved_code = code
+                    break
+        if not resolved_code:
+            return None
+
+        r_info = REGIONS_INFO[resolved_code]
+        reg_provinces = [p for p in self.provinces.values() if p["region_code"] == resolved_code]
+        visited_provinces = sorted(
+            [p for p in reg_provinces if p["visited"]],
+            key=lambda item: turkish_sort_key(item["name"])
+        )
+        unvisited_provinces = sorted(
+            [p for p in reg_provinces if not p["visited"]],
+            key=lambda item: turkish_sort_key(item["name"])
+        )
+        total = len(reg_provinces)
+        visited = len(visited_provinces)
+        unvisited = len(unvisited_provinces)
+        pct = round((visited / total) * 100, 1) if total > 0 else 0.0
+        total_landmarks = sum(len(p.get("landmarks", [])) for p in reg_provinces)
+        total_specialties = sum(len(p.get("specialties", [])) for p in reg_provinces)
+
+        start_city = visited_provinces[0]["name"] if visited_provinces else (
+            unvisited_provinces[0]["name"] if unvisited_provinces else None
+        )
+        optimal_corridor = self.plan_optimal_route(
+            start_city_name=start_city,
+            max_stops=min(6, max(1, unvisited)),
+            region_code=resolved_code,
+            optimize=True
+        ) if unvisited > 0 else []
+
+        return {
+            "region_code": resolved_code,
+            "name": r_info["name"],
+            "icon": r_info["icon"],
+            "color": r_info["color"],
+            "desc": r_info["desc"],
+            "total": total,
+            "visited": visited,
+            "unvisited": unvisited,
+            "percentage": pct,
+            "visited_provinces": visited_provinces,
+            "unvisited_provinces": unvisited_provinces,
+            "total_landmarks": total_landmarks,
+            "total_specialties": total_specialties,
+            "optimal_corridor": optimal_corridor,
+        }
+
+    def compare_provinces(self, city_a, city_b):
+        """İki ili isim, slug veya plaka kodu üzerinden karşılaştırır ve mesafe/kültür analizi döndürür."""
+        prov_a = self.find_province(city_a)
+        prov_b = self.find_province(city_b)
+        if not prov_a or not prov_b:
+            return None
+
+        air_km = self.calculate_distance_km(prov_a["lat"], prov_a["lng"], prov_b["lat"], prov_b["lng"])
+        road_km = int(round(air_km * 1.35))
+        est_drive_hours = round(road_km / 80.0, 1)
+        same_region = prov_a["region_code"] == prov_b["region_code"]
+        lm_a = len(prov_a.get("landmarks", []))
+        lm_b = len(prov_b.get("landmarks", []))
+        sp_a = len(prov_a.get("specialties", []))
+        sp_b = len(prov_b.get("specialties", []))
+
+        return {
+            "city_a": prov_a,
+            "city_b": prov_b,
+            "province_a": prov_a,
+            "province_b": prov_b,
+            "air_distance_km": air_km,
+            "road_distance_km": road_km,
+            "est_drive_hours": est_drive_hours,
+            "same_region": same_region,
+            "landmark_counts": {
+                prov_a["name"]: lm_a,
+                prov_b["name"]: lm_b,
+                "city_a": lm_a,
+                "city_b": lm_b,
+            },
+            "specialty_counts": {
+                prov_a["name"]: sp_a,
+                prov_b["name"]: sp_b,
+                "city_a": sp_a,
+                "city_b": sp_b,
+            },
+            "landmarks_a_count": lm_a,
+            "landmarks_b_count": lm_b,
+            "specialties_a_count": sp_a,
+            "specialties_b_count": sp_b,
+        }
+
+    def export_gpx_route(self, route):
+        """Rota listesini (<wpt> ve <rte>/<rtept> içeren) geçerli GPX 1.1 XML dizgesine dönüştürür."""
+        if not route:
+            route = []
+
+        start_name = html.escape(str(route[0].get("name", "Başlangıç"))) if route else "Anadolu"
+        end_name = html.escape(str(route[-1].get("name", "Menzil"))) if route else "Menzil"
+        route_title = f"Anadolu Seyahatnamesi Sefer Rotası ({start_name} - {end_name})"
+
+        lines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<gpx version="1.1" creator="Anadolu Seyahatnamesi - Dijital Seyyah" '
+            'xmlns="http://www.topografix.com/GPX/1/1" '
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+            'xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">',
+            '  <metadata>',
+            f'    <name>{route_title}</name>',
+            '    <desc>Dijital Seyyah Keşif ve Tefekkür Rotası (GPX 1.1)</desc>',
+            '  </metadata>',
+        ]
+
+        # Waypoints (<wpt>)
+        for idx, stop in enumerate(route, 1):
+            lat = float(stop.get("lat", 39.0))
+            lng = float(stop.get("lng", 35.0))
+            name = html.escape(f"{idx:02d}. {stop.get('name', 'Menzil')} ({stop.get('plate', 0):02d})")
+            region = html.escape(str(stop.get("region", "")))
+            lms = html.escape(", ".join(stop.get("landmarks", [])[:3]))
+            quote = html.escape(str(stop.get("custom_quote", stop.get("quote", ""))))
+            desc = f"{region} | Miras: {lms} | {quote}"
+            lines.extend([
+                f'  <wpt lat="{lat:.4f}" lon="{lng:.4f}">',
+                f'    <name>{name}</name>',
+                f'    <desc>{desc}</desc>',
+                '  </wpt>',
+            ])
+
+        # Route (<rte> and <rtept>)
+        lines.extend([
+            '  <rte>',
+            f'    <name>{route_title}</name>',
+        ])
+        for idx, stop in enumerate(route, 1):
+            lat = float(stop.get("lat", 39.0))
+            lng = float(stop.get("lng", 35.0))
+            name = html.escape(f"{idx:02d}. {stop.get('name', 'Menzil')}")
+            leg_km = int(stop.get("distance_from_prev_km", 0))
+            cum_km = int(stop.get("cumulative_km", 0))
+            desc = html.escape(f"+{leg_km} km (Toplam: {cum_km} km)")
+            lines.extend([
+                f'    <rtept lat="{lat:.4f}" lon="{lng:.4f}">',
+                f'      <name>{name}</name>',
+                f'      <desc>{desc}</desc>',
+                '    </rtept>',
+            ])
+        lines.extend([
+            '  </rte>',
+            '</gpx>',
+        ])
+        return "\n".join(lines)
 
     def generate_web_data_json(self):
         """Frontend web uygulaması için `travel_data.json` ve `web_data.js` üretir."""

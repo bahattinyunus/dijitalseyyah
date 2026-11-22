@@ -247,6 +247,109 @@
         border-radius: var(--radius-full);
         transition: width 0.45s ease;
       }
+      .compare-summary-banner {
+        padding: 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .compare-summary-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .compare-summary-title {
+        font-family: var(--font-heading);
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .compare-summary-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .compare-score-pill {
+        font-family: var(--font-heading);
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 4px 11px;
+        border-radius: var(--radius-full);
+        background: rgba(0, 242, 254, 0.12);
+        border: 1px solid rgba(0, 242, 254, 0.35);
+        color: var(--accent-cyan);
+      }
+      .compare-dim-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .compare-dim-card {
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+        padding: 11px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .compare-dim-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+      }
+      .compare-dim-winner {
+        font-family: var(--font-heading);
+        font-size: 0.86rem;
+        font-weight: 800;
+        color: var(--text-primary);
+      }
+      .compare-dim-winner.is-a { color: var(--accent-cyan); }
+      .compare-dim-winner.is-b { color: var(--accent-gold); }
+      .compare-dim-winner.is-tie { color: var(--accent-emerald); }
+      .compare-dim-split {
+        display: flex;
+        height: 6px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(148, 163, 184, 0.16);
+        gap: 2px;
+      }
+      .compare-dim-bar-a {
+        background: linear-gradient(90deg, #00f2fe, #4facfe);
+        border-radius: 999px;
+      }
+      .compare-dim-bar-b {
+        background: linear-gradient(90deg, #f59e0b, #f97316);
+        border-radius: 999px;
+      }
+      .compare-dim-vals {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+      }
+      body.light-theme .compare-telemetry-item,
+      body.light-theme .compare-library-box,
+      body.light-theme .compare-stats,
+      body.light-theme .compare-dim-card {
+        background: rgba(248, 250, 252, 0.92);
+        border-color: rgba(15, 23, 42, 0.12);
+      }
+      body.light-theme .compare-score-pill {
+        background: rgba(2, 132, 199, 0.1);
+        border-color: rgba(2, 132, 199, 0.35);
+        color: #0284c7;
+      }
+      body.light-theme .compare-dim-winner.is-a { color: #0284c7; }
+      body.light-theme .compare-dim-winner.is-b { color: #b45309; }
+      body.light-theme .compare-dim-winner.is-tie { color: #047857; }
       @media (max-width: 960px) {
         .compare-controls {
           grid-template-columns: 1fr;
@@ -254,12 +357,16 @@
         .compare-telemetry {
           grid-template-columns: repeat(2, 1fr);
         }
+        .compare-dim-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
         .compare-grid {
           grid-template-columns: 1fr;
         }
       }
       @media (max-width: 540px) {
-        .compare-telemetry {
+        .compare-telemetry,
+        .compare-dim-grid {
           grid-template-columns: 1fr;
         }
       }
@@ -569,6 +676,91 @@
     const maxSpecialties = Math.max(spA, spB, 1);
     const maxPhotos = Math.max(phA, phB, 1);
 
+    // 5-Dimension Summary Comparison ("Hangi Şehir Hangi Alanda Önde?")
+    const getLibCultureScore = (city) => {
+      const libLen = String(city.custom_library || city.library || '').trim().length;
+      const quoteLen = String(city.custom_quote || city.quote || '').trim().length;
+      const litCount = Array.isArray(city.literary_quotes) ? city.literary_quotes.length : 0;
+      return Math.min(100, Math.round((libLen > 20 ? 45 : 20) + (quoteLen > 15 ? 25 : 0) + litCount * 15));
+    };
+    const libScoreA = getLibCultureScore(cityA);
+    const libScoreB = getLibCultureScore(cityB);
+    const visitScoreA = cityA.visited ? 1 : 0;
+    const visitScoreB = cityB.visited ? 1 : 0;
+
+    const dimensions = [
+      {
+        label: '🏛️ Tarihî Miras & Durak',
+        valA: lmA,
+        valB: lmB,
+        dispA: `${lmA} durak`,
+        dispB: `${lmB} durak`
+      },
+      {
+        label: '🍽️ Gastronomi & Lezzet',
+        valA: spA,
+        valB: spB,
+        dispA: `${spA} lezzet`,
+        dispB: `${spB} lezzet`
+      },
+      {
+        label: '📸 Görsel Arşiv',
+        valA: phA,
+        valB: phB,
+        dispA: `${phA} kare`,
+        dispB: `${phB} kare`
+      },
+      {
+        label: '📚 Kütüphane & Edebiyat',
+        valA: libScoreA,
+        valB: libScoreB,
+        dispA: `${libScoreA} puan`,
+        dispB: `${libScoreB} puan`
+      },
+      {
+        label: '🧭 Sefer Durumu',
+        valA: visitScoreA,
+        valB: visitScoreB,
+        dispA: cityA.visited ? 'Gezildi ✓' : 'Bekliyor',
+        dispB: cityB.visited ? 'Gezildi ✓' : 'Bekliyor'
+      }
+    ];
+
+    let winsA = 0;
+    let winsB = 0;
+    const dimCardsHtml = dimensions
+      .map((d) => {
+        let winnerClass = 'is-tie';
+        let winnerText = '⚖️ Berabere';
+        if (d.valA > d.valB) {
+          winsA += 1;
+          winnerClass = 'is-a';
+          winnerText = `🏆 ${cityA.name}`;
+        } else if (d.valB > d.valA) {
+          winsB += 1;
+          winnerClass = 'is-b';
+          winnerText = `🏆 ${cityB.name}`;
+        }
+        const sum = Math.max(1, d.valA + d.valB);
+        const pctA = d.valA === 0 && d.valB === 0 ? 50 : Math.round((d.valA / sum) * 100);
+        const pctB = 100 - pctA;
+        return `
+          <div class="compare-dim-card">
+            <span class="compare-dim-label">${d.label}</span>
+            <span class="compare-dim-winner ${winnerClass}">${escapeHtml(winnerText)}</span>
+            <div class="compare-dim-split" aria-hidden="true">
+              <div class="compare-dim-bar-a" style="width:${pctA}%;"></div>
+              <div class="compare-dim-bar-b" style="width:${pctB}%;"></div>
+            </div>
+            <div class="compare-dim-vals">
+              <span>${escapeHtml(d.dispA)}</span>
+              <span>${escapeHtml(d.dispB)}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
     const optionsA = buildCityOptionsHtml(sortedEntries, selectedKeyA, escapeHtml);
     const optionsB = buildCityOptionsHtml(sortedEntries, selectedKeyB, escapeHtml);
 
@@ -636,6 +828,27 @@
               ${escapeHtml(regionRelTitle)}
             </span>
             <span class="compare-telemetry-sub">${escapeHtml(regionRelSub)}</span>
+          </div>
+        </div>
+
+        <!-- 5-Dimension Visual Comparison Summary Banner -->
+        <div class="glass-card compare-summary-banner">
+          <div class="compare-summary-top">
+            <div class="compare-summary-title">
+              <span>🏆 Hangi Şehir Hangi Alanda Önde?</span>
+              <span class="compare-score-pill">${escapeHtml(cityA.name)} ${winsA} – ${winsB} ${escapeHtml(cityB.name)}</span>
+            </div>
+            <div class="compare-summary-actions">
+              <button type="button" id="compare-btn-plan-route" class="btn btn-primary">
+                🧭 Bu İki Şehir Arası Rota Planla
+              </button>
+              <button type="button" id="compare-btn-ai-battle" class="btn btn-outline">
+                ⚔️ AI Hakem Düellosunda Yarıştır
+              </button>
+            </div>
+          </div>
+          <div class="compare-dim-grid">
+            ${dimCardsHtml}
           </div>
         </div>
 
@@ -744,6 +957,41 @@
         }
       });
     });
+
+    const planRouteBtn = container.querySelector('#compare-btn-plan-route');
+    if (planRouteBtn) {
+      planRouteBtn.addEventListener('click', function () {
+        const pA = provinces[selectedKeyA];
+        const pB = provinces[selectedKeyB];
+        if (!pA || !pB) return;
+        const routePair = pA.name === pB.name ? [pA.name] : [pA.name, pB.name];
+        if (state) {
+          state.customRouteCities = routePair;
+        }
+        showToast(`🧭 ${routePair.join(' ➔ ')} rotası planlayıcıya yüklendi!`);
+        if (typeof safeCtx.openView === 'function') {
+          safeCtx.openView('route');
+        } else if (typeof window !== 'undefined') {
+          window.location.hash = '#route';
+        }
+      });
+    }
+
+    const aiBattleBtn = container.querySelector('#compare-btn-ai-battle');
+    if (aiBattleBtn) {
+      aiBattleBtn.addEventListener('click', function () {
+        if (state) {
+          state.aiBattleCityA = selectedKeyA;
+          state.aiBattleCityB = selectedKeyB;
+        }
+        showToast(`⚔️ ${cityA.name} vs ${cityB.name} — AI Hakem Düellosu açılıyor!`);
+        if (typeof safeCtx.openView === 'function') {
+          safeCtx.openView('aiBattle');
+        } else if (typeof window !== 'undefined') {
+          window.location.hash = '#aiBattle';
+        }
+      });
+    }
   }
 
   window.SEYYAH_MODULES = window.SEYYAH_MODULES || {};

@@ -88,7 +88,15 @@
   }
 
   function formatReplyHtml(rawText) {
+    if (
+      typeof window !== 'undefined' &&
+      window.SEYYAH_AI &&
+      typeof window.SEYYAH_AI.renderMarkdown === 'function'
+    ) {
+      return window.SEYYAH_AI.renderMarkdown(rawText, esc);
+    }
     return esc(rawText)
+      .replace(/^###\s+(.+)$/gm, '<strong>$1</strong>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\r?\n/g, '<br>');
   }
@@ -116,6 +124,13 @@
     } catch (e) {
       return '';
     }
+  }
+
+  function hasApiKey() {
+    if (typeof window !== 'undefined' && window.SEYYAH_AI && typeof window.SEYYAH_AI.hasKey === 'function') {
+      if (window.SEYYAH_AI.hasKey()) return true;
+    }
+    return Boolean(getStoredApiKey());
   }
 
   function isRetiredModel(modelName) {
@@ -146,8 +161,16 @@
   // ---------------------------------------------------------------------------
   // Province & Context Helpers
   // ---------------------------------------------------------------------------
+  function getProvincesMap() {
+    if (_ctx && _ctx.data && _ctx.data.provinces) return _ctx.data.provinces;
+    if (typeof TRAVEL_DATA !== 'undefined' && TRAVEL_DATA && TRAVEL_DATA.provinces) {
+      return TRAVEL_DATA.provinces;
+    }
+    return {};
+  }
+
   function getAllProvinces() {
-    const obj = (_ctx && _ctx.data && _ctx.data.provinces) || {};
+    const obj = getProvincesMap();
     return Object.keys(obj)
       .map((key) => {
         const p = obj[key];
@@ -157,10 +180,12 @@
           name: p.name,
           plate: Number(p.plate) || 0,
           region: p.region || '',
+          lat: Number(p.lat) || 0,
+          lng: Number(p.lng) || 0,
           visited: Boolean(p.visited),
           landmarks: Array.isArray(p.landmarks) ? p.landmarks : [],
           specialties: Array.isArray(p.specialties) ? p.specialties : [],
-          library: p.library || '',
+          library: p.custom_library || p.library || '',
           quote: p.custom_quote || p.quote || '',
           history: p.history || '',
           five_day_plan: Array.isArray(p.five_day_plan) ? p.five_day_plan : [],
@@ -172,7 +197,7 @@
 
   function getActiveCityContext() {
     const key = _ctx && _ctx.state && _ctx.state.selectedCityKey;
-    const obj = _ctx && _ctx.data && _ctx.data.provinces;
+    const obj = getProvincesMap();
     if (!key || !obj || !obj[key]) return null;
     const p = obj[key];
     return {
@@ -180,14 +205,46 @@
       name: p.name || key,
       plate: Number(p.plate) || 0,
       region: p.region || '',
+      lat: Number(p.lat) || 0,
+      lng: Number(p.lng) || 0,
       visited: Boolean(p.visited),
       landmarks: Array.isArray(p.landmarks) ? p.landmarks : [],
       specialties: Array.isArray(p.specialties) ? p.specialties : [],
-      library: p.library || '',
+      library: p.custom_library || p.library || '',
       quote: p.custom_quote || p.quote || '',
       history: p.history || '',
       five_day_plan: Array.isArray(p.five_day_plan) ? p.five_day_plan : []
     };
+  }
+
+  function getActiveViewName() {
+    const stateView =
+      (_ctx && _ctx.state && (_ctx.state.currentView || _ctx.state.activeView || _ctx.state.view)) || '';
+    if (stateView) return norm(stateView);
+    try {
+      const hash = (window.location.hash || '').replace(/^#\/?/, '').split(/[/?]/)[0];
+      return norm(hash || 'dashboard');
+    } catch (_) {
+      return 'dashboard';
+    }
+  }
+
+  function getActiveViewDisplayLabel(viewName) {
+    const labels = {
+      route: 'Rota Planlayıcı',
+      planner: 'AI Sefer Planlayıcı',
+      'ai-planner': 'AI Sefer Planlayıcı',
+      atlas: 'Anadolu Atlası',
+      map: 'Anadolu Haritası',
+      gastronomy: 'Gastronomi Rehberi',
+      cuisine: 'Gastronomi Rehberi',
+      libraries: 'Kütüphane Ofisleri',
+      library: 'Kütüphane Ofisleri',
+      advisor: 'Seyyah Danışmanı',
+      stats: 'Seyyah İstatistikleri',
+      dashboard: 'Anadolu Atlası'
+    };
+    return labels[viewName] || 'Anadolu Atlası';
   }
 
   function buildSystemInstruction(activeCity) {
@@ -258,39 +315,192 @@
     return matched;
   }
 
-  function getContextChips(activeCity) {
+  function getContextChips(activeCity, activeView) {
     if (activeCity) {
       const name = activeCity.name;
       return [
         {
-          label: '🗓️ 5 günlük plan',
-          prompt: `${name} için 5 günlük gezi, kütüphane ve tefekkür planı öner.`
+          label: '📍 Bu Şehrin Gizli Hazineleri',
+          prompt: `${name} şehrinin gizli hazineleri, tarihî eserleri ve mutlaka görülmesi gereken durakları nelerdir?`
         },
         {
-          label: '📚 Kütüphane & çalışma',
-          prompt: `${name} İl Halk Kütüphanesi ve şehirdeki sessiz çalışma ortamları hakkında bilgi ver.`
+          label: '🍽️ Ne Yenir & Kütüphane?',
+          prompt: `${name} şehrinde ne yenir, meşhur yöresel lezzetleri ve İl Halk Kütüphanesi çalışma ortamı nasıldır?`
         },
         {
-          label: '🍽️ Yöresel lezzetler',
-          prompt: `${name} yöresel lezzetleri, meşhur yemekleri ve tatlıları nelerdir?`
+          label: '🧭 Buradan 3 Duraklı Rota',
+          prompt: `${name} çıkışlı, çevre illeri bağlayan 3 duraklı anlamlı bir Anadolu rotası öner.`
+        }
+      ];
+    }
+
+    const view = activeView || getActiveViewName();
+
+    if (view === 'route' || view === 'planner' || view === 'ai-planner') {
+      return [
+        {
+          label: '🧭 Gezilmemiş 3 Duraklı Rota',
+          prompt: 'Henüz gezmediğim illerden bana 3 duraklı verimli bir Anadolu koridoru öner.'
+        },
+        {
+          label: '📚 Kütüphaneli Rota Durakları',
+          prompt: '5 Gün Kuralı ile çalışabileceğim en iyi İl Halk Kütüphanesi şehirleri hangileri?'
+        },
+        {
+          label: '🍽️ Rota Üstü Lezzet Şehirleri',
+          prompt: 'Türkiye\'de gastronomi ve yöresel lezzetleriyle öne çıkan 4 durak öner.'
+        }
+      ];
+    }
+
+    if (view === 'atlas' || view === 'map' || view === 'explore') {
+      return [
+        {
+          label: '🗺️ Gezilmemiş İllerden Öneri',
+          prompt: 'Henüz gezmediğim illerden keşif önceliği yüksek 3 şehir öner.'
+        },
+        {
+          label: '🏛️ Tarih & UNESCO Hazineleri',
+          prompt: 'Anadolu\'da mutlaka görülmesi gereken tarihî ve kültürel hazine şehirleri hangileri?'
+        },
+        {
+          label: '🧭 Ankara Çıkışlı 3 Duraklı Rota',
+          prompt: 'Ankara çıkışlı 3 duraklı bir Anadolu keşif rotası öner.'
+        }
+      ];
+    }
+
+    if (view === 'gastronomy' || view === 'cuisine' || view === 'food') {
+      return [
+        {
+          label: '🍽️ En Meşhur Lezzet Şehirleri',
+          prompt: 'Türkiye\'de mutlaka denenmesi gereken en meşhur yöresel lezzet şehirleri hangileri?'
+        },
+        {
+          label: '📚 Lezzet & Kütüphane Dengesi',
+          prompt: 'Hem mutfağı güçlü hem de İl Halk Kütüphanesi çalışma ortamı iyi şehirler hangileri?'
+        },
+        {
+          label: '🧭 Gurme 3 Duraklı Rota',
+          prompt: 'Anadolu mutfağını keşfedeceğim 3 duraklı bir gastronomi rotası öner.'
+        }
+      ];
+    }
+
+    if (view === 'libraries' || view === 'library' || view === 'study') {
+      return [
+        {
+          label: '📚 En İyi Kütüphane Şehirleri',
+          prompt: 'Anadolu\'da çalışma ve okuma kültürü en güçlü İl Halk Kütüphanesi şehirleri hangileri?'
+        },
+        {
+          label: '🗓️ 5 Gün Kuralı İpuçları',
+          prompt: '5 Gün Kuralı ile hem kütüphanede çalışıp hem şehir keşfetmek için rota öner.'
+        },
+        {
+          label: '🍽️ Çalışma Sonrası Lezzetler',
+          prompt: 'Kütüphane mesaisi sonrası yöresel lezzetleriyle öne çıkan şehirler hangileri?'
         }
       ];
     }
 
     return [
       {
-        label: '🧭 Gezilmemiş rota öner',
+        label: '🧭 Gezilmemiş Rota Öner',
         prompt: 'Henüz gezmediğim illerden bana 3 duraklı anlamlı bir Anadolu rotası öner.'
       },
       {
-        label: '📚 En iyi kütüphane şehirleri',
+        label: '📚 En İyi Kütüphane Şehirleri',
         prompt: 'Anadolu\'da çalışma ve okuma kültürü en güçlü kütüphaneli şehirler hangileri?'
       },
       {
-        label: '🍽️ Anadolu lezzet durakları',
+        label: '🍽️ Anadolu Lezzet Durakları',
         prompt: 'Türkiye\'de mutlaka denenmesi gereken 4 yöresel lezzet şehri öner.'
       }
     ];
+  }
+
+  function calcOfflineDistKm(lat1, lon1, lat2, lon2) {
+    if (_ctx && typeof _ctx.calcDistKm === 'function') {
+      return _ctx.calcDistKm(lat1, lon1, lat2, lon2);
+    }
+    const R = 6371.0;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function getOfflineReply(promptText, activeCity) {
+    if (
+      typeof window !== 'undefined' &&
+      window.SEYYAH_AI &&
+      typeof window.SEYYAH_AI.synthesizeLocalResponse === 'function'
+    ) {
+      const synthesized = window.SEYYAH_AI.synthesizeLocalResponse(promptText, _ctx);
+      if (synthesized && synthesized.text) {
+        const provs =
+          Array.isArray(synthesized.provinces) && synthesized.provinces.length
+            ? synthesized.provinces.map((p) => ({
+                key: p.key,
+                name: p.name,
+                plate: p.plate,
+                visited: Boolean(p.visited)
+              }))
+            : extractMentionedProvinces(synthesized.text);
+        return {
+          reply: synthesized.text,
+          model: '⚡ Çevrimdışı Bilgi Grafiği',
+          provinces: provs,
+          offline: true
+        };
+      }
+    }
+
+    // Pure TRAVEL_DATA fallback if SEYYAH_AI is unavailable
+    const all = getAllProvinces();
+    const target = activeCity || all.find((p) => !p.visited) || all[0];
+    if (!target) {
+      return {
+        reply: '🧭 **Çevrimdışı Seyyah Motoru:** 81 il verisi hazırlanıyor. Lütfen tekrar deneyin.',
+        model: '⚡ Çevrimdışı Bilgi Grafiği',
+        provinces: [],
+        offline: true
+      };
+    }
+
+    const neighbors = all
+      .filter((p) => p.key !== target.key)
+      .map((p) => ({ p, km: Math.round(calcOfflineDistKm(target.lat, target.lng, p.lat, p.lng) * 1.25) }))
+      .sort((a, b) => a.km - b.km)
+      .slice(0, 2);
+
+    const lines = [
+      `### 📍 **${target.name}** (${target.region || 'Anadolu'}) Çevrimdışı Rehber`,
+      `- **Öne Çıkan Duraklar:** ${target.landmarks.slice(0, 4).join(', ') || target.name + ' Merkez'}`,
+      `- **Yöresel Lezzetler:** ${target.specialties.slice(0, 4).join(', ') || 'Yöresel mutfak'}`,
+      `- **Kütüphane Ofisi:** ${target.library || target.name + ' İl Halk Kütüphanesi'}`
+    ];
+    if (neighbors.length) {
+      lines.push(
+        `- **Yakın 3 Duraklı Koridor:** **${target.name}** → ${neighbors
+          .map((n) => `**${n.p.name}** (~${n.km} km)`)
+          .join(' → ')}`
+      );
+    }
+
+    const text = lines.join('\n');
+    return {
+      reply: text,
+      model: '⚡ Çevrimdışı 81 İl Motoru',
+      provinces: extractMentionedProvinces(text),
+      offline: true
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -1197,17 +1407,19 @@
 
   function updateHeaderBadge() {
     if (!_modelBadgeEl) return;
-    const hasKey = Boolean(getStoredApiKey());
+    const keyReady = hasApiKey();
     const model = _activeModel || getStoredModel();
-    _modelBadgeEl.innerHTML = `<span class="sc-model-dot${hasKey ? '' : ' no-key'}"></span><span>${esc(model)}</span>`;
-    _modelBadgeEl.title = hasKey
+    const badgeLabel = keyReady ? model : '⚡ Çevrimdışı Bilgi Grafiği';
+    _modelBadgeEl.innerHTML = `<span class="sc-model-dot${keyReady ? '' : ' no-key'}"></span><span>${esc(badgeLabel)}</span>`;
+    _modelBadgeEl.title = keyReady
       ? `Aktif Gemini modeli: ${model}`
-      : `Gemini API anahtarı henüz girilmedi (Varsayılan: ${model})`;
+      : 'API anahtarı olmadan 81 il yerel bilgi grafiği ile çalışır (Canlı AI için Admin Paneli’nden anahtar ekleyebilirsiniz)';
   }
 
   function renderContextAndChips() {
     const activeCity = getActiveCityContext();
-    const signature = activeCity ? `city:${activeCity.key}` : 'all';
+    const activeView = getActiveViewName();
+    const signature = activeCity ? `city:${activeCity.key}|view:${activeView}` : `all|view:${activeView}`;
     _lastContextSignature = signature;
 
     if (_contextBarEl) {
@@ -1220,15 +1432,16 @@
       } else {
         const all = getAllProvinces();
         const visitedCount = all.filter((p) => p.visited).length;
+        const viewLabel = getActiveViewDisplayLabel(activeView);
         _contextBarEl.innerHTML = `
-          <span class="sc-context-pill">🇹🇷 Bağlam: <strong>Anadolu Atlası</strong></span>
+          <span class="sc-context-pill">🇹🇷 Bağlam: <strong>${esc(viewLabel)}</strong></span>
           <span class="sc-context-sub">${visitedCount}/${all.length || 81} il gezildi</span>
         `;
       }
     }
 
     if (_chipsEl) {
-      const chips = getContextChips(activeCity);
+      const chips = getContextChips(activeCity, activeView);
       _chipsEl.innerHTML = chips
         .map(
           (chip, idx) =>
@@ -1336,18 +1549,14 @@
       })
       .join('');
 
-    const missingKeyBanner =
-      !hasKey && !_messages.some((m) => m.missingKey)
-        ? `<div class="sc-msg-row model">${renderNoKeyCardHtml()}</div>`
-        : '';
-
-    _messagesEl.innerHTML = itemsHtml + missingKeyBanner;
+    _messagesEl.innerHTML = itemsHtml;
     scrollMessagesToBottom();
   }
 
   function syncContextIfChanged() {
     const activeCity = getActiveCityContext();
-    const signature = activeCity ? `city:${activeCity.key}` : 'all';
+    const activeView = getActiveViewName();
+    const signature = activeCity ? `city:${activeCity.key}|view:${activeView}` : `all|view:${activeView}`;
     if (signature !== _lastContextSignature) {
       renderContextAndChips();
     }
@@ -1473,20 +1682,21 @@
 
     const activeCity = getActiveCityContext();
 
-    if (!getStoredApiKey()) {
+    if (!hasApiKey()) {
       _messages.push({
         id: ++_msgSeq,
         role: 'user',
         time: nowTimeLabel(),
         text: clean
       });
+      const localRes = getOfflineReply(clean, activeCity);
       _messages.push({
         id: ++_msgSeq,
         role: 'model',
-        isStatus: true,
-        missingKey: true,
         time: nowTimeLabel(),
-        text: ''
+        model: localRes.model,
+        text: localRes.reply,
+        provinces: localRes.provinces || []
       });
       renderMessages();
       return;
@@ -1519,16 +1729,17 @@
       const idx = _messages.findIndex((m) => m.id === loadingId);
 
       if (result && result.missingKey) {
-        const missingMsg = {
+        const localRes = getOfflineReply(clean, activeCity);
+        const fallbackMsg = {
           id: loadingId,
           role: 'model',
-          isStatus: true,
-          missingKey: true,
           time: nowTimeLabel(),
-          text: ''
+          model: localRes.model,
+          text: localRes.reply,
+          provinces: localRes.provinces || []
         };
-        if (idx >= 0) _messages[idx] = missingMsg;
-        else _messages.push(missingMsg);
+        if (idx >= 0) _messages[idx] = fallbackMsg;
+        else _messages.push(fallbackMsg);
       } else if (result && result.reply) {
         _activeModel = result.model || _activeModel;
         updateHeaderBadge();
@@ -1544,31 +1755,33 @@
         if (idx >= 0) _messages[idx] = replyMsg;
         else _messages.push(replyMsg);
       } else {
-        const emptyErrMsg = {
+        const localRes = getOfflineReply(clean, activeCity);
+        const fallbackMsg = {
           id: loadingId,
           role: 'model',
-          isStatus: true,
-          isError: true,
           retryPrompt: clean,
           time: nowTimeLabel(),
-          text: '⚠️ Gemini boş veya geçersiz bir yanıt döndürdü.'
+          model: `${localRes.model} (Yedek)`,
+          text: localRes.reply,
+          provinces: localRes.provinces || []
         };
-        if (idx >= 0) _messages[idx] = emptyErrMsg;
-        else _messages.push(emptyErrMsg);
+        if (idx >= 0) _messages[idx] = fallbackMsg;
+        else _messages.push(fallbackMsg);
       }
     } catch (err) {
       const idx = _messages.findIndex((m) => m.id === loadingId);
-      const errMsg = {
+      const localRes = getOfflineReply(clean, activeCity);
+      const fallbackMsg = {
         id: loadingId,
         role: 'model',
-        isStatus: true,
-        isError: true,
         retryPrompt: clean,
         time: nowTimeLabel(),
-        text: `⚠️ Gemini isteği tamamlanamadı: **${err && err.message ? err.message : 'Bilinmeyen hata'}**`
+        model: `${localRes.model} (Yedek)`,
+        text: `${localRes.reply}\n\n*(Canlı Gemini şu an yanıt veremedi; yerel 81 il bilgi grafiği devreye alındı.)*`,
+        provinces: localRes.provinces || []
       };
-      if (idx >= 0) _messages[idx] = errMsg;
-      else _messages.push(errMsg);
+      if (idx >= 0) _messages[idx] = fallbackMsg;
+      else _messages.push(fallbackMsg);
     } finally {
       _isLoading = false;
       if (_sendBtn) _sendBtn.disabled = false;
@@ -1634,7 +1847,7 @@
       const chipBtn = e.target.closest('[data-sc-chip]');
       if (!chipBtn) return;
       const idx = Number(chipBtn.getAttribute('data-sc-chip'));
-      const chips = getContextChips(getActiveCityContext());
+      const chips = getContextChips(getActiveCityContext(), getActiveViewName());
       if (chips[idx]) {
         sendPrompt(chips[idx].prompt);
       }

@@ -4,9 +4,10 @@ Pulsing Glowing Markerlar, Çoklu Harita Katmanları, Katlanabilir Glassmorphism
 """
 
 import html
+import json
 from pathlib import Path
 import folium
-from travel_core import SeyyahEngine, turkish_sort_key
+from travel_core import SeyyahEngine, turkish_sort_key, normalize_turkish
 
 
 class MapGenerator:
@@ -239,6 +240,93 @@ class MapGenerator:
             padding: 2px 6px;
             font-size: 10px;
             font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .city-badge:hover {
+            background: rgba(0, 242, 254, 0.22);
+            border-color: rgba(0, 242, 254, 0.6);
+            color: #f8fafc;
+        }
+        .panel-controls-box {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .quick-search-row {
+            display: flex;
+            gap: 6px;
+        }
+        .map-quick-search-input {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            padding: 7px 10px;
+            color: #f8fafc;
+            font-size: 11.5px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .map-quick-search-input:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.18);
+        }
+        .map-quick-jump-btn {
+            background: rgba(0, 242, 254, 0.16);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            color: #00f2fe;
+            border-radius: 8px;
+            padding: 0 11px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .map-quick-jump-btn:hover {
+            background: #00f2fe;
+            color: #04121d;
+        }
+        .expedition-focus-btn {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(0, 242, 254, 0.18) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            color: #fcd34d;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .expedition-focus-btn:hover {
+            border-color: #00f2fe;
+            color: #ffffff;
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+            transform: translateY(-1px);
+        }
+        .expedition-stop-marker {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b 0%, #00f2fe 100%);
+            color: #04121d;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.85), 0 0 6px rgba(0, 242, 254, 0.8);
+            cursor: pointer;
         }
         .panel-quote {
             margin: 12px 0 0 0;
@@ -393,7 +481,29 @@ class MapGenerator:
         # Ziyaret Edilen İllerin Badgeleri (Türkçe Alfabetik Sıra)
         visited_badges_html = ""
         for _, p in sorted(self.engine.visited_provinces.items(), key=lambda x: turkish_sort_key(x[1]["name"])):
-            visited_badges_html += f'<span class="city-badge">{html.escape(p["name"])}</span>'
+            esc_name = html.escape(p["name"])
+            visited_badges_html += (
+                f'<span class="city-badge" title="{esc_name} konumuna odaklan" '
+                f'onclick="window.seyyahJumpToCity(\'{esc_name}\')">{esc_name}</span>'
+            )
+
+        # 81 İl için datalist seçenekleri ve kompakt JS arama sözlüğü
+        datalist_options_html = ""
+        city_lookup = {}
+        for _, p in sorted(self.engine.provinces.items(), key=lambda x: turkish_sort_key(x[1]["name"])):
+            esc_name = html.escape(p["name"])
+            plate_str = f"{p['plate']:02d}"
+            datalist_options_html += f'<option value="{esc_name}">{plate_str} - {esc_name} ({html.escape(p["region"])})</option>'
+            entry = {"name": p["name"], "plate": p["plate"], "lat": p["lat"], "lng": p["lng"]}
+            city_lookup[normalize_turkish(p["name"])] = entry
+            city_lookup[normalize_turkish(p["slug"])] = entry
+            city_lookup[str(p["plate"])] = entry
+            city_lookup[plate_str] = entry
+
+        # Aktif Sefer Rotası (Ankara ➔ Edirne)
+        custom_expedition = self.engine.build_custom_route()
+        expedition_coords = [[stop["lat"], stop["lng"]] for stop in custom_expedition]
+        map_var_name = m.get_name()
 
         # Katlanabilir Floating Panel HTML
         title_panel_html = f"""
@@ -431,6 +541,25 @@ class MapGenerator:
                     </div>
                 </div>
 
+                <div class="panel-controls-box">
+                    <div class="quick-search-row">
+                        <input
+                            type="text"
+                            id="map-quick-city-search"
+                            class="map-quick-search-input"
+                            list="seyyah-map-cities-list"
+                            placeholder="🔍 İl adı veya plaka ara (örn: 42, Konya)..."
+                            onkeydown="if(event.key==='Enter'){{window.seyyahQuickSearchJump();}}"
+                            onchange="window.seyyahQuickSearchJump();"
+                        />
+                        <button type="button" class="map-quick-jump-btn" onclick="window.seyyahQuickSearchJump()" title="Şehre Odaklan">Git</button>
+                    </div>
+                    <datalist id="seyyah-map-cities-list">{datalist_options_html}</datalist>
+                    <button type="button" class="expedition-focus-btn" id="seyyah-focus-expedition-btn" onclick="window.seyyahFocusExpeditionRoute()">
+                        🎯 Aktif Sefer Rotasına Odaklan
+                    </button>
+                </div>
+
                 <div class="visited-cities-list">
                     <h3>Ziyaret Edilen İller ({visited_count})</h3>
                     <div class="visited-cities-grid">
@@ -441,13 +570,109 @@ class MapGenerator:
                 <p class="panel-quote">"İyi bir gezginin sabit planları ve varmak gibi bir amacı yoktur."</p>
             </div>
         </div>
+        <script>
+        (function() {{
+            var CITY_LOOKUP = {json.dumps(city_lookup, ensure_ascii=False)};
+            var EXPEDITION_COORDS = {json.dumps(expedition_coords)};
+            function normTr(s) {{
+                if (!s) return "";
+                return String(s).trim()
+                    .replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i")
+                    .replace(/Ç/g, "c").replace(/ç/g, "c")
+                    .replace(/Ğ/g, "g").replace(/ğ/g, "g")
+                    .replace(/Ö/g, "o").replace(/ö/g, "o")
+                    .replace(/Ş/g, "s").replace(/ş/g, "s")
+                    .replace(/Ü/g, "u").replace(/ü/g, "u")
+                    .toLowerCase();
+            }}
+            function getLeafletMap() {{
+                if (typeof {map_var_name} !== "undefined" && {map_var_name} && {map_var_name}.setView) {{
+                    return {map_var_name};
+                }}
+                for (var k in window) {{
+                    if (k.indexOf("map_") === 0 && window[k] && typeof window[k].setView === "function") {{
+                        return window[k];
+                    }}
+                }}
+                return null;
+            }}
+            window.seyyahJumpToCity = function(query) {{
+                var q = normTr(query);
+                if (!q) return false;
+                var target = CITY_LOOKUP[q];
+                if (!target) {{
+                    for (var key in CITY_LOOKUP) {{
+                        if (key.indexOf(q) !== -1) {{
+                            target = CITY_LOOKUP[key];
+                            break;
+                        }}
+                    }}
+                }}
+                var mapObj = getLeafletMap();
+                if (target && mapObj) {{
+                    mapObj.flyTo([target.lat, target.lng], 9, {{ duration: 1.1 }});
+                    return true;
+                }}
+                return false;
+            }};
+            window.seyyahQuickSearchJump = function() {{
+                var inp = document.getElementById("map-quick-city-search");
+                if (inp && inp.value) {{
+                    window.seyyahJumpToCity(inp.value);
+                }}
+            }};
+            window.seyyahFocusExpeditionRoute = function() {{
+                var mapObj = getLeafletMap();
+                if (mapObj && EXPEDITION_COORDS.length > 1) {{
+                    mapObj.flyToBounds(EXPEDITION_COORDS, {{ padding: [45, 45], duration: 1.2 }});
+                }}
+            }};
+        }})();
+        </script>
         """
         m.get_root().html.add_child(folium.Element(title_panel_html))
 
         # Katman Grupları
+        expedition_group = folium.FeatureGroup(name="🎯 Aktif Sefer Rotası (Ankara ➔ Edirne)", show=True)
         route_group = folium.FeatureGroup(name="🛣️ Seyyah Rota İzi", show=True)
         visited_group = folium.FeatureGroup(name=f"✅ Ziyaret Edilen İller ({visited_count})", show=True)
         unvisited_group = folium.FeatureGroup(name=f"⏳ Bekleyen İller ({stats['unvisited_cities']})", show=True)
+
+        # Aktif Sefer Rotası (Ankara ➔ Edirne) Parlayan Çizgi ve Durak İşaretçileri
+        if len(expedition_coords) > 1:
+            total_exp_km = custom_expedition[-1].get("cumulative_km", 0)
+            folium.PolyLine(
+                locations=expedition_coords,
+                color="#f59e0b",
+                weight=7,
+                opacity=0.35,
+                tooltip=f"🎯 Aktif Sefer Rotası (Ankara ➔ Edirne | {total_exp_km:,} km)"
+            ).add_to(expedition_group)
+            folium.PolyLine(
+                locations=expedition_coords,
+                color="#00f2fe",
+                weight=3.5,
+                opacity=0.95,
+                dash_array="8, 6",
+                tooltip=f"🎯 Aktif Sefer Rotası (Ankara ➔ Edirne | {total_exp_km:,} km)"
+            ).add_to(expedition_group)
+
+            for idx, stop in enumerate(custom_expedition, 1):
+                stop_name = html.escape(stop["name"])
+                leg_km = stop.get("distance_from_prev_km", 0)
+                cum_km = stop.get("cumulative_km", 0)
+                leg_info = "Başlangıç Menzili" if idx == 1 else f"+{leg_km} km | Toplam: {cum_km:,} km"
+                stop_icon_html = f'<div class="expedition-stop-marker">{idx}</div>'
+                folium.Marker(
+                    location=[stop["lat"], stop["lng"]],
+                    tooltip=folium.Tooltip(f"🎯 Sefer #{idx:02d}: {stop_name} ({stop['plate']:02d}) — {leg_info}"),
+                    icon=folium.DivIcon(
+                        html=stop_icon_html,
+                        class_name="custom-expedition-stop-icon",
+                        icon_size=(22, 22),
+                        icon_anchor=(11, 11),
+                    ),
+                ).add_to(expedition_group)
 
         # Seyahat İzi Çizgisi (Polyline)
         visited_coords = [
@@ -552,6 +777,7 @@ class MapGenerator:
                 tooltip=folium.Tooltip(f"⏳ {city_name} ({p['plate']:02d}) - Keşfedilmeyi Bekliyor"),
             ).add_to(unvisited_group)
 
+        expedition_group.add_to(m)
         route_group.add_to(m)
         visited_group.add_to(m)
         unvisited_group.add_to(m)

@@ -693,6 +693,100 @@
         cursor: wait;
       }
 
+      .amd-local-btn,
+      .amd-random-mood-btn,
+      .amd-route-transfer-btn {
+        cursor: pointer;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+
+      .amd-local-btn {
+        background: rgba(245, 158, 11, 0.14);
+        border: 1px solid rgba(245, 158, 11, 0.38);
+        color: var(--accent-gold, #f59e0b);
+      }
+
+      .amd-local-btn:hover:not(:disabled) {
+        background: rgba(245, 158, 11, 0.24);
+        border-color: var(--accent-gold, #f59e0b);
+        transform: translateY(-2px);
+      }
+
+      .amd-random-mood-btn {
+        background: rgba(168, 85, 247, 0.14);
+        border: 1px solid rgba(168, 85, 247, 0.38);
+        color: #c084fc;
+        padding: 7px 13px;
+        font-size: 0.8rem;
+      }
+
+      .amd-random-mood-btn:hover:not(:disabled) {
+        background: rgba(168, 85, 247, 0.25);
+        border-color: #c084fc;
+        transform: translateY(-1px);
+      }
+
+      .amd-route-transfer-btn {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0, 242, 254, 0.2));
+        border: 1px solid rgba(16, 185, 129, 0.45);
+        color: #34d399;
+      }
+
+      .amd-route-transfer-btn:hover {
+        background: linear-gradient(135deg, var(--accent-emerald, #10b981), var(--accent-cyan, #00f2fe));
+        color: #061224;
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(16, 185, 129, 0.28);
+      }
+
+      .amd-cta-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .amd-manifesto-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      body.light-theme .amd-local-btn {
+        background: rgba(217, 119, 6, 0.12);
+        border-color: rgba(217, 119, 6, 0.38);
+        color: #b45309;
+      }
+
+      body.light-theme .amd-random-mood-btn {
+        background: rgba(124, 58, 237, 0.1);
+        border-color: rgba(124, 58, 237, 0.32);
+        color: #6d28d9;
+      }
+
+      body.light-theme .amd-route-transfer-btn {
+        background: rgba(5, 150, 105, 0.12);
+        border-color: rgba(5, 150, 105, 0.38);
+        color: #047857;
+      }
+
+      body.light-theme .amd-route-transfer-btn:hover {
+        color: #ffffff;
+        background: linear-gradient(135deg, #059669, #0284c7);
+      }
+
       /* Loading Skeleton */
       .amd-loading-wrap {
         display: flex;
@@ -1275,35 +1369,42 @@
     const landmark2 = (p.landmarks && p.landmarks[1]) || `${p.name} seyir noktası`;
     const libName = p.library ? cleanSnippet(p.library.split(' - ')[0], 46) : `${p.name} İl Halk Kütüphanesi`;
     const firstDish = (p.specialties && p.specialties[0]) || 'yöresel sofra';
+    const planHint = Array.isArray(p.five_day_plan) && p.five_day_plan[0]
+      ? ` (5 Gün Planı 1. Gün: ${cleanSnippet(p.five_day_plan[0], 72)})`
+      : '';
 
     if (mood.id === 'kodlama') {
-      return `Sabah ${libName}'nde derin odak ve kodlama bloğu; ikindi vakti ${landmark1} çevresinde yürüyüş; akşam ${firstDish} eşliğinde gün değerlendirmesi.`;
+      return `Sabah ${libName}'nde derin odak ve kodlama bloğu; ikindi vakti ${landmark1} çevresinde yürüyüş; akşam ${firstDish} eşliğinde gün değerlendirmesi.${planHint}`;
     }
     if (mood.id === 'gurme') {
-      return `Sabah tarihî çarşıda fırından taze ikramlar; öğlen ${landmark1} ve esnaf lokantası turu; akşam ${firstDish} ile ${season.toLowerCase()} sofrası.`;
+      return `Sabah tarihî çarşıda fırından taze ikramlar; öğlen ${landmark1} ve esnaf lokantası turu; akşam ${firstDish} ile ${season.toLowerCase()} sofrası.${planHint}`;
     }
     if (mood.id === 'fotograf') {
-      return `Şafakta ${landmark1} silüetiyle ilk kareler; öğlen ${libName} civarında dinlenme; altın saatte ${landmark2} noktasında gün batımı kadrajı.`;
+      return `Şafakta ${landmark1} silüetiyle ilk kareler; öğlen ${libName} civarında dinlenme; altın saatte ${landmark2} noktasında gün batımı kadrajı.${planHint}`;
     }
     if (mood.id === 'macera') {
-      return `Erken saatte ${landmark1} parkuruna çıkış; öğleden sonra ${landmark2} keşfi; akşam ${companion.toLowerCase()} ${firstDish} eşliğinde rota muhasebesi.`;
+      return `Erken saatte ${landmark1} parkuruna çıkış; öğleden sonra ${landmark2} keşfi; akşam ${companion.toLowerCase()} ${firstDish} eşliğinde rota muhasebesi.${planHint}`;
     }
     if (mood.id === 'melankoli') {
-      return `${season} serinliğinde ${libName} penceresinde okuma ve çay; ikindide ${landmark1} sokaklarında ağır adımlar; akşam ${firstDish} ile sıcacık mola.`;
+      return `${season} serinliğinde ${libName} penceresinde okuma ve çay; ikindide ${landmark1} sokaklarında ağır adımlar; akşam ${firstDish} ile sıcacık mola.${planHint}`;
     }
-    return `Sabah ${landmark1} avlusunda sükûnet; öğle sonrası ${libName}'nde tefekkür ve okuma; akşam ${landmark2} yönünde dingin yürüyüş.`;
+    return `Sabah ${landmark1} avlusunda sükûnet; öğle sonrası ${libName}'nde tefekkür ve okuma; akşam ${landmark2} yönünde dingin yürüyüş.${planHint}`;
   }
 
   function buildOfflineReason(p, mood, season, companion) {
-    const quote = cleanSnippet(p.custom_quote || p.quote || '', 120);
+    const quote = cleanSnippet(p.custom_quote || p.quote || '', 115);
     const lm = (p.landmarks && p.landmarks.slice(0, 2).join(' ve ')) || `${p.name} mirası`;
+    const spiritualRaw = Array.isArray(p.spiritual_figures) && p.spiritual_figures[0]
+      ? cleanSnippet(String(p.spiritual_figures[0]).split(':')[0], 50)
+      : '';
+    const spiritualNote = spiritualRaw ? ` (${spiritualRaw} irfanıyla)` : '';
     const prefixMap = {
-      sukunet: `${p.name}, ${season.toLowerCase()} dinginliğinde ${lm} ile gönle duruluk veren bir sükûnet durağı.`,
+      sukunet: `${p.name}, ${season.toLowerCase()} dinginliğinde ${lm}${spiritualNote} ile gönle duruluk veren bir sükûnet durağı.`,
       macera: `${p.name}, ${lm} hattıyla ${companion.toLowerCase()} çıkılacak keşiflere diri bir Anadolu heyecanı katar.`,
       kodlama: `${p.name}, düzenli şehir ritmi ve ${lm} yakınındaki kütüphane iklimiyle derin çalışma için biçilmiş kaftan.`,
       gurme: `${p.name}, köklü mutfak geleneği ve ${lm} çevresindeki çarşı kültürüyle gerçek bir lezzet menzili.`,
       fotograf: `${p.name}, ${season.toLowerCase()} ışığının ${lm} dokusuna vurduğu anlarda unutulmaz kareler sunar.`,
-      melankoli: `${p.name}, ${season.toLowerCase()} göğü altında ${lm} izleriyle şiirsel bir hüzün ve dinginlik taşır.`
+      melankoli: `${p.name}, ${season.toLowerCase()} göğü altında ${lm}${spiritualNote} izleriyle şiirsel bir hüzün ve dinginlik taşır.`
     };
     const lead = prefixMap[mood.id] || `${p.name}, ruh halinle örtüşen kadim bir menzil.`;
     return quote ? `${lead} “${quote}”` : lead;
@@ -1688,12 +1789,50 @@
     }
 
     function hasLiveAIConfigured() {
-      const hasGlobal = typeof window !== 'undefined' && window.SEYYAH_AI && typeof window.SEYYAH_AI.ask === 'function';
-      const hasByok = Boolean(getStoredGeminiKey());
-      return hasGlobal || hasByok;
+      if (typeof window !== 'undefined' && window.SEYYAH_AI && typeof window.SEYYAH_AI.hasKey === 'function') {
+        return Boolean(window.SEYYAH_AI.hasKey());
+      }
+      return Boolean(getStoredGeminiKey());
     }
 
-    async function runDiscovery(isReroll) {
+    function runInstantLocalDiscovery(isReroll) {
+      if (uiState.isLoading) return;
+      if (allProvinces.length === 0) {
+        notify('⚠️ İl verileri henüz yüklenmedi.');
+        return;
+      }
+
+      if (isReroll) {
+        uiState.rerollCount += 1;
+      } else {
+        uiState.rerollCount = 0;
+        uiState.previousKeys = [];
+      }
+
+      const mood = getMoodById(uiState.moodId);
+      const candidates = getCandidatePool();
+      const offlineRes = generateOfflineRecommendations(
+        candidates,
+        mood,
+        uiState.season,
+        uiState.companion,
+        normFn,
+        uiState.rerollCount,
+        uiState.previousKeys
+      );
+      offlineRes.sourceLabel = '⚡ Yerel Bilgi Grafiği Motoru (81 İl Sentezi)';
+      uiState.result = offlineRes;
+      uiState.previousKeys = offlineRes.picks.map((pk) => pk.key);
+      uiState.errorMsg = '';
+      renderView();
+      notify('⚡ Yerel motor ile 3 uyumlu Anadolu menzili anında sentezlendi!');
+    }
+
+    async function runDiscovery(isReroll, forceLocal) {
+      if (forceLocal || !hasLiveAIConfigured()) {
+        runInstantLocalDiscovery(isReroll);
+        return;
+      }
       if (uiState.isLoading) return;
       if (allProvinces.length === 0) {
         notify('⚠️ İl verileri henüz yüklenmedi.');
@@ -1871,9 +2010,14 @@
               </span>
               <div class="amd-manifesto-text">“${esc(res.manifesto)}”</div>
             </div>
-            <button type="button" class="amd-reroll-btn" data-amd-reroll>
-              🎲 Farklı 3 Menzil
-            </button>
+            <div class="amd-manifesto-actions">
+              <button type="button" class="amd-route-transfer-btn" data-amd-transfer-route>
+                🧭 Önerilen 3 Şehri Sefer Rotama Aktar
+              </button>
+              <button type="button" class="amd-reroll-btn" data-amd-reroll>
+                🎲 Farklı 3 Menzil
+              </button>
+            </div>
           </div>
           <div class="amd-cards-grid">
             ${cardsHtml}
@@ -1914,7 +2058,12 @@
                 <span class="amd-step-num">1</span>
                 <span>Bugünkü Seyahat Ruh Hâlini Seç</span>
               </div>
-              <span class="amd-step-hint">6 atmosferden biriyle başla</span>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <span class="amd-step-hint">6 atmosferden biriyle başla</span>
+                <button type="button" class="amd-random-mood-btn" data-amd-random-mood ${uiState.isLoading ? 'disabled' : ''}>
+                  🎲 Ruh Halimi Rastgele Seç
+                </button>
+              </div>
             </div>
             <div class="amd-mood-grid">
               ${renderMoodCards(activeMood)}
@@ -1989,9 +2138,14 @@
                 <span class="amd-mini-pill">${esc(uiState.companion)}</span>
                 <span class="amd-mini-pill">${uiState.onlyUnvisited ? 'Sadece Gezilmemiş' : 'Tüm 81 İl'}</span>
               </div>
-              <button type="button" class="amd-cta-btn" data-amd-discover ${uiState.isLoading ? 'disabled' : ''}>
-                ${uiState.isLoading ? '⏳ Menziller Aranıyor…' : '✨ Ruh Halime Göre 3 Menzil Bul'}
-              </button>
+              <div class="amd-cta-group">
+                <button type="button" class="amd-local-btn" data-amd-local-discover ${uiState.isLoading ? 'disabled' : ''}>
+                  ⚡ Anında Yerel Motor ile Üret (API Anahtarsız)
+                </button>
+                <button type="button" class="amd-cta-btn" data-amd-discover ${uiState.isLoading ? 'disabled' : ''}>
+                  ${uiState.isLoading ? '⏳ Menziller Aranıyor…' : '✨ Ruh Halime Göre 3 Menzil Bul'}
+                </button>
+              </div>
             </div>
           </section>
 
@@ -2015,6 +2169,21 @@
           renderView();
         });
       });
+
+      const randomMoodBtn = container.querySelector('[data-amd-random-mood]');
+      if (randomMoodBtn) {
+        randomMoodBtn.addEventListener('click', () => {
+          const otherMoods = MOODS.filter((m) => m.id !== uiState.moodId);
+          const pickedMood = (otherMoods.length ? otherMoods : MOODS)[Math.floor(Math.random() * (otherMoods.length || MOODS.length))];
+          const pickedSeason = SEASONS[Math.floor(Math.random() * SEASONS.length)];
+          const pickedComp = COMPANIONS[Math.floor(Math.random() * COMPANIONS.length)];
+          uiState.moodId = pickedMood.id;
+          uiState.season = pickedSeason.id;
+          uiState.companion = pickedComp.id;
+          notify(`🎲 Rastgele Profil: ${pickedMood.icon} ${pickedMood.title} • ${pickedSeason.label} • ${pickedComp.label}`);
+          runDiscovery(false, false);
+        });
+      }
 
       container.querySelectorAll('[data-amd-season]').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -2041,14 +2210,44 @@
       const discoverBtn = container.querySelector('[data-amd-discover]');
       if (discoverBtn) {
         discoverBtn.addEventListener('click', () => {
-          runDiscovery(false);
+          runDiscovery(false, false);
+        });
+      }
+
+      const localDiscoverBtn = container.querySelector('[data-amd-local-discover]');
+      if (localDiscoverBtn) {
+        localDiscoverBtn.addEventListener('click', () => {
+          runDiscovery(false, true);
         });
       }
 
       const rerollBtn = container.querySelector('[data-amd-reroll]');
       if (rerollBtn) {
         rerollBtn.addEventListener('click', () => {
-          runDiscovery(true);
+          runDiscovery(true, false);
+        });
+      }
+
+      const transferRouteBtn = container.querySelector('[data-amd-transfer-route]');
+      if (transferRouteBtn) {
+        transferRouteBtn.addEventListener('click', () => {
+          if (!uiState.result || !Array.isArray(uiState.result.picks) || !uiState.result.picks.length) return;
+          const keys = uiState.result.picks.map((pk) => pk.key).filter(Boolean);
+          const names = uiState.result.picks.map((pk) => pk.province && pk.province.name).filter(Boolean);
+          if (safeCtx.state && typeof safeCtx.state === 'object') {
+            safeCtx.state.customRouteCities = keys.slice();
+            safeCtx.state.routeSelectedCities = keys.slice();
+          }
+          try {
+            localStorage.setItem('dijital_seyyah_custom_route_cities', JSON.stringify(keys));
+          } catch (e) {}
+          notify(`🧭 ${names.join(' ➔ ')} sefer rotasına aktarıldı!`);
+          if (typeof safeCtx.openView === 'function') {
+            safeCtx.openView('route');
+          }
+          try {
+            window.location.hash = '#route';
+          } catch (e) {}
         });
       }
 

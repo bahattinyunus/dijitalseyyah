@@ -98,7 +98,8 @@
     budgetId: 'kyk',
     extraNote: '',
     isGenerating: false,
-    result: null
+    result: null,
+    exportedRoute: null
   };
 
   // ---------------------------------------------------------------------------
@@ -170,6 +171,13 @@
     }
   }
 
+  function hasGeminiKeyConfigured() {
+    if (typeof window !== 'undefined' && window.SEYYAH_AI && typeof window.SEYYAH_AI.hasKey === 'function') {
+      if (window.SEYYAH_AI.hasKey()) return true;
+    }
+    return Boolean(getStoredGeminiKey());
+  }
+
   function isRetiredModel(modelName) {
     if (!modelName) return false;
     return RETIRED_MODELS.has(modelName) || /^gemini-2\.[05]($|-)/i.test(modelName);
@@ -212,7 +220,10 @@
   // ---------------------------------------------------------------------------
   function buildProvinceIndex(ctx) {
     const norm = (ctx && ctx.normalizeTurkish) || fallbackNormalize;
-    const raw = (ctx && ctx.data && ctx.data.provinces) || {};
+    const raw =
+      (ctx && ctx.data && ctx.data.provinces) ||
+      (typeof TRAVEL_DATA !== 'undefined' && TRAVEL_DATA && TRAVEL_DATA.provinces) ||
+      {};
     const list = [];
 
     Object.keys(raw).forEach((key) => {
@@ -452,10 +463,71 @@
     return selected;
   }
 
+  // ---------------------------------------------------------------------------
+  // 2-Opt Open-Path TSP Optimizer (Keeps Start City Fixed at Index 0)
+  // ---------------------------------------------------------------------------
+  function calcOpenPathKm(provs, distFn) {
+    let total = 0;
+    for (let i = 1; i < provs.length; i++) {
+      total += distFn(provs[i - 1].lat, provs[i - 1].lng, provs[i].lat, provs[i].lng);
+    }
+    return total;
+  }
+
+  function optimizeRoute2Opt(routeProvs, distFn) {
+    if (!Array.isArray(routeProvs) || routeProvs.length <= 2) {
+      const km = Math.round(calcOpenPathKm(routeProvs || [], distFn));
+      return { ordered: (routeProvs || []).slice(), beforeKm: km, afterKm: km, savedKm: 0 };
+    }
+
+    const best = routeProvs.slice();
+    const beforeKm = calcOpenPathKm(best, distFn);
+    let bestDist = beforeKm;
+    let improved = true;
+    let guard = 0;
+
+    while (improved && guard < 120) {
+      improved = false;
+      guard++;
+      for (let i = 1; i < best.length - 1; i++) {
+        for (let k = i + 1; k < best.length; k++) {
+          const candidate = best
+            .slice(0, i)
+            .concat(best.slice(i, k + 1).reverse(), best.slice(k + 1));
+          const candDist = calcOpenPathKm(candidate, distFn);
+          if (candDist + 0.5 < bestDist) {
+            for (let idx = 0; idx < best.length; idx++) {
+              best[idx] = candidate[idx];
+            }
+            bestDist = candDist;
+            improved = true;
+          }
+        }
+      }
+    }
+
+    const beforeRound = Math.round(beforeKm);
+    const afterRound = Math.round(bestDist);
+    return {
+      ordered: best,
+      beforeKm: beforeRound,
+      afterKm: afterRound,
+      savedKm: Math.max(0, beforeRound - afterRound)
+    };
+  }
+
   function generateOfflinePlan(provinces, startProv, duration, focus, budget, extraNote, distFn, normFn, fallbackReason) {
-    const stops = buildCorridorStops(provinces, startProv, duration.stops, focus, extraNote, distFn, normFn);
-    const fullRoute = [{ prov: startProv, legKm: 0 }].concat(stops);
-    const totalKm = stops.reduce((acc, s) => acc + s.legKm, 0);
+    const rawStops = buildCorridorStops(provinces, startProv, duration.stops, focus, extraNote, distFn, normFn);
+    const rawSequence = [startProv].concat(rawStops.map((s) => s.prov));
+    const opt = optimizeRoute2Opt(rawSequence, distFn);
+    const fullRoute = opt.ordered.map((prov, idx) => ({
+      prov,
+      legKm:
+        idx === 0
+          ? 0
+          : Math.round(distFn(opt.ordered[idx - 1].lat, opt.ordered[idx - 1].lng, prov.lat, prov.lng))
+    }));
+    const totalKm = opt.afterKm;
     const estRoadKm = Math.round(totalKm * 1.24); // Winding Anatolian road factor
     const estBudgetTl = duration.days * budget.dailyTl + Math.round(estRoadKm * (budget.id === 'kyk' ? 1.8 : budget.id === 'standart' ? 2.6 : 4.2));
 
@@ -464,14 +536,14 @@
     const unvisitedCount = provinces.length - visitedCount;
 
     const lines = [];
-    lines.push(`# ${startProv.name} Çıkışlı ${duration.label} — ${focus.shortLabel} Seferi`);
+    lines.push(`# ${startProv.name} Çıkışlı ${duration.label} — ${focus.shortLabel} Seferi (2-Opt Algoritmik Plan)`);
     lines.push('');
     lines.push(
       `> *"${stripBold(startProv.quote || 'Yola çık ki yol sana görünsün; kendini yola bırak ki menzile eresin.')}"*`
     );
     lines.push('');
-    lines.push(`- **Rota Koridoru:** ${routeNamesBold}`);
-    lines.push(`- **Sefer Profili:** ${duration.label} (${duration.days} Gün) • ${focus.label}`);
+    lines.push(`- **2-Opt Optimize Koridor:** ${routeNamesBold}${opt.savedKm > 0 ? ` *(2-Opt ile ~${formatTrNumber(opt.savedKm)} km tasarruf)*` : ''}`);
+    lines.push(`- **Sefer Profili:** ${duration.label} (${duration.days} Gün) • ${focus.label} • 5 Gün Kuralı + Kütüphane + Lezzet`);
     lines.push(`- **Konaklama & Bütçe Modu:** ${budget.label} (Tahmini toplam ~**${formatTrNumber(estBudgetTl)} ₺**)`);
     lines.push(`- **Tahmini Karayolu Mesafesi:** ~**${formatTrNumber(estRoadKm)} km** (kuş uçuşu ${formatTrNumber(totalKm)} km)`);
     lines.push(
@@ -568,9 +640,10 @@
 
     return {
       markdown: lines.join('\n'),
+      routeNames: fullRoute.map((r) => r.prov.name),
       modelUsed: fallbackReason
-        ? `Çevrimdışı Plan Motoru (Gemini yedek: ${fallbackReason})`
-        : 'Çevrimdışı Akıllı Plan Motoru (81 İl Verisi)',
+        ? `2-Opt Algoritmik Plan Motoru (Gemini yedek: ${fallbackReason})`
+        : '2-Opt Algoritmik Plan Motoru (81 İl • API Anahtarsız)',
       isLive: false,
       noKey: !fallbackReason
     };
@@ -988,6 +1061,41 @@
         color: var(--text-secondary, #94a3b8);
       }
 
+      .sap-submit-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .sap-algo-btn {
+        cursor: pointer;
+        border: 1px solid rgba(16, 185, 129, 0.42);
+        border-radius: 14px;
+        padding: 13px 18px;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #6ee7b7;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(0, 242, 254, 0.12));
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.16);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .sap-algo-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.26), rgba(0, 242, 254, 0.2));
+        box-shadow: 0 10px 24px rgba(16, 185, 129, 0.26);
+      }
+
+      .sap-algo-btn:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
       .sap-generate-btn {
         cursor: pointer;
         border: none;
@@ -1377,6 +1485,85 @@
         background: rgba(245, 158, 11, 0.14);
       }
 
+      .sap-action-btn.emerald {
+        border-color: rgba(16, 185, 129, 0.48);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0, 242, 254, 0.14));
+        color: #6ee7b7;
+      }
+
+      .sap-action-btn.emerald:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.32), rgba(0, 242, 254, 0.22));
+      }
+
+      .sap-export-jump-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(0, 242, 254, 0.1));
+        border: 1px solid rgba(16, 185, 129, 0.36);
+        font-size: 0.82rem;
+        color: #d1fae5;
+      }
+
+      .sap-jump-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .sap-jump-btn {
+        cursor: pointer;
+        border: 1px solid rgba(0, 242, 254, 0.4);
+        background: rgba(15, 23, 42, 0.72);
+        color: #67e8f9;
+        border-radius: 10px;
+        padding: 7px 13px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        font-family: inherit;
+        transition: all 0.18s ease;
+      }
+
+      .sap-jump-btn:hover {
+        background: rgba(0, 242, 254, 0.2);
+        color: #ffffff;
+        transform: translateY(-1px);
+      }
+
+      body.light-theme .sap-algo-btn {
+        color: #047857;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(2, 132, 199, 0.1));
+        border-color: rgba(5, 150, 105, 0.4);
+      }
+
+      body.light-theme .sap-action-btn.emerald {
+        color: #047857;
+        background: rgba(16, 185, 129, 0.14);
+        border-color: rgba(5, 150, 105, 0.38);
+      }
+
+      body.light-theme .sap-export-jump-bar {
+        color: #065f46;
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(5, 150, 105, 0.35);
+      }
+
+      body.light-theme .sap-jump-btn {
+        background: #ffffff;
+        color: #0369a1;
+        border-color: rgba(2, 132, 199, 0.38);
+      }
+
+      body.light-theme .sap-jump-btn:hover {
+        background: rgba(2, 132, 199, 0.12);
+        color: #0c4a6e;
+      }
+
       @media (max-width: 768px) {
         .sap-form-grid {
           grid-template-columns: 1fr;
@@ -1386,7 +1573,11 @@
         .sap-result-card {
           padding: 16px;
         }
-        .sap-generate-btn {
+        .sap-submit-actions {
+          width: 100%;
+        }
+        .sap-generate-btn,
+        .sap-algo-btn {
           width: 100%;
           justify-content: center;
         }
@@ -1423,7 +1614,7 @@
     }
 
     function renderView() {
-      const hasKey = Boolean(getStoredGeminiKey());
+      const hasKey = hasGeminiKeyConfigured();
       const activeModel = getPreferredGeminiModel();
       const startProv = provinces.find((p) => p.key === uiState.startCityKey) || provinces[0];
 
@@ -1444,6 +1635,10 @@
         const cards = startProv
           ? extractProvinceCardsFromMarkdown(res.markdown, provinces, startProv, distFn)
           : [];
+        const routeSequenceNames =
+          Array.isArray(res.routeNames) && res.routeNames.length
+            ? res.routeNames
+            : cards.map((c) => c.name);
         const mdHtml = renderMarkdownToHtml(res.markdown, escapeHtml);
 
         const cardsGridHtml = cards.length
@@ -1480,6 +1675,19 @@
           `
           : '';
 
+        const exportedJumpHtml =
+          Array.isArray(uiState.exportedRoute) && uiState.exportedRoute.length
+            ? `
+              <div class="sap-export-jump-bar" role="status">
+                <span>✅ <strong>${uiState.exportedRoute.length} durak</strong> (${escapeHtml(uiState.exportedRoute.join(' → '))}) Ana Rota Planlayıcıya aktarıldı!</span>
+                <div class="sap-jump-actions">
+                  <button type="button" class="sap-jump-btn" data-sap-jump="route">🛣️ Rota Planlayıcıya Git (#route)</button>
+                  <button type="button" class="sap-jump-btn" data-sap-jump="atlas">🗺️ Haritada / Atlasta Gör (#atlas)</button>
+                </div>
+              </div>
+            `
+            : '';
+
         return `
           <article class="sap-result-card" aria-label="Üretilen Sefer Planı">
             <div class="sap-result-header">
@@ -1494,17 +1702,24 @@
                 ${res.createdAt ? `<span class="sap-meta-badge">🕒 ${escapeHtml(res.createdAt)}</span>` : ''}
               </div>
               <div class="sap-result-actions">
+                ${
+                  routeSequenceNames.length
+                    ? `<button type="button" class="sap-action-btn emerald" data-sap-export-route>🗺️ Üretilen Rotayı Ana Rota Planlayıcıya &amp; Haritaya Aktar</button>`
+                    : ''
+                }
                 <button type="button" class="sap-action-btn" data-sap-copy>📋 Kopyala</button>
                 <button type="button" class="sap-action-btn gold" data-sap-download>📥 Markdown İndir</button>
               </div>
             </div>
 
+            ${exportedJumpHtml}
+
             ${
               res.noKey
                 ? `
               <div class="sap-offline-banner">
-                <span>💡 Canlı Gemini API anahtarı henüz tanımlı değil; plan yerel 81 il verisiyle anında üretildi.</span>
-                <span style="font-size: 0.76rem; font-weight: 600;">🔒 API ayarları yalnızca Admin Paneli üzerinden yönetilir.</span>
+                <span>💡 2-Opt + 5 Gün Kuralı algoritmik plan motoru 81 il yerel verisiyle anında çalıştı (API anahtarı gerekmez).</span>
+                <span style="font-size: 0.76rem; font-weight: 600;">🔒 Canlı Gemini API ayarları Admin Paneli üzerinden yönetilir.</span>
               </div>
             `
                 : ''
@@ -1626,12 +1841,17 @@
                 ${
                   hasKey
                     ? `🟢 Canlı Gemini AI (${escapeHtml(activeModel)}) + gerçek gezilmiş/gezilmemiş il bağlamı aktif.`
-                    : '⚡ Çevrimdışı 81 il plan motoru hazır (API ayarları Admin Paneli’nden yönetilir).'
+                    : '⚡ Çevrimdışı 2-Opt + 5 Gün Kuralı plan motoru hazır (API anahtarı olmadan tam plan üretir).'
                 }
               </span>
-              <button type="submit" class="sap-generate-btn" data-sap-submit ${uiState.isGenerating ? 'disabled' : ''}>
-                ${uiState.isGenerating ? '⏳ Plan Üretiliyor...' : '✨ Gemini ile Sefer Planı Üret'}
-              </button>
+              <div class="sap-submit-actions">
+                <button type="button" class="sap-algo-btn" data-sap-offline-algo ${uiState.isGenerating ? 'disabled' : ''}>
+                  ⚡ Hızlı Algoritmik Plan (API Anahtarsız)
+                </button>
+                <button type="submit" class="sap-generate-btn" data-sap-submit ${uiState.isGenerating ? 'disabled' : ''}>
+                  ${uiState.isGenerating ? '⏳ Plan Üretiliyor...' : '✨ Gemini ile Sefer Planı Üret'}
+                </button>
+              </div>
             </div>
           </form>
 
@@ -1640,6 +1860,50 @@
       `;
 
       bindEvents();
+    }
+
+    function handleOfflineAlgorithmGenerate() {
+      if (uiState.isGenerating || !provinces.length) return;
+
+      const startProv = provinces.find((p) => p.key === uiState.startCityKey) || provinces[0];
+      const duration = getSelectedOption(DURATIONS, uiState.durationId);
+      const focus = getSelectedOption(FOCUSES, uiState.focusId);
+      const budget = getSelectedOption(BUDGETS, uiState.budgetId);
+      const extraNote = (uiState.extraNote || '').trim();
+
+      const meta = {
+        startCity: startProv.name,
+        duration: duration.label,
+        focus: focus.label,
+        budget: budget.shortLabel,
+        slug: startProv.slug || normFn(startProv.name),
+        days: duration.days
+      };
+
+      const offlineRes = generateOfflinePlan(
+        provinces,
+        startProv,
+        duration,
+        focus,
+        budget,
+        extraNote,
+        distFn,
+        normFn,
+        null
+      );
+
+      uiState.exportedRoute = null;
+      uiState.result = {
+        markdown: offlineRes.markdown,
+        routeNames: offlineRes.routeNames || [],
+        modelUsed: offlineRes.modelUsed,
+        isLive: false,
+        noKey: !hasGeminiKeyConfigured(),
+        createdAt: nowTimeStr(),
+        meta
+      };
+      renderView();
+      notify('⚡ 2-Opt + 5 Gün Kuralı algoritmik sefer planı anında hazırlandı!');
     }
 
     async function handleGenerate() {
@@ -1662,30 +1926,11 @@
       };
 
       if (!apiKey) {
-        const offlineRes = generateOfflinePlan(
-          provinces,
-          startProv,
-          duration,
-          focus,
-          budget,
-          extraNote,
-          distFn,
-          normFn,
-          null
-        );
-        uiState.result = {
-          markdown: offlineRes.markdown,
-          modelUsed: offlineRes.modelUsed,
-          isLive: false,
-          noKey: true,
-          createdAt: nowTimeStr(),
-          meta
-        };
-        renderView();
-        notify('⚡ Çevrimdışı 81 il verisiyle sefer planı hazırlandı!');
+        handleOfflineAlgorithmGenerate();
         return;
       }
 
+      uiState.exportedRoute = null;
       uiState.isGenerating = true;
       renderView();
 
@@ -1700,8 +1945,10 @@
           distFn
         );
         const aiRes = await requestGeminiExpedition(apiKey, systemInstruction, userPrompt);
+        const extracted = extractProvinceCardsFromMarkdown(aiRes.markdown, provinces, startProv, distFn);
         uiState.result = {
           markdown: aiRes.markdown,
+          routeNames: extracted.map((c) => c.name),
           modelUsed: aiRes.modelUsed,
           isLive: true,
           noKey: false,
@@ -1711,7 +1958,7 @@
         notify(`✨ Sefer planı ${aiRes.modelUsed} ile üretildi!`);
       } catch (err) {
         const errMsg = (err && err.message) || 'Bağlantı hatası';
-        notify(`⚠️ Gemini API hatası (${errMsg}) — Çevrimdışı yedek plan oluşturuldu.`);
+        notify(`⚠️ Gemini API hatası (${errMsg}) — 2-Opt çevrimdışı yedek plan oluşturuldu.`);
         const offlineRes = generateOfflinePlan(
           provinces,
           startProv,
@@ -1725,6 +1972,7 @@
         );
         uiState.result = {
           markdown: offlineRes.markdown,
+          routeNames: offlineRes.routeNames || [],
           modelUsed: offlineRes.modelUsed,
           isLive: false,
           noKey: false,
@@ -1741,6 +1989,8 @@
       const form = container.querySelector('[data-sap-form]');
       const startSelect = container.querySelector('[data-sap-start-city]');
       const noteInput = container.querySelector('[data-sap-extra-note]');
+      const offlineAlgoBtn = container.querySelector('[data-sap-offline-algo]');
+      const exportRouteBtn = container.querySelector('[data-sap-export-route]');
       const copyBtn = container.querySelector('[data-sap-copy]');
       const downloadBtn = container.querySelector('[data-sap-download]');
 
@@ -1753,6 +2003,12 @@
       if (noteInput) {
         noteInput.addEventListener('input', (e) => {
           uiState.extraNote = e.target.value;
+        });
+      }
+
+      if (offlineAlgoBtn) {
+        offlineAlgoBtn.addEventListener('click', () => {
+          handleOfflineAlgorithmGenerate();
         });
       }
 
@@ -1789,6 +2045,51 @@
           handleGenerate();
         });
       }
+
+      if (exportRouteBtn && uiState.result) {
+        exportRouteBtn.addEventListener('click', () => {
+          const startProv = provinces.find((p) => p.key === uiState.startCityKey) || provinces[0];
+          const matchedCards = startProv
+            ? extractProvinceCardsFromMarkdown(uiState.result.markdown, provinces, startProv, distFn)
+            : [];
+          const rawNames =
+            Array.isArray(uiState.result.routeNames) && uiState.result.routeNames.length
+              ? uiState.result.routeNames
+              : matchedCards.map((c) => c.name);
+          const uniqueNames = rawNames.filter((n, idx) => n && rawNames.indexOf(n) === idx);
+
+          if (!uniqueNames.length) {
+            notify('⚠️ Planda aktarılacak il bulunamadı.');
+            return;
+          }
+
+          if (!safeCtx.state) safeCtx.state = {};
+          safeCtx.state.customRouteCities = uniqueNames.slice();
+          uiState.exportedRoute = uniqueNames.slice();
+
+          try {
+            window.dispatchEvent(
+              new CustomEvent('seyyah:route-updated', { detail: { cities: uniqueNames.slice() } })
+            );
+          } catch (_) {}
+
+          notify(`🗺️ ${uniqueNames.length} duraklık rota Ana Rota Planlayıcıya aktarıldı!`);
+          renderView();
+        });
+      }
+
+      container.querySelectorAll('[data-sap-jump]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-sap-jump');
+          if (!target) return;
+          if (typeof safeCtx.openView === 'function') {
+            safeCtx.openView(target);
+          }
+          try {
+            window.location.hash = '#' + target;
+          } catch (_) {}
+        });
+      });
 
       if (copyBtn && uiState.result) {
         copyBtn.addEventListener('click', async () => {

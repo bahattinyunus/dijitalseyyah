@@ -5,10 +5,46 @@
  */
 
 const ALLOWED_MODELS = new Set([
+  'gemini-flash-lite-latest',
+  'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-flash-latest',
   'gemini-2.5-flash',
   'gemini-2.5-pro',
   'gemini-2.0-flash'
 ]);
+
+const FAILOVER_MODELS = [
+  'gemini-flash-lite-latest',
+  'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-flash-latest',
+  'gemini-2.5-flash'
+];
+
+const RETIRED_MODELS = new Set([
+  'gemini-2.5-flash',
+  'gemini-2.5-pro',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash'
+]);
+
+function buildModelCandidates(requestedModel) {
+  const clean = String(requestedModel || '').trim();
+  const primary =
+    clean && ALLOWED_MODELS.has(clean) && !RETIRED_MODELS.has(clean)
+      ? clean
+      : 'gemini-flash-lite-latest';
+  const list = [primary].concat(FAILOVER_MODELS);
+  return list.filter((m, idx) => Boolean(m) && list.indexOf(m) === idx);
+}
+
+function isRetryableStatus(status, message) {
+  if (status === 404 || status === 429 || status === 503) return true;
+  return /quota|billing|limit|not found|high demand|no longer available|retired|overloaded|unavailable/i.test(
+    String(message || '')
+  );
+}
 
 const DEFAULT_SYSTEM_PROMPT = `Sen "Dijital Seyyah: Anadolu Seyahatnamesi" projesinin yapay zekâ destekli seyahat ve tefekkür rehberisin.
 Görevlerin:
@@ -52,8 +88,8 @@ exports.handler = async function (event) {
     const payload = JSON.parse(event.body || '{}');
     const prompt = String(payload.prompt || '').trim();
     const contextSummary = String(payload.context || '').slice(0, 2500);
-    const requestedModel = String(payload.model || 'gemini-2.5-flash').trim();
-    const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : 'gemini-2.5-flash';
+    const requestedModel = String(payload.model || 'gemini-flash-lite-latest').trim();
+    const candidateModels = buildModelCandidates(requestedModel);
 
     if (!prompt || prompt.length > 1500) {
       return {
@@ -64,70 +100,108 @@ exports.handler = async function (event) {
     }
 
     const history = Array.isArray(payload.history) ? payload.history.slice(-6) : [];
-    const contents = history
-      .filter((m) => m && (m.role === 'user' || m.role === 'model') && m.text)
-      .map((m) => ({
-        role: m.role,
+    const alternating = [];
+    for (const m of history) {
+      if (!m || !m.text) continue;
+      const role = m.role === 'assistant' || m.role === 'model' ? 'model' : m.role === 'user' ? 'user' : '';
+      if (!role) continue;
+      if (alternating.length === 0 && role !== 'user') continue;
+      if (alternating.length > 0 && alternating[alternating.length - 1].role === role) continue;
+      alternating.push({
+        role,
         parts: [{ text: String(m.text).slice(0, 800) }]
-      }));
+      });
+    }
+    if (alternating.length > 0 && alternating[alternating.length - 1].role === 'user') {
+      alternating.pop();
+    }
 
-    contents.push({
-      role: 'user',
-      parts: [{ text: prompt }]
-    });
+    const contents = alternating.concat([
+      {
+        role: 'user',
+        parts: [{ text: prompt }]
+      }
+    ]);
 
     const systemInstruction = contextSummary
       ? `${DEFAULT_SYSTEM_PROMPT}\n\nGüncel Seyyah Verisi:\n${contextSummary}`
       : DEFAULT_SYSTEM_PROMPT;
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemInstruction }] },
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 650
-        }
-      })
+    const requestBody = JSON.stringify({
+      system_instruction: { parts: [{ text: systemInstruction }] },
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1024
+      }
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      return {
-        statusCode: response.status,
-        headers,
-        body: JSON.stringify({
-          error: 'GEMINI_API_ERROR',
-          message: (data && data.error && data.error.message) || 'Gemini API hatası'
-        })
-      };
-    }
+    let lastStatus = 502;
+    let lastErrorMessage = 'Gemini API yanıt vermedi';
 
-    const reply =
-      data &&
-      data.candidates &&
-      data.candidates[0] &&
-      data.candidates[0].content &&
-      data.candidates[0].content.parts
-        ? data.candidates[0].content.parts.map((p) => p.text || '').join('\n').trim()
-        : '';
+    for (const tryModel of candidateModels) {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(tryModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-    if (!reply) {
-      return {
-        statusCode: 502,
-        headers,
-        body: JSON.stringify({ error: 'EMPTY_GEMINI_REPLY' })
-      };
+      let response;
+      let data = null;
+      try {
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody
+        });
+        data = await response.json().catch(() => null);
+      } catch (netErr) {
+        lastErrorMessage = netErr && netErr.message ? netErr.message : 'Ağ hatası';
+        continue;
+      }
+
+      if (!response.ok) {
+        const msg = (data && data.error && data.error.message) || `Gemini API hatası (HTTP ${response.status})`;
+        lastStatus = response.status;
+        lastErrorMessage = msg;
+        if (isRetryableStatus(response.status, msg)) {
+          continue;
+        }
+        return {
+          statusCode: response.status,
+          headers,
+          body: JSON.stringify({
+            error: 'GEMINI_API_ERROR',
+            message: msg,
+            model: tryModel
+          })
+        };
+      }
+
+      const reply =
+        data &&
+        data.candidates &&
+        data.candidates[0] &&
+        data.candidates[0].content &&
+        data.candidates[0].content.parts
+          ? data.candidates[0].content.parts.map((p) => p.text || '').join('\n').trim()
+          : '';
+
+      if (reply) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ reply, model: tryModel, source: 'netlify' })
+        };
+      }
+
+      lastStatus = 502;
+      lastErrorMessage = 'EMPTY_GEMINI_REPLY';
     }
 
     return {
-      statusCode: 200,
+      statusCode: lastStatus,
       headers,
-      body: JSON.stringify({ reply, model, source: 'netlify' })
+      body: JSON.stringify({
+        error: 'GEMINI_API_ERROR',
+        message: lastErrorMessage
+      })
     };
   } catch (err) {
     return {

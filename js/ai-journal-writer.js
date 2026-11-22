@@ -11,6 +11,7 @@
 
   const STYLE_ID = 'seyyah-ai-writer-styles';
   const JOURNAL_ENTRIES_STORAGE = 'dijital_seyyah_journal_entries';
+  const PERSONAL_JOURNAL_STORAGE = 'dijital_seyyah_personal_journal_v1';
   const GEMINI_KEY_STORAGE = 'dijital_seyyah_gemini_api_key';
   const GEMINI_MODEL_STORAGE = 'dijital_seyyah_gemini_model';
   const DEFAULT_GEMINI_MODELS = [
@@ -133,10 +134,14 @@
     return trimmed.split(/\s+/).filter(Boolean).length;
   }
 
+  function countChars(text) {
+    return String(text || '').trim().length;
+  }
+
   function formatDurationMinutes(words) {
     if (!words) return '0 dk';
     const mins = Math.max(1, Math.round(words / 180));
-    return `${mins} dk okuma`;
+    return `~${mins} dk okuma`;
   }
 
   function getBannerPath(province, cityKey) {
@@ -201,6 +206,8 @@
   }
 
   function appendJournalEntry(entry) {
+    let savedEntries = false;
+    let count = 0;
     try {
       const raw = localStorage.getItem(JOURNAL_ENTRIES_STORAGE);
       let entries = [];
@@ -210,21 +217,67 @@
       }
       entries.unshift(entry);
       localStorage.setItem(JOURNAL_ENTRIES_STORAGE, JSON.stringify(entries));
-      return { saved: true, count: entries.length };
-    } catch (e) {
-      return { saved: false, count: 0 };
-    }
+      savedEntries = true;
+      count = entries.length;
+    } catch (e) {}
+
+    // Also save directly into personal journal (dijital_seyyah_personal_journal_v1) for the selected city
+    let savedPersonal = false;
+    try {
+      const rawPJ = localStorage.getItem(PERSONAL_JOURNAL_STORAGE);
+      let pj = rawPJ ? JSON.parse(rawPJ) : null;
+      if (!pj || typeof pj !== 'object' || Array.isArray(pj)) {
+        pj = { visited: [], notes: {}, dates: {}, ratings: {}, tags: {} };
+      }
+      if (!Array.isArray(pj.visited)) pj.visited = [];
+      if (!pj.notes || typeof pj.notes !== 'object') pj.notes = {};
+      if (!pj.dates || typeof pj.dates !== 'object') pj.dates = {};
+      if (!pj.ratings || typeof pj.ratings !== 'object') pj.ratings = {};
+      if (!pj.tags || typeof pj.tags !== 'object') pj.tags = {};
+
+      const ck = entry.cityKey;
+      if (ck) {
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const stamp = `[AI Seyahatname · ${entry.styleLabel || entry.mode} · ${todayIso}]`;
+        const prevNote = typeof pj.notes[ck] === 'string' ? pj.notes[ck].trim() : '';
+        pj.notes[ck] = prevNote
+          ? `${prevNote}\n\n---\n${stamp}\n${entry.content}`
+          : `${stamp}\n${entry.content}`;
+        if (!pj.dates[ck]) {
+          pj.dates[ck] = todayIso;
+        }
+        const curTags = Array.isArray(pj.tags[ck]) ? pj.tags[ck] : [];
+        if (!curTags.includes('kutuphane')) curTags.push('kutuphane');
+        if (!curTags.includes('tarih')) curTags.push('tarih');
+        pj.tags[ck] = curTags;
+        localStorage.setItem(PERSONAL_JOURNAL_STORAGE, JSON.stringify(pj));
+        savedPersonal = true;
+      }
+    } catch (e) {}
+
+    return { saved: savedEntries || savedPersonal, count };
   }
 
   function getJournalEntryCount() {
+    let entriesCount = 0;
     try {
       const raw = localStorage.getItem(JOURNAL_ENTRIES_STORAGE);
-      if (!raw) return 0;
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.length : 0;
-    } catch (e) {
-      return 0;
-    }
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) entriesCount = parsed.length;
+      }
+    } catch (e) {}
+    try {
+      const rawPJ = localStorage.getItem(PERSONAL_JOURNAL_STORAGE);
+      if (rawPJ) {
+        const pj = JSON.parse(rawPJ);
+        if (pj && pj.notes && typeof pj.notes === 'object') {
+          const noteCount = Object.keys(pj.notes).length;
+          if (noteCount > entriesCount) return noteCount;
+        }
+      }
+    } catch (e) {}
+    return entriesCount;
   }
 
   function getSortedProvinceKeys(provinces) {
@@ -439,31 +492,41 @@
     const firstNote = noteItems[0] || 'sabahın serinliği';
     const secondNote = noteItems[1] || 'kütüphanenin vakur sessizliği';
     const thirdNote = noteItems[2] || 'gün batımında gökyüzüne düşen kızıllık';
+    const historySent = province.history
+      ? String(province.history).split(/(?<=[.!?])\s+/)[0]
+      : `${name}, Anadolu'nun binlerce yıllık hafızasını sokaklarında yaşatan müstesna bir şehirdir.`;
+    const spiritualName = Array.isArray(province.spiritual_figures) && province.spiritual_figures[0]
+      ? stripMdSyntax(String(province.spiritual_figures[0]).split(':')[0])
+      : '';
+    const planDay1 = Array.isArray(province.five_day_plan) && province.five_day_plan[0]
+      ? stripMdSyntax(province.five_day_plan[0])
+      : '';
 
     switch (styleObj.id) {
       case 'modern':
         return [
           `# ${name}: Yavaş Bir Günün İzinde`,
           '',
-          `${plate} numaralı bu ${region} durağına vardığınızda acele etmeyi kapıda bırakmanız gerekir. Şehrin ilk saatleri **${firstNote}** ile başlar; kalabalık henüz uyanmadan sokaklar size gerçek yüzünü gösterir.`,
+          `${plate} numaralı bu ${region} durağına vardığınızda acele etmeyi kapıda bırakmanız gerekir. ${historySent} Şehrin ilk saatleri **${firstNote}** ile başlar; kalabalık henüz uyanmadan sokaklar size gerçek yüzünü gösterir.`,
           '',
           `Öğleye doğru rotayı **${libraryName}** masalarına kırmak, yolculuğa başka bir ritim katar. Dışarıda ${landmarks[0]} çevresindeki günlük telaş akarken, içeride **${secondNote}** zihni berraklaştırır. Bir şehri yalnızca gezmekle yetinmeyip orada üretmek, mekânla kurulan bağı derinleştirir.`,
           '',
-          `Akşamüstü ${landmarks[1] || landmarks[0]} civarında yürürken **${thirdNote}** günün bütün yorgunluğunu alır. Masaya gelen **${specialties[0]}** ise bu sade günün en samimi ödülüdür.`,
+          `Akşamüstü ${landmarks[1] || landmarks[0]} civarında yürürken **${thirdNote}** günün bütün yorgunluğunu alır.${spiritualName ? ` Şehrin manevi hafızasında iz bırakan **${spiritualName}** iklimi sokakların dinginliğinde hissedilir.` : ''} Masaya gelen **${specialties[0]}**${specialties[1] ? ` ve **${specialties[1]}**` : ''} ise bu sade günün en samimi ödülüdür.`,
           '',
           `> ${quote}`,
           '',
           `- **Duraklar:** ${landmarks.slice(0, 3).join(' · ')}`,
+          planDay1 ? `- **5 Gün Planı Başlangıcı:** ${planDay1}` : '',
           `- **Yol Notları:** ${notesJoined}`
-        ].join('\n');
+        ].filter(Boolean).join('\n');
 
       case 'sufi':
         return [
           `# ${name} Menzilinde Sefer Der Vatan`,
           '',
-          `Yolcu bazen şehir şehir gezer, fakat hakiki sefer kalbin kendi iklimine yaptığı yolculuktur. ${region} coğrafyasının vakarlı şehri **${name}**, yolcusuna daha ilk adımda **${firstNote}** ile tevazuyu fısıldar.`,
+          `Yolcu bazen şehir şehir gezer, fakat hakiki sefer kalbin kendi iklimine yaptığı yolculuktur. ${region} coğrafyasının vakarlı şehri **${name}**, yolcusuna daha ilk adımda **${firstNote}** ile tevazuyu fısıldar. ${historySent}`,
           '',
-          `${landmarks[0]} gölgesinde durup taşların hafızasını dinleyen insan, zamanın aslında geçmediğini; sadece insanın içinden aktığını fark eder. Sonra **${libraryName}** kapısından içeri girildiğinde **${secondNote}**, dış dünyanın gürültüsünü susturan bir dergâh sükûnetine dönüşür.`,
+          `${landmarks[0]} gölgesinde durup taşların hafızasını dinleyen insan, zamanın aslında geçmediğini; sadece insanın içinden aktığını fark eder.${spiritualName ? ` **${spiritualName}** nefesinin sindiği bu topraklarda her kubbe ve her taş avlu bir irfan dersidir.` : ''} Sonra **${libraryName}** kapısından içeri girildiğinde **${secondNote}**, dış dünyanın gürültüsünü susturan bir dergâh sükûnetine dönüşür.`,
           '',
           `Akşam vakti **${thirdNote}** ufku boyarken, şükür sofrasında tadılan **${specialties[0]}** bize her nimetin bir emanet olduğunu hatırlatır. Zira her menzil, insanı kendi özüne bir adım daha yaklaştırdığı ölçüde bereketlidir.`,
           '',
@@ -476,7 +539,7 @@
         return [
           `# ${name} (${plate}) Notları: 5 Gün Kuralı ve Bir Kütüphane Masası 🧭`,
           '',
-          `Bir şehri 3 saatte fotoğraflayıp geçmek yerine 5 gün yaşamak nasıl hissettiriyor? Bugünkü durağım **${region}** kalbindeki **${name}** oldu.`,
+          `Bir şehri 3 saatte fotoğraflayıp geçmek yerine 5 gün yaşamak nasıl hissettiriyor? Bugünkü durağım **${region}** kalbindeki **${name}** oldu. ${historySent}`,
           '',
           `Güne **${firstNote}** eşliğinde başladım. Ardından bilgisayarımı alıp **${libraryName}** köşesine geçtim; **${secondNote}** içinde derin odakla çalışmak bana bir kez daha şunu gösterdi: Yolda olmak üretmeye engel değil, aksine zihni tazeleyen en güçlü kaynak.`,
           '',
@@ -494,9 +557,9 @@
         return [
           `# Seyahat-i ${name}-i Şerîf (${plate} — ${region})`,
           '',
-          `Ey aziz kârî! Bu hakîr-i pür-taksîr, ${region} ikliminin müstesna beldelerinden **${name}** diyarına kadem bastıkta, daha seher vaktinde **${firstNote}** ile ruhumuz tazelendi. Âb u havası latîf, ahalisi mihmanperver ve sokakları dahi ibret-nümâ bir şehirdir.`,
+          `Ey aziz kârî! Bu hakîr-i pür-taksîr, ${region} ikliminin müstesna beldelerinden **${name}** diyarına kadem bastıkta, daha seher vaktinde **${firstNote}** ile ruhumuz tazelendi. ${historySent} Âb u havası latîf, ahalisi mihmanperver ve sokakları dahi ibret-nümâ bir şehirdir.`,
           '',
-          `Evvelâ şehrin dârü'l-kütübü olan **${libraryName}** makamına varıp kalem-i âcizânemizi elimize aldık. Anda hüküm süren **${secondNote}**, gönül aynamızı cilâlayıp ilim ve tefekkür meclisine kapı araladı. Ba'dehu **${landmarks[0]}** ve **${landmarks[1] || landmarks[0]}** misali âsâr-ı kadîmeyi temaşa eyledik ki her bir taşı ecdâd yadigârıdır.`,
+          `Evvelâ şehrin dârü'l-kütübü olan **${libraryName}** makamına varıp kalem-i âcizânemizi elimize aldık. Anda hüküm süren **${secondNote}**, gönül aynamızı cilâlayıp ilim ve tefekkür meclisine kapı araladı. Ba'dehu **${landmarks[0]}** ve **${landmarks[1] || landmarks[0]}** misali âsâr-ı kadîmeyi temaşa eyledik ki her bir taşı ecdâd yadigârıdır.${spiritualName ? ` Husûsan **${spiritualName}** hazretlerinin mânevî feyzi bu beldenin üzerinde bir kubbe-i nur misali parıldar.` : ''}`,
           '',
           `Gurûb-ı şems vaktinde **${thirdNote}** manzarasına nazar kılıp, ni'met-i nefîseden **${specialties[0]}**${specialties[1] ? ' ve **' + specialties[1] + '**' : ''} ile şükür eyledik.`,
           '',

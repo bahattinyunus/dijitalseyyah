@@ -229,6 +229,7 @@
         specialties: Array.isArray(p.specialties) ? p.specialties : [],
         spiritual_figures: Array.isArray(p.spiritual_figures) ? p.spiritual_figures : [],
         literary_quotes: Array.isArray(p.literary_quotes) ? p.literary_quotes : [],
+        five_day_plan: Array.isArray(p.five_day_plan) ? p.five_day_plan : [],
         normName: norm(p.name)
       }));
   }
@@ -786,6 +787,73 @@
         const exp = `${plateStr} plaka kodu ${target.name} (${target.region}) ilimize aittir. Öne çıkan durakları: ${target.landmarks.slice(0, 3).join(', ')}.`;
         return buildCityChoiceQuestion(provinces, target, q, exp, difficultyId, sig);
       });
+
+      // 5 Gün Kuralı Planı Generator
+      generators.push(() => {
+        const eligible = freshFirst(provinces.filter((p) => p.five_day_plan && p.five_day_plan.length >= 2));
+        if (!eligible.length) return null;
+        const target = pickRandom(eligible);
+        const rawPlan = pickRandom(target.five_day_plan);
+        const cleanPlan = String(rawPlan || '').replace(/\*\*/g, '').trim();
+        if (cleanPlan.length < 24) return null;
+        const maskedPlan = maskCityName(cleanPlan, target.name);
+        const sig = `genel-plan-${target.key}-${norm(cleanPlan).slice(0, 20)}`;
+        const regionHint = difficultyId === 'cirak' ? ` (${target.region} Bölgesi)` : '';
+        const q = `Dijital Seyyah "5 Gün Kuralı" rotasında şu gün planı hangi ilimize aittir?${regionHint}\n«${maskedPlan}»`;
+        const exp = `Bu 5 günlük keşif rotası ${target.name} (${padPlate(target.plate)}) ilimize aittir. Şehrin öne çıkan durakları: ${target.landmarks.slice(0, 3).join(', ')}.`;
+        return buildCityChoiceQuestion(provinces, target, q, exp, difficultyId, sig);
+      });
+
+      // Kütüphane & Dijital Göçebe Çalışma Durağı Generator
+      generators.push(() => {
+        const eligible = freshFirst(provinces.filter((p) => {
+          const lib = String(p.custom_library || p.library || '').trim();
+          return lib.length >= 22;
+        }));
+        if (!eligible.length) return null;
+        const target = pickRandom(eligible);
+        const rawLib = String(target.custom_library || target.library || '').trim();
+        const maskedLib = maskCityName(rawLib, target.name);
+        const sig = `genel-lib-${target.key}`;
+        const clue = difficultyId === 'cirak' ? ` (${target.region} Bölgesi)` : '';
+        const q = `Dijital göçebeler için önerilen şu kütüphane çalışma durağı hangi ilimizde yer alır?${clue}\n«${maskedLib}»`;
+        const exp = `${target.name} (${padPlate(target.plate)}) kütüphane ofisi: ${rawLib}`;
+        return buildCityChoiceQuestion(provinces, target, q, exp, difficultyId, sig);
+      });
+
+      // Şehir Sözü & Tefekkür Generator
+      generators.push(() => {
+        const eligible = freshFirst(provinces.filter((p) => {
+          const txt = String(p.quote || p.reflection || '').trim();
+          return txt.length >= 28;
+        }));
+        if (!eligible.length) return null;
+        const target = pickRandom(eligible);
+        const rawQuote = String(target.quote || target.reflection || '').trim();
+        const snippet = rawQuote.length > 180 ? rawQuote.slice(0, 177).trim() + '...' : rawQuote;
+        const masked = maskCityName(snippet, target.name);
+        const sig = `genel-quote-${target.key}`;
+        const q = `Anadolu Seyahatnamesi'nde şu sözle anılan kadim şehrimiz hangisidir?\n«${masked}»`;
+        const exp = `${target.name} (${target.region}) — ${rawQuote}`;
+        return buildCityChoiceQuestion(provinces, target, q, exp, difficultyId, sig);
+      });
+    }
+
+    // Also include 5-day plan & library generators in tarih/doga for richer endless pool
+    if (categoryId === 'tarih' || categoryId === 'doga') {
+      generators.push(() => {
+        const eligible = freshFirst(provinces.filter((p) => p.five_day_plan && p.five_day_plan.length >= 2));
+        if (!eligible.length) return null;
+        const target = pickRandom(eligible);
+        const rawPlan = pickRandom(target.five_day_plan);
+        const cleanPlan = String(rawPlan || '').replace(/\*\*/g, '').trim();
+        if (cleanPlan.length < 24) return null;
+        const maskedPlan = maskCityName(cleanPlan, target.name);
+        const sig = `${categoryId}-plan-${target.key}-${norm(cleanPlan).slice(0, 20)}`;
+        const q = `5 günlük seyahat planında şu rota hangi ilimizde uygulanır?\n«${maskedPlan}»`;
+        const exp = `${target.name} (${padPlate(target.plate)}, ${target.region}) 5 Gün Kuralı rotası: ${cleanPlan}`;
+        return buildCityChoiceQuestion(provinces, target, q, exp, difficultyId, sig);
+      });
     }
 
     // Try generators in shuffled order, avoiding recently seen signatures
@@ -832,14 +900,37 @@
     }
 
     const reqId = ++state.requestSeq;
-    state.isLoading = true;
+    const activeDifficulty = state.difficulty;
+    const activeCategory = state.category;
+    const aiStatus = checkAIStatus();
+
     state.isAnswered = false;
     state.selectedIndex = null;
     state.lastPointsEarned = 0;
-    renderUI();
 
-    const activeDifficulty = state.difficulty;
-    const activeCategory = state.category;
+    // Instant API-keyless Knowledge-Graph synthesis (zero delay, no error flash)
+    if (!aiStatus.available) {
+      const synth = synthesizeFallbackQuestion(provinces, activeDifficulty, activeCategory);
+      state.isLoading = false;
+      if (!synth) {
+        notify('Soru üretilemedi, lütfen tekrar deneyin.');
+        renderUI();
+        return;
+      }
+      state.currentQuestion = {
+        ...synth,
+        source: 'local-kg',
+        fallbackReason: '',
+        difficultyId: activeDifficulty,
+        categoryId: activeCategory
+      };
+      recordAskedQuestion(state.currentQuestion);
+      renderUI();
+      return;
+    }
+
+    state.isLoading = true;
+    renderUI();
 
     let questionObj = null;
     let source = 'ai';
@@ -1551,6 +1642,83 @@
         color: var(--text-muted, #64748b);
       }
 
+      /* City Deep-Dive Card inside Explanation */
+      .aiq-deepdive-card {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: var(--radius-md, 12px);
+        background: rgba(15, 23, 42, 0.56);
+        border: 1px solid rgba(0, 242, 254, 0.28);
+      }
+
+      .aiq-deepdive-thumb {
+        width: 96px;
+        height: 68px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.14));
+      }
+
+      .aiq-deepdive-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .aiq-deepdive-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.96rem;
+        font-weight: 800;
+        color: var(--text-primary, #f8fafc);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+
+      .aiq-deepdive-meta {
+        font-size: 0.77rem;
+        color: var(--text-secondary, #94a3b8);
+        line-height: 1.45;
+      }
+
+      .aiq-multiplier-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 11px;
+        border-radius: var(--radius-full, 9999px);
+        font-size: 0.76rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(245, 158, 11, 0.24));
+        border: 1px solid rgba(245, 158, 11, 0.48);
+        color: #fbbf24;
+      }
+
+      body.light-theme .aiq-deepdive-card {
+        background: rgba(241, 245, 249, 0.94);
+        border-color: rgba(2, 132, 199, 0.3);
+      }
+
+      body.light-theme .aiq-multiplier-live {
+        color: #b45309;
+        background: rgba(245, 158, 11, 0.16);
+      }
+
+      @media (max-width: 720px) {
+        .aiq-deepdive-card {
+          grid-template-columns: 1fr;
+        }
+        .aiq-deepdive-thumb {
+          width: 100%;
+          height: 120px;
+        }
+      }
+
       /* Light Theme High-Contrast Overrides */
       body.light-theme .aiq-hero {
         background: linear-gradient(135deg, rgba(2, 132, 199, 0.1), rgba(124, 58, 237, 0.1) 55%, rgba(217, 119, 6, 0.08));
@@ -1707,7 +1875,11 @@
     const cat = getCategoryMeta(q.categoryId || state.category);
     const sourceBadge = q.source === 'ai'
       ? '<span class="aiq-tag source-ai">🤖 Gemini AI Sorusu</span>'
-      : '<span class="aiq-tag source-fallback">📜 Anadolu Arşivi (Dinamik Yedek)</span>';
+      : q.source === 'local-kg'
+        ? '<span class="aiq-tag source-ai">⚡ Bilgi Grafiği (81 İl Hibrit)</span>'
+        : '<span class="aiq-tag source-fallback">📜 Anadolu Arşivi (Dinamik Yedek)</span>';
+    const liveMult = getStreakMultiplier(state.streak);
+    const liveMultBadge = `<span class="aiq-multiplier-live" title="Art arda doğru cevaplarda puan çarpanı artar">🔥 x${liveMult} Çarpan${state.streak > 0 ? ' · ' + state.streak + ' Seri' : ''}</span>`;
 
     const optionsHtml = q.options.map((opt, idx) => {
       let cls = 'aiq-option-card';
@@ -1745,20 +1917,47 @@
         : `<div class="aiq-exp-verdict bad">❌ Yanlış Seçim — Doğru Cevap: ${LETTERS[q.correctIndex]}) ${esc(q.options[q.correctIndex])}</div>`;
 
       const cityJumpHtml = q.matchedKey
-        ? `<button type="button" class="aiq-city-pill" data-aiq-jump="${esc(q.matchedKey)}">📍 İli İncele · ${esc(q.matchedProvince ? q.matchedProvince.name : q.cityName)}</button>`
+        ? `<button type="button" class="aiq-city-pill" data-aiq-jump="${esc(q.matchedKey)}">📍 Şehir Rehberini Derinlemesine İncele ➔</button>`
         : `<span class="aiq-city-pill-static">📍 ${esc(q.cityName)}</span>`;
+
+      const mp = q.matchedProvince;
+      const deepDiveCardHtml = mp ? `
+        <div class="aiq-deepdive-card">
+          <img
+            class="aiq-deepdive-thumb"
+            src="${esc(mp.banner_rel || 'assets/banner.jpg')}"
+            alt="${esc(mp.name)}"
+            loading="lazy"
+            onerror="if(this.dataset.fb!=='1'){this.dataset.fb='1';this.src='assets/banner.jpg';}"
+          />
+          <div class="aiq-deepdive-info">
+            <div class="aiq-deepdive-title">
+              <span>${esc(mp.name)}</span>
+              <span class="aiq-tag">🏷️ ${padPlate(mp.plate)} · ${esc(mp.region)}</span>
+              <span class="aiq-tag">${mp.visited ? '✅ Gezildi' : '⏳ Keşif Bekliyor'}</span>
+            </div>
+            <div class="aiq-deepdive-meta">
+              ${mp.landmarks && mp.landmarks[0] ? `🏛️ ${esc(mp.landmarks.slice(0, 2).join(', '))}` : ''}
+              ${mp.specialties && mp.specialties[0] ? ` · 🍽️ ${esc(mp.specialties.slice(0, 2).join(', '))}` : ''}
+              ${mp.library ? `<br/>📚 ${esc(String(mp.library).slice(0, 95))}${String(mp.library).length > 95 ? '…' : ''}` : ''}
+            </div>
+          </div>
+          <div>${cityJumpHtml}</div>
+        </div>
+      ` : '';
 
       explanationHtml = `
         <div class="aiq-explanation-box ${wasCorrect ? '' : 'was-wrong'}">
           <div class="aiq-exp-header">
             ${verdictHtml}
-            ${q.matchedProvince ? `<span class="aiq-tag">🏷️ ${padPlate(q.matchedProvince.plate)} · ${esc(q.matchedProvince.region)}</span>` : ''}
+            ${mp ? `<span class="aiq-tag">🏷️ ${padPlate(mp.plate)} · ${esc(mp.region)}</span>` : ''}
           </div>
           <div class="aiq-exp-text">${esc(q.explanation)}</div>
+          ${deepDiveCardHtml}
           <div class="aiq-exp-footer">
-            ${cityJumpHtml}
+            ${mp ? `<span class="aiq-kbd-hint">Enter tuşu ile sıradaki soruya geçebilirsin</span>` : cityJumpHtml}
             <button type="button" class="aiq-generate-btn" data-aiq-generate>
-              ✨ AI Yeni Soru Üret
+              ✨ Sıradaki Soru
             </button>
           </div>
         </div>
@@ -1772,6 +1971,7 @@
             ${sourceBadge}
             <span class="aiq-tag">${esc(cat.label)}</span>
             <span class="aiq-tag">${esc(diff.label)} · ${diff.points} baz puan</span>
+            ${liveMultBadge}
           </div>
           <span class="aiq-kbd-hint">Kısayol: A-D veya 1-4</span>
         </div>

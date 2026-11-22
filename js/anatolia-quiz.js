@@ -1,5 +1,5 @@
 /**
- * Anadolu Bilgi Yarışması (4 Modlu Keşif Oyunu)
+ * Anadolu Bilgi Yarışması (5 Modlu Keşif Oyunu)
  * Registers on window.SEYYAH_MODULES.quiz
  */
 (function () {
@@ -36,12 +36,19 @@
       title: 'Bu Miras Nerede?',
       shortTitle: 'Tarihi Miras',
       desc: 'Tarihi ve doğal mirasların adresini bul'
+    },
+    {
+      id: 'quote',
+      icon: '📜',
+      title: 'Şehrin Ruhu & Hikmetten Şehir Tanı',
+      shortTitle: 'Şehrin Ruhu',
+      desc: 'Şehrin ruhu sözünden veya manevi mimarlarından ili bul'
     }
   ];
 
   // Module-scoped persistent quiz session state
   const quizState = {
-    mode: 'photo',       // 'photo' | 'plate' | 'specialty' | 'landmark'
+    mode: 'photo',       // 'photo' | 'plate' | 'specialty' | 'landmark' | 'quote'
     playType: 'round10', // 'round10' | 'endless'
     score: 0,
     correctCount: 0,
@@ -57,6 +64,8 @@
     isAnswered: false,
     roundFinished: false,
     hintRevealed: false,
+    joker5050Used: false,
+    eliminatedKeys: [],
     activeContainer: null,
     activeCtx: null,
     keyHandler: null
@@ -131,6 +140,25 @@
     return imgs;
   }
 
+  function maskProvinceName(text, provinceName) {
+    if (!text) return '';
+    if (!provinceName) return String(text);
+    const escaped = String(provinceName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    try {
+      return String(text).replace(new RegExp(escaped, 'gi'), '••••');
+    } catch (e) {
+      return String(text);
+    }
+  }
+
+  function hasQuoteOrSpiritClue(p) {
+    if (!p) return false;
+    const q = (p.custom_quote || p.quote || p.soul || '').trim();
+    if (q.length > 4) return true;
+    if (Array.isArray(p.spiritual_figures) && p.spiritual_figures.length > 0) return true;
+    return false;
+  }
+
   function generateQuestion(entries, mode) {
     let eligible = entries;
 
@@ -142,6 +170,8 @@
       eligible = entries.filter(p => Array.isArray(p.specialties) && p.specialties.length > 0);
     } else if (mode === 'landmark') {
       eligible = entries.filter(p => Array.isArray(p.landmarks) && p.landmarks.length > 0);
+    } else if (mode === 'quote') {
+      eligible = entries.filter(p => hasQuoteOrSpiritClue(p));
     }
 
     if (eligible.length < 4) return null;
@@ -204,6 +234,16 @@
       questionPayload.promptTitle = 'Bu tarihi / doğal miras hangi ilimizde yer alır?';
       questionPayload.promptHighlight = item;
       questionPayload.promptLabel = item;
+    } else if (mode === 'quote') {
+      const rawQuote = maskProvinceName((correct.custom_quote || correct.quote || correct.soul || '').trim(), correct.name);
+      const figures = Array.isArray(correct.spiritual_figures)
+        ? correct.spiritual_figures.map(f => typeof f === 'string' ? f : (f && (f.name || f.title)) || '').filter(Boolean)
+        : [];
+      const figuresLine = figures.length > 0 ? `Manevi & İrfan Mimarları: ${figures.slice(0, 3).join(' • ')}` : '';
+      questionPayload.promptTitle = 'Bu ruh & hikmet tasviri hangi ilimize aittir?';
+      questionPayload.promptHighlight = rawQuote || (figures.length ? figures.join(' • ') : 'Kadim Anadolu Menzili');
+      questionPayload.promptSub = rawQuote && figuresLine ? figuresLine : (correct.landmarks && correct.landmarks[0] ? `İpucu Miras: ${correct.landmarks[0]}` : '');
+      questionPayload.promptLabel = figures.length ? figures[0] : 'Şehrin Ruhu';
     }
 
     // Pick 3 distractors (fallback to any other city if filter narrowed too much)
@@ -306,7 +346,7 @@
 
       .aq-modes-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 10px;
       }
 
@@ -557,6 +597,61 @@
         font-weight: 800;
         color: var(--text-primary);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      }
+
+      .aq-quote-stage {
+        max-width: 680px;
+        padding: 20px 26px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(0, 242, 254, 0.1));
+        border: 1px solid rgba(245, 158, 11, 0.42);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .aq-quote-text {
+        font-family: Georgia, "Times New Roman", serif;
+        font-style: italic;
+        font-size: 1.18rem;
+        line-height: 1.55;
+        color: var(--text-primary);
+      }
+
+      .aq-quote-sub {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--accent-gold);
+      }
+
+      .aq-option-btn.is-eliminated {
+        opacity: 0.28;
+        text-decoration: line-through;
+        pointer-events: none;
+        filter: grayscale(0.8);
+      }
+
+      .aq-joker-btn {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(168, 85, 247, 0.18));
+        border: 1px solid rgba(245, 158, 11, 0.5);
+        color: var(--accent-gold);
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 5px 13px;
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .aq-joker-btn:hover:not(:disabled) {
+        background: rgba(245, 158, 11, 0.28);
+        transform: translateY(-1px);
+      }
+
+      .aq-joker-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
 
       .aq-hint-row {
@@ -832,6 +927,8 @@
     quizState.isAnswered = false;
     quizState.roundFinished = false;
     quizState.hintRevealed = false;
+    quizState.joker5050Used = false;
+    quizState.eliminatedKeys = [];
     quizState.currentQuestion = generateQuestion(entries, quizState.mode);
   }
 
@@ -843,7 +940,21 @@
     quizState.selectedKey = null;
     quizState.isAnswered = false;
     quizState.hintRevealed = false;
+    quizState.eliminatedKeys = [];
     quizState.currentQuestion = generateQuestion(entries, quizState.mode);
+  }
+
+  function useJoker5050(ctx) {
+    if (quizState.isAnswered || quizState.joker5050Used || !quizState.currentQuestion) return;
+    const q = quizState.currentQuestion;
+    const wrongOptions = q.options.filter(o => o.key !== q.correctKey && !quizState.eliminatedKeys.includes(o.key));
+    if (wrongOptions.length < 2) return;
+    const toEliminate = shuffleArray(wrongOptions).slice(0, 2).map(o => o.key);
+    quizState.eliminatedKeys = toEliminate;
+    quizState.joker5050Used = true;
+    if (ctx && typeof ctx.showToast === 'function') {
+      ctx.showToast('💡 50:50 Joker kullanıldı: İki yanlış şık elendi!');
+    }
   }
 
   function handleAnswer(chosenKey, ctx) {
@@ -912,8 +1023,10 @@
       if (!quizState.isAnswered && quizState.currentQuestion) {
         const idx = ['1', '2', '3', '4'].indexOf(e.key);
         if (idx !== -1 && quizState.currentQuestion.options[idx]) {
+          const pickedOpt = quizState.currentQuestion.options[idx];
+          if (quizState.eliminatedKeys.includes(pickedOpt.key)) return;
           e.preventDefault();
-          handleAnswer(quizState.currentQuestion.options[idx].key, ctx);
+          handleAnswer(pickedOpt.key, ctx);
           renderUI(container, ctx, entries);
         }
       } else if (quizState.isAnswered && (e.key === 'Enter' || e.key === ' ')) {
@@ -951,6 +1064,14 @@
         <div class="aq-feature-pill">
           <span>🍽️</span>
           <span>${escapeHtml(q.promptHighlight)}</span>
+        </div>
+      `;
+    }
+    if (q.mode === 'quote') {
+      return `
+        <div class="aq-quote-stage">
+          <div class="aq-quote-text">📜 “${escapeHtml(q.promptHighlight)}”</div>
+          ${q.promptSub ? `<div class="aq-quote-sub">✦ ${escapeHtml(q.promptSub)}</div>` : ''}
         </div>
       `;
     }
@@ -1084,6 +1205,7 @@
       const optionsHtml = q.options.map((opt, idx) => {
         let cls = 'aq-option-btn';
         let mark = '';
+        const isEliminated = quizState.eliminatedKeys.includes(opt.key);
         if (quizState.isAnswered) {
           if (opt.key === q.correctKey) {
             cls += ' is-correct';
@@ -1094,13 +1216,16 @@
           } else {
             cls += ' is-dimmed';
           }
+        } else if (isEliminated) {
+          cls += ' is-eliminated';
+          mark = '✕';
         }
         return `
           <button
             type="button"
             class="${cls}"
             data-option-key="${escapeHtml(opt.key)}"
-            ${quizState.isAnswered ? 'disabled' : ''}
+            ${quizState.isAnswered || isEliminated ? 'disabled' : ''}
           >
             <span class="aq-option-key">${idx + 1}</span>
             <span class="aq-option-name">${escapeHtml(opt.name)}</span>
@@ -1111,16 +1236,23 @@
 
       let hintHtml = '';
       if (!quizState.isAnswered) {
+        const jokerBtnHtml = `
+          <button type="button" class="aq-joker-btn" id="aq-btn-joker" ${quizState.joker5050Used ? 'disabled' : ''}>
+            ${quizState.joker5050Used ? '💡 İki Şık Ele (Kullanıldı)' : '💡 İki Şık Ele (50:50 Joker)'}
+          </button>
+        `;
         if (quizState.hintRevealed) {
           hintHtml = `
             <div class="aq-hint-row">
               <span class="aq-hint-text">💡 İpucu: ${escapeHtml(p.region || 'Anadolu')} Bölgesi${q.mode !== 'plate' ? ` • Plaka ${formatPlate(p.plate)}` : ''}</span>
+              ${jokerBtnHtml}
             </div>
           `;
         } else {
           hintHtml = `
             <div class="aq-hint-row">
               <button type="button" class="aq-hint-btn" id="aq-btn-hint">💡 Bölge İpucu Göster (-2 puan)</button>
+              ${jokerBtnHtml}
             </div>
           `;
         }
@@ -1194,7 +1326,7 @@
         <div class="aq-hero">
           <div>
             <div class="aq-hero-title">🎯 Anadolu Bilgi Yarışması</div>
-            <div class="aq-hero-sub">81 ilin fotoğrafları, plakaları, lezzetleri ve mirasıyla 4 modlu keşif oyunu</div>
+            <div class="aq-hero-sub">81 ilin fotoğrafları, plakaları, lezzetleri, mirası ve şehrin ruhuyla 5 modlu keşif oyunu</div>
           </div>
           <div class="aq-playtype-toggle" role="tablist" aria-label="Oyun tipi">
             <button type="button" class="aq-playtype-btn ${quizState.playType === 'round10' ? 'active' : ''}" data-play-type="round10">
@@ -1249,6 +1381,14 @@
     if (btnHint) {
       btnHint.addEventListener('click', () => {
         quizState.hintRevealed = true;
+        renderUI(container, ctx, entries);
+      });
+    }
+
+    const btnJoker = container.querySelector('#aq-btn-joker');
+    if (btnJoker) {
+      btnJoker.addEventListener('click', () => {
+        useJoker5050(ctx);
         renderUI(container, ctx, entries);
       });
     }

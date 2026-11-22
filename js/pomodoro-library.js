@@ -9,6 +9,7 @@
 
   const STYLE_ID = 'seyyah-pomodoro-library-styles';
   const STORAGE_KEY = 'dijital_seyyah_pomodoro_stats';
+  const TASKS_STORAGE_KEY = 'dijital_seyyah_pomodoro_tasks_v1';
   const FLOATING_PILL_ID = 'seyyah-pomodoro-floating-pill';
   const RING_RADIUS = 104;
   const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -201,6 +202,33 @@
     const next = Object.assign({}, current, patch);
     saveStats(next);
     return next;
+  }
+
+  function loadChecklistTasks() {
+    try {
+      const raw = localStorage.getItem(TASKS_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter(item => item && typeof item.text === 'string' && item.text.trim())
+        .slice(0, 40)
+        .map(item => ({
+          id: String(item.id || `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`),
+          text: item.text.trim().slice(0, 120),
+          done: Boolean(item.done)
+        }));
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveChecklistTasks(tasks) {
+    try {
+      localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks.slice(0, 40)));
+    } catch (e) {
+      // Ignore storage quota or private mode restrictions
+    }
   }
 
   function getSortedProvinces(ctx) {
@@ -1228,6 +1256,178 @@
         color: #475569;
       }
 
+      /* Session Task Checklist */
+      .pomo-checklist-card {
+        padding: 20px 22px;
+        border-radius: var(--radius-lg, 20px);
+        background: var(--bg-card, rgba(30, 41, 59, 0.72));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .pomo-checklist-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pomo-checklist-title {
+        font-family: var(--font-heading, inherit);
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: var(--text-primary, #f8fafc);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pomo-checklist-badge {
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.16);
+        border: 1px solid rgba(16, 185, 129, 0.38);
+        color: #34d399;
+      }
+
+      .pomo-checklist-form {
+        display: flex;
+        gap: 8px;
+      }
+
+      .pomo-checklist-input {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 14px;
+        border-radius: var(--radius-md, 12px);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.14));
+        background: rgba(15, 23, 42, 0.6);
+        color: var(--text-primary, #f8fafc);
+        font-family: inherit;
+        font-size: 0.88rem;
+        outline: none;
+      }
+
+      .pomo-checklist-input:focus {
+        border-color: var(--pomo-accent);
+        box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.14);
+      }
+
+      .pomo-checklist-add-btn {
+        padding: 10px 16px;
+        border-radius: var(--radius-md, 12px);
+        border: 1px solid rgba(0, 242, 254, 0.45);
+        background: rgba(0, 242, 254, 0.16);
+        color: var(--text-primary, #f8fafc);
+        font-family: inherit;
+        font-size: 0.84rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+      }
+
+      .pomo-checklist-add-btn:hover {
+        background: rgba(0, 242, 254, 0.26);
+        border-color: var(--accent-cyan, #00f2fe);
+      }
+
+      .pomo-checklist-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .pomo-checklist-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: var(--radius-md, 12px);
+        background: rgba(15, 23, 42, 0.48);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+        transition: border-color 0.2s ease;
+      }
+
+      .pomo-checklist-item.is-done {
+        opacity: 0.72;
+        border-color: rgba(16, 185, 129, 0.3);
+      }
+
+      .pomo-checklist-toggle {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--text-primary, #f8fafc);
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .pomo-checklist-item.is-done .pomo-checklist-text {
+        text-decoration: line-through;
+        color: var(--text-muted, #94a3b8);
+      }
+
+      .pomo-checklist-del {
+        background: none;
+        border: 1px solid transparent;
+        color: var(--text-muted, #94a3b8);
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.18s ease;
+      }
+
+      .pomo-checklist-del:hover {
+        color: #f43f5e;
+        border-color: rgba(244, 63, 94, 0.35);
+        background: rgba(244, 63, 94, 0.1);
+      }
+
+      body.light-theme .pomo-checklist-card {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(15, 23, 42, 0.12);
+      }
+
+      body.light-theme .pomo-checklist-input,
+      body.light-theme .pomo-checklist-item {
+        background: #f8fafc;
+        border-color: rgba(15, 23, 42, 0.12);
+        color: #0f172a;
+      }
+
+      body.light-theme .pomo-checklist-toggle {
+        color: #0f172a;
+      }
+
+      body.light-theme .pomo-checklist-add-btn {
+        background: rgba(2, 132, 199, 0.12);
+        border-color: rgba(2, 132, 199, 0.4);
+        color: #0369a1;
+      }
+
       /* Responsive */
       @media (max-width: 980px) {
         .pomo-main-grid {
@@ -1581,6 +1781,24 @@
       <button type="button" class="pomo-chip-btn" data-pomo-chip="${esc(label)}">${esc(label)}</button>
     `).join('');
 
+    const checklistTasks = loadChecklistTasks();
+    const completedChecklistCount = checklistTasks.filter(t => t.done).length;
+    const checklistHtml = checklistTasks.length
+      ? checklistTasks.map(task => `
+          <div class="pomo-checklist-item ${task.done ? 'is-done' : ''}" data-task-row="${esc(task.id)}">
+            <button type="button" class="pomo-checklist-toggle" data-pomo-task-toggle="${esc(task.id)}" aria-pressed="${task.done ? 'true' : 'false'}">
+              <span>${task.done ? '✅' : '⬜'}</span>
+              <span class="pomo-checklist-text">${esc(task.text)}</span>
+            </button>
+            <button type="button" class="pomo-checklist-del" data-pomo-task-del="${esc(task.id)}" title="Görevi sil" aria-label="Görevi sil">×</button>
+          </div>
+        `).join('')
+      : `
+        <div class="pomo-log-empty" style="padding:12px;">
+          Kütüphane seansınız için küçük okuma veya kodlama adımları ekleyin (örn. "Bölüm 3 notlarını özetle", "API testlerini çalıştır").
+        </div>
+      `;
+
     const logsHtml = stats.recentLogs.length
       ? stats.recentLogs.map(log => {
           const plateStr = log.plate ? `${formatPlate(log.plate)} ` : '';
@@ -1761,6 +1979,33 @@
           </div>
         </div>
 
+        <!-- Session Task Checklist -->
+        <div class="pomo-checklist-card" aria-label="Seans Görev Kontrol Listesi">
+          <div class="pomo-checklist-head">
+            <h3 class="pomo-checklist-title">
+              <span>☑️ Seans Görev Listesi</span>
+              <span class="pomo-checklist-badge">${completedChecklistCount}/${checklistTasks.length} tamamlandı</span>
+            </h3>
+            ${completedChecklistCount > 0
+              ? '<button type="button" class="pomo-clear-log-btn" data-pomo-clear-done-tasks>Tamamlananları Temizle</button>'
+              : ''}
+          </div>
+          <form class="pomo-checklist-form" data-pomo-checklist-form>
+            <input
+              type="text"
+              class="pomo-checklist-input"
+              data-pomo-checklist-input
+              maxlength="120"
+              placeholder="Kodlama, okuma veya not görevi ekle..."
+              aria-label="Yeni seans görevi"
+            />
+            <button type="submit" class="pomo-checklist-add-btn">➕ Ekle</button>
+          </form>
+          <div class="pomo-checklist-items">
+            ${checklistHtml}
+          </div>
+        </div>
+
         <!-- Recent Focus Log -->
         <div class="pomo-log-card">
           <div class="pomo-log-header">
@@ -1901,6 +2146,66 @@
       clearLogBtn.addEventListener('click', () => {
         updatePersistedMeta({ recentLogs: [] });
         notifyToast('📜 Odak günlüğü temizlendi');
+        if (activeContainer && activeCtx) {
+          render(activeContainer, activeCtx);
+        }
+      });
+    }
+
+    // Session Task Checklist Events
+    const checklistForm = root.querySelector('[data-pomo-checklist-form]');
+    const checklistInput = root.querySelector('[data-pomo-checklist-input]');
+    if (checklistForm && checklistInput) {
+      checklistForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = checklistInput.value.trim();
+        if (!text) return;
+        const tasks = loadChecklistTasks();
+        tasks.unshift({
+          id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          text: text.slice(0, 120),
+          done: false
+        });
+        saveChecklistTasks(tasks);
+        notifyToast('☑️ Görev seans listesine eklendi');
+        if (activeContainer && activeCtx) {
+          render(activeContainer, activeCtx);
+        }
+      });
+    }
+
+    root.querySelectorAll('[data-pomo-task-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-pomo-task-toggle');
+        if (!id) return;
+        const tasks = loadChecklistTasks().map(t =>
+          t.id === id ? Object.assign({}, t, { done: !t.done }) : t
+        );
+        saveChecklistTasks(tasks);
+        if (activeContainer && activeCtx) {
+          render(activeContainer, activeCtx);
+        }
+      });
+    });
+
+    root.querySelectorAll('[data-pomo-task-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-pomo-task-del');
+        if (!id) return;
+        const tasks = loadChecklistTasks().filter(t => t.id !== id);
+        saveChecklistTasks(tasks);
+        if (activeContainer && activeCtx) {
+          render(activeContainer, activeCtx);
+        }
+      });
+    });
+
+    const clearDoneBtn = root.querySelector('[data-pomo-clear-done-tasks]');
+    if (clearDoneBtn) {
+      clearDoneBtn.addEventListener('click', () => {
+        const tasks = loadChecklistTasks().filter(t => !t.done);
+        saveChecklistTasks(tasks);
+        notifyToast('🧹 Tamamlanan görevler listeden temizlendi');
         if (activeContainer && activeCtx) {
           render(activeContainer, activeCtx);
         }

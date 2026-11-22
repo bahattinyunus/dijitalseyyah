@@ -309,6 +309,74 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Netlify Serverless Proxy Helper + Offline Smart Synthesis Engine
+  // ---------------------------------------------------------------------------
+  async function tryNetlifyProxy(prompt, system, history, preferredModel) {
+    if (typeof window === 'undefined' || !window.location) return null;
+    const proto = window.location.protocol;
+    if (proto !== 'http:' && proto !== 'https:') return null;
+    if (typeof fetch !== 'function') return null;
+
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller
+      ? setTimeout(function () {
+          try {
+            controller.abort();
+          } catch (_) {}
+        }, 4500)
+      : null;
+
+    try {
+      const cleanHistory = [];
+      if (Array.isArray(history)) {
+        for (let i = 0; i < history.length; i++) {
+          const item = history[i];
+          if (!item || item.loading) continue;
+          const rawRole = String(item.role || '').toLowerCase();
+          const role = rawRole === 'assistant' || rawRole === 'model' ? 'model' : rawRole === 'user' ? 'user' : '';
+          const text = extractTurnText(item).trim();
+          if (role && text) {
+            cleanHistory.push({ role: role, text: text.slice(0, 800) });
+          }
+        }
+      }
+
+      const fetchOpts = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: String(prompt).slice(0, 1500),
+          model: preferredModel || DEFAULT_MODEL,
+          context: system ? String(system).slice(0, 2500) : '',
+          history: cleanHistory.slice(-6)
+        })
+      };
+      if (controller) {
+        fetchOpts.signal = controller.signal;
+      }
+
+      const res = await fetch('/.netlify/functions/seyyah-ai', fetchOpts);
+      if (timer) clearTimeout(timer);
+      if (!res || !res.ok) return null;
+
+      const data = await res.json().catch(function () {
+        return null;
+      });
+      if (data && typeof data.reply === 'string' && data.reply.trim()) {
+        return {
+          text: data.reply.trim(),
+          model: data.model || preferredModel || DEFAULT_MODEL,
+          source: data.source || 'netlify'
+        };
+      }
+      return null;
+    } catch (_) {
+      if (timer) clearTimeout(timer);
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Core AI Methods: ask() and stream()
   // ---------------------------------------------------------------------------
   async function ask(options) {
@@ -346,6 +414,43 @@
 
     const apiKey = readApiKey();
     if (!apiKey) {
+      // First attempt Netlify Function Proxy when running on http/https
+      const proxyHit = await tryNetlifyProxy(prompt, system, history, getPreferredModel());
+      if (proxyHit && proxyHit.text) {
+        if (cacheKey) {
+          cacheSet(cacheKey, proxyHit.text, proxyHit.model);
+        }
+        const latencyMs = Math.max(0, Math.round(nowMs() - t0));
+        telemetry.totalCalls += 1;
+        telemetry.lastModel = proxyHit.model;
+        telemetry.lastLatencyMs = latencyMs;
+        emitTelemetry({ cached: false, streaming: false, source: 'netlify' });
+        return {
+          text: proxyHit.text,
+          model: proxyHit.model,
+          cached: false,
+          latencyMs: latencyMs,
+          source: 'netlify'
+        };
+      }
+
+      if (opts.allowLocalFallback) {
+        const localRes = synthesizeLocalResponse(prompt, opts.ctx);
+        const latencyMs = Math.max(0, Math.round(nowMs() - t0));
+        telemetry.totalCalls += 1;
+        telemetry.lastModel = localRes.model;
+        telemetry.lastLatencyMs = latencyMs;
+        emitTelemetry({ cached: false, streaming: false, source: 'local-knowledge-graph' });
+        return {
+          text: localRes.text,
+          model: localRes.model,
+          cached: false,
+          latencyMs: latencyMs,
+          offline: true,
+          provinces: localRes.provinces
+        };
+      }
+
       const latencyMs = Math.max(0, Math.round(nowMs() - t0));
       telemetry.totalCalls += 1;
       telemetry.errors += 1;
@@ -460,7 +565,13 @@
 
     const apiKey = readApiKey();
     if (!apiKey) {
-      return ask(opts);
+      const fallbackRes = await ask(opts);
+      if (onChunk && fallbackRes && fallbackRes.text) {
+        try {
+          onChunk(fallbackRes.text, fallbackRes.text);
+        } catch (_) {}
+      }
+      return fallbackRes;
     }
 
     const t0 = nowMs();
@@ -752,6 +863,208 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Built-in Deterministic Anatolia Knowledge Graph Synthesis Engine
+  // ---------------------------------------------------------------------------
+  function calcHaversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371.0;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function synthesizeLocalResponse(prompt, ctx) {
+    const rawPrompt = String(prompt || '').trim();
+    const normPrompt = defaultNormalizeTurkish(rawPrompt);
+    const provincesMap = resolveProvincesMap(ctx);
+    const entries = Object.entries(provincesMap);
+
+    const list = entries
+      .map(function (entry) {
+        const key = entry[0];
+        const p = entry[1];
+        if (!p || !p.name) return null;
+        return {
+          key: p.key || key,
+          name: p.name,
+          plate: Number(p.plate) || 0,
+          region: p.region || 'Anadolu',
+          region_code: p.region_code || '',
+          lat: Number(p.lat) || 0,
+          lng: Number(p.lng) || 0,
+          visited: Boolean(p.visited),
+          landmarks: Array.isArray(p.landmarks) ? p.landmarks : [],
+          specialties: Array.isArray(p.specialties) ? p.specialties : [],
+          spiritual: Array.isArray(p.spiritual_figures) ? p.spiritual_figures : [],
+          five_day_plan: Array.isArray(p.five_day_plan) ? p.five_day_plan : [],
+          library: p.custom_library || p.library || (p.name + ' İl Halk Kütüphanesi'),
+          quote: p.custom_quote || p.quote || '',
+          history: p.history || '',
+          normName: defaultNormalizeTurkish(p.name)
+        };
+      })
+      .filter(Boolean);
+
+    if (list.length === 0) {
+      return {
+        text: '🧭 **Anadolu Bilgi Grafiği:** Şu an yerel il veritabanı yükleniyor. Lütfen birkaç saniye sonra tekrar deneyin.',
+        model: 'seyyah-knowledge-graph-v2',
+        provinces: [],
+        offline: true
+      };
+    }
+
+    const distFn = (ctx && typeof ctx.calcDistKm === 'function') ? ctx.calcDistKm : calcHaversineKm;
+    const selectedKey = ctx && ctx.state && ctx.state.selectedCityKey;
+    const activeCity = selectedKey ? list.find(function (p) { return p.key === selectedKey; }) : null;
+
+    // Detect explicitly mentioned province in prompt
+    const sortedByLen = list.slice().sort(function (a, b) { return b.normName.length - a.normName.length; });
+    let mentionedCity = null;
+    for (let i = 0; i < sortedByLen.length; i++) {
+      const p = sortedByLen[i];
+      if (p.normName.length < 3) continue;
+      const re = new RegExp('(?:^|[^a-z])' + p.normName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:$|[^a-z]|[a-z]{1,5}(?:$|[^a-z]))');
+      if (re.test(normPrompt)) {
+        mentionedCity = p;
+        break;
+      }
+    }
+
+    const focusCity = mentionedCity || activeCity;
+    const unvisitedList = list.filter(function (p) { return !p.visited; });
+    const visitedList = list.filter(function (p) { return p.visited; });
+
+    let lines = [];
+
+    if (focusCity && /(gizli|hazine|eser|tarih|gezilecek|5 gun|plan|oneri|hakkinda|nasil)/.test(normPrompt)) {
+      const lm = focusCity.landmarks.slice(0, 4).join(', ') || (focusCity.name + ' Tarihî Kent Merkezi');
+      const sp = focusCity.specialties.slice(0, 4).join(', ') || 'Yöresel Anadolu Mutfağı';
+      const neighbors = (unvisitedList.length >= 2 ? unvisitedList : list)
+        .filter(function (p) { return p.key !== focusCity.key; })
+        .map(function (p) {
+          return { p: p, km: Math.round(distFn(focusCity.lat, focusCity.lng, p.lat, p.lng) * 1.28) };
+        })
+        .sort(function (a, b) { return a.km - b.km; })
+        .slice(0, 2);
+
+      lines.push('### 📍 **' + focusCity.name + '** (Plaka ' + String(focusCity.plate).padStart(2, '0') + ' • ' + focusCity.region + ') Keşif Sentezi');
+      if (focusCity.quote) {
+        lines.push('> *"' + String(focusCity.quote).replace(/\*\*/g, '') + '"*');
+      }
+      lines.push('- **Tarihî & Kültürel Hazineler:** ' + lm);
+      lines.push('- **Kütüphane & Çalışma Ofisi:** ' + focusCity.library);
+      lines.push('- **Yöresel Lezzet Durakları:** ' + sp);
+      if (focusCity.five_day_plan.length > 0) {
+        lines.push('- **5 Gün Kuralı Notu:** ' + String(focusCity.five_day_plan[0]).replace(/\*\*/g, ''));
+      }
+      if (neighbors.length > 0) {
+        lines.push(
+          '- **Yakın Komşu Rota:** ' +
+            neighbors.map(function (n) { return '**' + n.p.name + '** (~' + n.km + ' km)'; }).join(' → ')
+        );
+      }
+    } else if (/(ne yenir|lezzet|yemek|kebap|tatli|gastronomi|kutuphane|calis)/.test(normPrompt)) {
+      if (focusCity) {
+        const sp = focusCity.specialties.join(' • ') || 'Yöresel esnaf mutfağı';
+        lines.push('### 🍽️ **' + focusCity.name + '** Gastronomi & Kütüphane Rehberi');
+        lines.push('- **Mutlaka Tadılması Gerekenler:** ' + sp);
+        lines.push('- **İl Halk Kütüphanesi Ofisi:** ' + focusCity.library);
+        lines.push('- **Seyyah Tavsiyesi:** Sabah 09:00–13:00 arası kütüphanede derin odaklanma mesaisi yaptıktan sonra tarihî çarşıda yöresel lezzet molası verin.');
+      } else {
+        const gastroPicks = list
+          .filter(function (p) {
+            return ['gaziantep', 'hatay', 'sanliurfa', 'adana', 'bursa', 'konya', 'kayseri', 'erzurum'].indexOf(p.normName) !== -1;
+          })
+          .slice(0, 4);
+        lines.push('### 🍽️ Anadolu Gastronomi & Kütüphane Başkentleri');
+        lines.push('| Şehir | Öne Çıkan Lezzetler | Kütüphane & Çalışma |');
+        lines.push('| :--- | :--- | :--- |');
+        for (let i = 0; i < gastroPicks.length; i++) {
+          const gp = gastroPicks[i];
+          lines.push(
+            '| **' +
+              gp.name +
+              '** | ' +
+              gp.specialties.slice(0, 2).join(', ') +
+              ' | ' +
+              String(gp.library).split('-')[0].trim() +
+              ' |'
+          );
+        }
+      }
+    } else if (/(rota|durak|sefer|gezi|plan|yakın|yakin)/.test(normPrompt)) {
+      const start = focusCity || list.find(function (p) { return p.normName === 'ankara'; }) || list[0];
+      const pool = unvisitedList.length >= 3 ? unvisitedList : list;
+      const route = [start];
+      const used = new Set([start.key]);
+
+      while (route.length < 3) {
+        const last = route[route.length - 1];
+        const nextHit = pool
+          .filter(function (p) { return !used.has(p.key); })
+          .map(function (p) {
+            return { p: p, km: Math.round(distFn(last.lat, last.lng, p.lat, p.lng) * 1.28) };
+          })
+          .sort(function (a, b) { return a.km - b.km; })[0];
+        if (!nextHit) break;
+        used.add(nextHit.p.key);
+        route.push(nextHit.p);
+      }
+
+      lines.push('### 🧭 **' + start.name + '** Çıkışlı 3 Duraklı Anadolu Koridoru');
+      lines.push('1. **' + route[0].name + '** — ' + (route[0].landmarks.slice(0, 2).join(', ') || route[0].region) + ' | 🍽️ ' + (route[0].specialties[0] || 'Yöresel mutfak'));
+      if (route[1]) {
+        lines.push('2. **' + route[1].name + '** — ' + (route[1].landmarks.slice(0, 2).join(', ') || route[1].region) + ' | 📚 ' + String(route[1].library).split('-')[0].trim());
+      }
+      if (route[2]) {
+        lines.push('3. **' + route[2].name + '** — ' + (route[2].landmarks.slice(0, 2).join(', ') || route[2].region) + ' | 🍽️ ' + (route[2].specialties[0] || 'Yöresel lezzet'));
+      }
+      lines.push('\n> **5 Gün Kuralı:** Her durakta sabahları İl Halk Kütüphanesi\'nde çalışıp öğleden sonra medeniyet mirasını keşfedebilirsiniz.');
+    } else {
+      const target = focusCity || unvisitedList[0] || list[0];
+      const pct = ((visitedList.length / list.length) * 100).toFixed(1);
+      lines.push('### 🧭 Anadolu Bilgi Grafiği Özeti (' + visitedList.length + '/' + list.length + ' İl • %' + pct + ')');
+      lines.push('- **Önerilen Odak Şehir:** **' + target.name + '** (' + target.region + ')');
+      lines.push('- **Önemli Duraklar:** ' + (target.landmarks.slice(0, 3).join(', ') || target.name + ' Merkez'));
+      lines.push('- **Yöresel Tatlar:** ' + (target.specialties.slice(0, 3).join(', ') || 'Yöresel mutfak'));
+      lines.push('- **Kütüphane Ofisi:** ' + target.library);
+    }
+
+    const finalText = lines.join('\n');
+    return {
+      text: finalText,
+      model: 'seyyah-knowledge-graph-v2',
+      provinces: extractProvinceMatches(finalText, ctx, 6),
+      offline: true
+    };
+  }
+
+  async function askWithFallback(options, ctx) {
+    const opts = Object.assign({}, options || {});
+    const contextObj = ctx || opts.ctx;
+    try {
+      return await ask(opts);
+    } catch (err) {
+      const localRes = synthesizeLocalResponse(opts.prompt, contextObj);
+      return {
+        text: localRes.text,
+        model: localRes.model,
+        cached: false,
+        latencyMs: 1,
+        offline: true,
+        provinces: localRes.provinces,
+        fallbackReason: err && err.message ? err.message : 'OFFLINE_SYNTHESIS'
+      };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // XSS-Proof Markdown Renderer
   // ---------------------------------------------------------------------------
   function defaultEscapeHtml(str) {
@@ -783,6 +1096,7 @@
     let listType = null; // 'ul' | 'ol' | null
     let paragraphBuf = [];
     let quoteBuf = [];
+    let tableBuf = [];
 
     function flushParagraph() {
       if (paragraphBuf.length > 0) {
@@ -804,6 +1118,60 @@
       }
     }
 
+    function flushTable() {
+      if (tableBuf.length === 0) return;
+      const rows = tableBuf
+        .map(function (rowLine) {
+          let clean = rowLine.trim();
+          if (clean.startsWith('|')) clean = clean.slice(1);
+          if (clean.endsWith('|')) clean = clean.slice(0, -1);
+          return clean.split('|').map(function (cell) {
+            return cell.trim();
+          });
+        })
+        .filter(function (cells) {
+          // Skip markdown alignment separator row like | :--- | --- |
+          return !cells.every(function (c) {
+            return /^:?-{2,}:?$/.test(c) || c === '';
+          });
+        });
+
+      tableBuf = [];
+      if (rows.length === 0) return;
+
+      const headerCells = rows[0];
+      const bodyRows = rows.slice(1);
+      const theadHtml =
+        '<thead><tr>' +
+        headerCells
+          .map(function (c) {
+            return `<th class="seyyah-md-th">${formatInlineSafe(c, esc)}</th>`;
+          })
+          .join('') +
+        '</tr></thead>';
+
+      const tbodyHtml =
+        bodyRows.length > 0
+          ? '<tbody>' +
+            bodyRows
+              .map(function (r) {
+                return (
+                  '<tr>' +
+                  r
+                    .map(function (c) {
+                      return `<td class="seyyah-md-td">${formatInlineSafe(c, esc)}</td>`;
+                    })
+                    .join('') +
+                  '</tr>'
+                );
+              })
+              .join('') +
+            '</tbody>'
+          : '';
+
+      html.push(`<div class="seyyah-md-table-wrap"><table class="seyyah-md-table">${theadHtml}${tbodyHtml}</table></div>`);
+    }
+
     function closeList() {
       if (listType === 'ul') {
         html.push('</ul>');
@@ -820,8 +1188,20 @@
       if (!trimmed) {
         flushParagraph();
         flushQuote();
+        flushTable();
         closeList();
         continue;
+      }
+
+      // Markdown table row detection: | Col 1 | Col 2 |
+      if (trimmed.startsWith('|') && trimmed.indexOf('|', 1) !== -1) {
+        flushParagraph();
+        flushQuote();
+        closeList();
+        tableBuf.push(trimmed);
+        continue;
+      } else if (tableBuf.length > 0) {
+        flushTable();
       }
 
       if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
@@ -859,11 +1239,11 @@
           listType = 'ul';
           html.push('<ul class="seyyah-md-list">');
         }
-        html.push(`<li>${formatInlineSafe(ulMatch[1], esc)}</li>`);
+        html.push(`<li class="seyyah-md-li"><span class="seyyah-md-badge seyyah-md-badge-cyan" aria-hidden="true">◆</span><span class="seyyah-md-li-body">${formatInlineSafe(ulMatch[1], esc)}</span></li>`);
         continue;
       }
 
-      const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+      const olMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
       if (olMatch) {
         flushParagraph();
         flushQuote();
@@ -872,7 +1252,7 @@
           listType = 'ol';
           html.push('<ol class="seyyah-md-list seyyah-md-ol">');
         }
-        html.push(`<li>${formatInlineSafe(olMatch[1], esc)}</li>`);
+        html.push(`<li class="seyyah-md-li"><span class="seyyah-md-badge seyyah-md-badge-gold">${esc(olMatch[1])}</span><span class="seyyah-md-li-body">${formatInlineSafe(olMatch[2], esc)}</span></li>`);
         continue;
       }
 
@@ -883,6 +1263,7 @@
 
     flushParagraph();
     flushQuote();
+    flushTable();
     closeList();
 
     return html.join('\n');
@@ -898,7 +1279,9 @@
     getModel: getPreferredModel,
     getFailoverModels: getFailoverModels,
     ask: ask,
+    askWithFallback: askWithFallback,
     stream: stream,
+    synthesizeLocalResponse: synthesizeLocalResponse,
     buildAnatoliaContext: buildAnatoliaContext,
     extractProvinceMatches: extractProvinceMatches,
     renderMarkdown: renderMarkdown,

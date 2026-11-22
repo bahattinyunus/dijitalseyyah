@@ -10,6 +10,41 @@
   window.SEYYAH_MODULES = window.SEYYAH_MODULES || {};
 
   const STYLE_ID = 'seyyah-seven-valleys-styles';
+  const VALLEY_NOTES_STORAGE = 'dijital_seyyah_seven_valleys_notes_v1';
+
+  // Interactive Personal Valley Assessment ("Hangi Vadidesin?" Tefekkür Pusulası)
+  const COMPASS_QUESTIONS = [
+    {
+      id: 'q1',
+      prompt: 'Yola çıkarken veya yeni bir şehre adım atarken kalbindeki en baskın niyet hangisidir?',
+      options: [
+        { label: 'Alışkanlık kafesini kırıp yeni bir ufka revan olmak', valleyId: 1 },
+        { label: 'Dağa, taşa ve o beldenin insanına muhabbetle bağlanmak', valleyId: 2 },
+        { label: 'İl Halk Kütüphanesinde ve tarihî eserlerde derin ilim aramak', valleyId: 3 },
+        { label: 'Tek bir sırt çantasıyla hafifleyip az eşyayla hürleşmek', valleyId: 4 }
+      ]
+    },
+    {
+      id: 'q2',
+      prompt: 'Bir Anadolu şehrinde ikindi vakti taş bir avluda oturduğunda iç âleminde hangi hâl uyanır?',
+      options: [
+        { label: '7 bölgenin farklı renklerinde tek bir medeniyet ruhunu görmek', valleyId: 5 },
+        { label: 'Göbeklitepe’den Selimiye’ye zaman ve sanat karşısında sessiz bir hayret', valleyId: 6 },
+        { label: '“Yolun kendisi menzildir” sırrıyla benlikten soyunup şükretmek', valleyId: 7 },
+        { label: 'Şehrin kütüphanesinde okuyup tefekkür notları derlemek', valleyId: 3 }
+      ]
+    },
+    {
+      id: 'q3',
+      prompt: 'Yolculukta karşına çıkan zahmet, yorgunluk veya yalnızlık anlarını nasıl karşılarsın?',
+      options: [
+        { label: 'Yola çıkma irademi bileyleyen ilk eşik olarak görürüm', valleyId: 1 },
+        { label: 'Sevdiğim coğrafyaya duyduğum aşkın tatlı bir bedeli sayarım', valleyId: 2 },
+        { label: 'İstiğna ve kanaatle fazlalıklardan arınma fırsatı bilirim', valleyId: 4 },
+        { label: 'Kesrette vahdeti ve derin hayreti büyüten bir sükût anı sayarım', valleyId: 6 }
+      ]
+    }
+  ];
 
   // ---------------------------------------------------------------------------
   // 7 Valleys of Attâr's Mantıku't-Tayr mapped to 81 Anatolian Provinces
@@ -294,8 +329,63 @@
     aiOutputs: {},       // cacheKey -> { text, source, isLiveAI }
     aiLoadingKey: null,
     aiError: '',
-    activeRequestId: 0
+    activeRequestId: 0,
+    compassOpen: false,
+    compassAnswers: {},  // qId -> valleyId
+    noteDrafts: {}       // slug -> string
   };
+
+  // ---------------------------------------------------------------------------
+  // Per-Valley Personal Tefekkür Journal Storage
+  // ---------------------------------------------------------------------------
+  function loadValleyNotes() {
+    try {
+      const raw = localStorage.getItem(VALLEY_NOTES_STORAGE);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveValleyNotes(notesMap) {
+    try {
+      localStorage.setItem(VALLEY_NOTES_STORAGE, JSON.stringify(notesMap));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function getValleyNoteEntry(notesMap, slug) {
+    const raw = notesMap && notesMap[slug];
+    if (!raw) return { text: '', updatedAt: '' };
+    if (typeof raw === 'string') return { text: raw, updatedAt: '' };
+    return {
+      text: typeof raw.text === 'string' ? raw.text : '',
+      updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : ''
+    };
+  }
+
+  function computeCompassResult(answers) {
+    const ids = Object.values(answers || {}).filter((v) => Number.isFinite(Number(v)));
+    if (ids.length < COMPASS_QUESTIONS.length) return null;
+    const freq = {};
+    ids.forEach((id) => {
+      freq[id] = (freq[id] || 0) + 1;
+    });
+    let bestId = ids[0];
+    let bestCount = 0;
+    Object.keys(freq).forEach((k) => {
+      const numId = Number(k);
+      if (freq[k] > bestCount || (freq[k] === bestCount && numId > bestId)) {
+        bestCount = freq[k];
+        bestId = numId;
+      }
+    });
+    return VALLEYS.find((v) => v.id === bestId) || VALLEYS[0];
+  }
 
   // ---------------------------------------------------------------------------
   // Safe Helpers
@@ -1331,6 +1421,276 @@
         font-style: italic;
       }
 
+      /* İçsel Pusula ("Hangi Vadidesin?") Card */
+      .svs-compass-card {
+        border-radius: 18px;
+        padding: 16px 20px;
+        background:
+          linear-gradient(135deg, rgba(245, 158, 11, 0.09), rgba(0, 242, 254, 0.07)),
+          var(--bg-card, rgba(30, 41, 59, 0.72));
+        border: 1px solid rgba(245, 158, 11, 0.28);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .svs-compass-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .svs-compass-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .svs-compass-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+      }
+
+      .svs-compass-desc {
+        font-size: 0.84rem;
+        color: var(--text-secondary, #cbd5e1);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .svs-compass-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .svs-btn-ghost {
+        cursor: pointer;
+        border-radius: 11px;
+        padding: 8px 13px;
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: var(--text-primary, #f8fafc);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .svs-btn-ghost:hover {
+        border-color: var(--accent-gold, #f59e0b);
+        background: rgba(245, 158, 11, 0.14);
+        transform: translateY(-1px);
+      }
+
+      .svs-btn-gold {
+        cursor: pointer;
+        border-radius: 11px;
+        padding: 8px 14px;
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(0, 242, 254, 0.18));
+        border: 1px solid rgba(245, 158, 11, 0.42);
+        color: var(--text-primary, #f8fafc);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .svs-btn-gold:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.2);
+      }
+
+      .svs-compass-quiz {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+      }
+
+      .svs-compass-q {
+        padding: 12px 14px;
+        border-radius: 13px;
+        background: rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .svs-compass-q-prompt {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-primary, #f8fafc);
+      }
+
+      .svs-compass-opts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .svs-compass-opt {
+        text-align: left;
+        cursor: pointer;
+        padding: 8px 11px;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        color: var(--text-secondary, #cbd5e1);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.18s ease;
+      }
+
+      .svs-compass-opt:hover {
+        border-color: var(--accent-cyan, #00f2fe);
+        color: var(--text-primary, #f8fafc);
+      }
+
+      .svs-compass-opt.selected {
+        background: rgba(0, 242, 254, 0.16);
+        border-color: var(--accent-cyan, #00f2fe);
+        color: var(--text-primary, #f8fafc);
+        font-weight: 600;
+      }
+
+      .svs-compass-result {
+        padding: 13px 15px;
+        border-radius: 13px;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.86rem;
+      }
+
+      /* Per-Valley Personal Tefekkür Journal */
+      .svs-journal-panel {
+        border-radius: 18px;
+        padding: 18px 20px;
+        background: rgba(15, 23, 42, 0.48);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .svs-journal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .svs-journal-head h4 {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .svs-journal-meta {
+        font-size: 0.76rem;
+        color: var(--text-muted, #94a3b8);
+      }
+
+      .svs-journal-textarea {
+        width: 100%;
+        min-height: 108px;
+        resize: vertical;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(8, 13, 27, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--text-primary, #f8fafc);
+        font-family: inherit;
+        font-size: 0.88rem;
+        line-height: 1.6;
+        outline: none;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+      }
+
+      .svs-journal-textarea:focus {
+        border-color: var(--svs-v-accent, #00f2fe);
+      }
+
+      .svs-journal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .svs-journal-btns {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .svs-saved-strip {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      }
+
+      .svs-saved-chip {
+        cursor: pointer;
+        border-radius: 999px;
+        padding: 4px 11px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-family: inherit;
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: var(--text-primary, #f8fafc);
+        transition: all 0.18s ease;
+      }
+
+      .svs-saved-chip:hover {
+        background: rgba(245, 158, 11, 0.24);
+      }
+
+      .svs-saved-preview {
+        padding: 11px 14px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border-left: 3px solid var(--svs-v-accent, #f59e0b);
+        font-size: 0.85rem;
+        line-height: 1.58;
+        color: var(--text-secondary, #cbd5e1);
+        white-space: pre-wrap;
+      }
+
       /* ---------------------------------------------------------------------
          Light Theme Overrides (body.light-theme)
          --------------------------------------------------------------------- */
@@ -1441,6 +1801,63 @@
         color: #334155;
       }
 
+      body.light-theme .svs-compass-card {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(2, 132, 199, 0.06)), rgba(255, 255, 255, 0.94);
+        border-color: rgba(180, 83, 9, 0.25);
+        color: #0f172a;
+      }
+
+      body.light-theme .svs-compass-desc,
+      body.light-theme .svs-compass-opt,
+      body.light-theme .svs-saved-preview {
+        color: #334155;
+      }
+
+      body.light-theme .svs-compass-q,
+      body.light-theme .svs-journal-panel {
+        background: rgba(241, 245, 249, 0.92);
+        border-color: rgba(15, 23, 42, 0.12);
+        color: #0f172a;
+      }
+
+      body.light-theme .svs-compass-q-prompt {
+        color: #0f172a;
+      }
+
+      body.light-theme .svs-compass-opt {
+        background: rgba(255, 255, 255, 0.88);
+        border-color: rgba(15, 23, 42, 0.12);
+      }
+
+      body.light-theme .svs-compass-opt.selected {
+        background: rgba(2, 132, 199, 0.12);
+        border-color: #0284c7;
+        color: #0c4a6e;
+      }
+
+      body.light-theme .svs-btn-ghost,
+      body.light-theme .svs-btn-gold,
+      body.light-theme .svs-saved-chip {
+        color: #0f172a;
+        background: rgba(15, 23, 42, 0.06);
+        border-color: rgba(15, 23, 42, 0.14);
+      }
+
+      body.light-theme .svs-btn-gold {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(2, 132, 199, 0.12));
+        border-color: rgba(180, 83, 9, 0.35);
+      }
+
+      body.light-theme .svs-journal-textarea {
+        background: #ffffff;
+        border-color: rgba(15, 23, 42, 0.16);
+        color: #0f172a;
+      }
+
+      body.light-theme .svs-saved-preview {
+        background: rgba(255, 255, 255, 0.88);
+      }
+
       @media (max-width: 980px) {
         .svs-doctrine-grid,
         .svs-provinces-grid {
@@ -1449,7 +1866,8 @@
         .svs-pills-row {
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
-        .svs-wisdom-grid {
+        .svs-wisdom-grid,
+        .svs-compass-opts {
           grid-template-columns: 1fr;
         }
       }
@@ -1719,11 +2137,20 @@
     function draw() {
       const selectedValley = VALLEYS.find((v) => v.id === uiState.selectedValleyId) || snapshot.activeValley;
       const progressInfo = getValleyProgressInfo(selectedValley, snapshot.visitedCities, snapshot.activeValley.id);
+      const activeProgressInfo = getValleyProgressInfo(snapshot.activeValley, snapshot.visitedCities, snapshot.activeValley.id);
       const matchedList = resolveMatchedProvinces(selectedValley, snapshot.provincesMap);
       const visitedMatchedCount = matchedList.filter((m) => m.visited).length;
       const cacheKey = `svs_${selectedValley.slug}_${snapshot.visitedCities}`;
       const cachedAi = uiState.aiOutputs[cacheKey] || null;
       const isCurrentlyLoading = uiState.aiLoadingKey === cacheKey;
+
+      const allNotes = loadValleyNotes();
+      const savedEntry = getValleyNoteEntry(allNotes, selectedValley.slug);
+      const draftValue = Object.prototype.hasOwnProperty.call(uiState.noteDrafts, selectedValley.slug)
+        ? uiState.noteDrafts[selectedValley.slug]
+        : savedEntry.text;
+      const valleysWithNotes = VALLEYS.filter((v) => Boolean(getValleyNoteEntry(allNotes, v.slug).text.trim()));
+      const compassResult = computeCompassResult(uiState.compassAnswers);
 
       const doctrinesHtml = SEFER_DOCTRINES.map((doc) => {
         const isDocActive = uiState.selectedDoctrineId === doc.id;
@@ -1748,6 +2175,7 @@
         const st = getValleyStatus(v, snapshot.visitedCities, snapshot.activeValley.id);
         const isSel = v.id === selectedValley.id;
         const statusIcon = st === 'completed' ? '✓' : st === 'active' ? '🔥' : '○';
+        const hasNote = Boolean(getValleyNoteEntry(allNotes, v.slug).text.trim());
         return `
           <button
             type="button"
@@ -1755,12 +2183,74 @@
             style="--svs-v-accent: ${v.accent}; --svs-v-soft: ${v.accentSoft};"
             data-svs-valley="${v.id}"
           >
-            <span class="svs-pill-top">${statusIcon} ${v.roman}</span>
+            <span class="svs-pill-top">${statusIcon} ${v.roman}${hasNote ? ' 📝' : ''}</span>
             <span class="svs-pill-name">${v.icon} ${esc(v.shortTitle)}</span>
             <span class="svs-pill-range">${v.minCities}–${v.maxCities} İl</span>
           </button>
         `;
       }).join('');
+
+      const compassQuizHtml = uiState.compassOpen
+        ? `
+          <div class="svs-compass-quiz">
+            ${COMPASS_QUESTIONS.map((q, idx) => `
+              <div class="svs-compass-q">
+                <div class="svs-compass-q-prompt">${idx + 1}. ${esc(q.prompt)}</div>
+                <div class="svs-compass-opts">
+                  ${q.options
+                    .map((opt) => {
+                      const isPicked = Number(uiState.compassAnswers[q.id]) === opt.valleyId;
+                      return `
+                        <button
+                          type="button"
+                          class="svs-compass-opt ${isPicked ? 'selected' : ''}"
+                          data-svs-compass-q="${esc(q.id)}"
+                          data-svs-compass-v="${opt.valleyId}"
+                        >
+                          ${isPicked ? '✦ ' : ''}${esc(opt.label)}
+                        </button>
+                      `;
+                    })
+                    .join('')}
+                </div>
+              </div>
+            `).join('')}
+            ${
+              compassResult
+                ? `
+                  <div class="svs-compass-result">
+                    <div>
+                      <strong>🧭 Gönül Pusulası İşareti:</strong>
+                      ${compassResult.icon} <strong>${compassResult.roman}. ${esc(compassResult.title)}</strong>
+                      — ${esc(compassResult.tagline)}
+                    </div>
+                    <button type="button" class="svs-btn-gold" data-svs-valley="${compassResult.id}">
+                      ${compassResult.icon} Bu Vadiyi İncele →
+                    </button>
+                  </div>
+                `
+                : `<div class="svs-journal-meta">3 soruyu yanıtladığında gönlündeki baskın vadi makamı burada belirir.</div>`
+            }
+          </div>
+        `
+        : '';
+
+      const savedStripHtml = valleysWithNotes.length
+        ? `
+          <div class="svs-saved-strip">
+            <span class="svs-journal-meta">📖 Kayıtlı Vadi Notların (${valleysWithNotes.length}/7):</span>
+            ${valleysWithNotes
+              .map(
+                (v) => `
+                  <button type="button" class="svs-saved-chip" data-svs-valley="${v.id}">
+                    ${v.icon} ${v.roman}. ${esc(v.shortTitle)}
+                  </button>
+                `
+              )
+              .join('')}
+          </div>
+        `
+        : '';
 
       const provincesHtml = matchedList
         .map((m) => {
@@ -1825,6 +2315,33 @@
             <div class="svs-doctrine-grid">
               ${doctrinesHtml}
             </div>
+          </section>
+
+          <!-- Hangi Vadidesin? (İçsel Pusula) Quick Indicator & Quiz -->
+          <section class="svs-compass-card">
+            <div class="svs-compass-top">
+              <div class="svs-compass-info">
+                <h3 class="svs-compass-title">
+                  <span>🧭 Hangi Vadidesin? (İçsel Pusula)</span>
+                </h3>
+                <p class="svs-compass-desc">
+                  Gezilen <strong>${snapshot.visitedCities}/${snapshot.totalCities} il</strong> ilerlemene göre şu an
+                  <strong>${snapshot.activeValley.icon} ${snapshot.activeValley.roman}. ${esc(snapshot.activeValley.title)}</strong>
+                  makamındasın — ${esc(activeProgressInfo.detail)}
+                </p>
+              </div>
+              <div class="svs-compass-actions">
+                ${
+                  selectedValley.id !== snapshot.activeValley.id
+                    ? `<button type="button" class="svs-btn-gold" data-svs-valley="${snapshot.activeValley.id}">🎯 Aktif Vadime Git (${esc(snapshot.activeValley.shortTitle)})</button>`
+                    : ''
+                }
+                <button type="button" class="svs-btn-ghost" data-svs-toggle-compass>
+                  ${uiState.compassOpen ? '▲ İçsel Pusulayı Gizle' : '🧭 3 Soruluk İçsel Pusulayı Aç'}
+                </button>
+              </div>
+            </div>
+            ${compassQuizHtml}
           </section>
 
           <!-- Interactive SVG 7-Valley Mountain Ascent Map -->
@@ -1919,6 +2436,48 @@
                 ${cachedAi && cachedAi.text ? renderSafeMarkdown(cachedAi.text, esc) : ''}
               </div>
             </div>
+
+            <!-- Per-Valley Personal Tefekkür Journal -->
+            <div class="svs-journal-panel">
+              <div class="svs-journal-head">
+                <h4><span>📝</span> ${selectedValley.roman}. ${esc(selectedValley.shortTitle)} Vadisi — Şahsî Tefekkür Defterin</h4>
+                <span class="svs-journal-meta">
+                  ${
+                    savedEntry.updatedAt
+                      ? `Son kayıt: ${esc(savedEntry.updatedAt)}`
+                      : `Bu vadi için henüz kayıtlı notun yok (${valleysWithNotes.length}/7 vadi notlu)`
+                  }
+                </span>
+              </div>
+
+              ${
+                savedEntry.text.trim()
+                  ? `<div class="svs-saved-preview"><strong>Kayıtlı Tefekkürün:</strong>\n${esc(savedEntry.text)}</div>`
+                  : ''
+              }
+
+              <textarea
+                class="svs-journal-textarea"
+                data-svs-note-input
+                placeholder="${esc(selectedValley.title)} makamına dair içsel tefekkürünü, yolda öğrendiklerini veya bu vadideki niyetini buraya yaz..."
+              >${esc(draftValue)}</textarea>
+
+              <div class="svs-journal-footer">
+                <div class="svs-journal-btns">
+                  <button type="button" class="svs-btn-gold" data-svs-note-save>
+                    💾 Bu Vadinin Tefekkürünü Kaydet
+                  </button>
+                  ${
+                    savedEntry.text.trim()
+                      ? `<button type="button" class="svs-btn-ghost" data-svs-note-clear>🗑️ Notu Temizle</button>`
+                      : ''
+                  }
+                </div>
+                <span class="svs-journal-meta">Tarayıcında güvenle saklanır (localStorage)</span>
+              </div>
+
+              ${savedStripHtml}
+            </div>
           </section>
         </div>
       `;
@@ -1942,6 +2501,27 @@
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleSelect();
+          }
+        });
+      });
+
+      // Toggle İçsel Pusula quiz
+      const compassToggle = container.querySelector('[data-svs-toggle-compass]');
+      if (compassToggle) {
+        compassToggle.addEventListener('click', () => {
+          uiState.compassOpen = !uiState.compassOpen;
+          draw();
+        });
+      }
+
+      // İçsel Pusula question options
+      container.querySelectorAll('[data-svs-compass-q]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const qId = btn.getAttribute('data-svs-compass-q');
+          const vId = Number(btn.getAttribute('data-svs-compass-v'));
+          if (qId && vId) {
+            uiState.compassAnswers[qId] = vId;
+            draw();
           }
         });
       });
@@ -1972,6 +2552,61 @@
       if (aiBtn) {
         aiBtn.addEventListener('click', () => {
           runValleyReflection(selectedValley, matchedList);
+        });
+      }
+
+      // Per-Valley Personal Tefekkür Journal events
+      const noteInput = container.querySelector('[data-svs-note-input]');
+      if (noteInput) {
+        noteInput.addEventListener('input', () => {
+          uiState.noteDrafts[selectedValley.slug] = noteInput.value;
+        });
+      }
+
+      const noteSaveBtn = container.querySelector('[data-svs-note-save]');
+      if (noteSaveBtn) {
+        noteSaveBtn.addEventListener('click', () => {
+          const rawText = noteInput ? noteInput.value.trim() : '';
+          const notes = loadValleyNotes();
+          if (!rawText) {
+            delete notes[selectedValley.slug];
+            delete uiState.noteDrafts[selectedValley.slug];
+            saveValleyNotes(notes);
+            if (ctx && typeof ctx.showToast === 'function') {
+              ctx.showToast(`🗑️ ${selectedValley.shortTitle} Vadisi notu temizlendi.`);
+            }
+            draw();
+            return;
+          }
+          const stamp = new Date().toLocaleString('tr-TR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          notes[selectedValley.slug] = { text: rawText, updatedAt: stamp };
+          uiState.noteDrafts[selectedValley.slug] = rawText;
+          if (saveValleyNotes(notes)) {
+            if (ctx && typeof ctx.showToast === 'function') {
+              ctx.showToast(`📝 ${selectedValley.shortTitle} Vadisi tefekkürün kaydedildi!`);
+            }
+            draw();
+          }
+        });
+      }
+
+      const noteClearBtn = container.querySelector('[data-svs-note-clear]');
+      if (noteClearBtn) {
+        noteClearBtn.addEventListener('click', () => {
+          const notes = loadValleyNotes();
+          delete notes[selectedValley.slug];
+          uiState.noteDrafts[selectedValley.slug] = '';
+          saveValleyNotes(notes);
+          if (ctx && typeof ctx.showToast === 'function') {
+            ctx.showToast(`🗑️ ${selectedValley.shortTitle} Vadisi notu silindi.`);
+          }
+          draw();
         });
       }
     }

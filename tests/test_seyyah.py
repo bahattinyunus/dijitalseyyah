@@ -214,8 +214,9 @@ def test_route_planner_region_filter(engine):
         assert stop["region_code"] == "07_GuneydoguAnadolu"
 
 
-def test_web_data_json_generation(engine):
+def test_web_data_json_generation(engine, tmp_path, monkeypatch):
     """travel_data.json ve web_data.js dosyalarının üretilip geçerli olduğunu doğrular."""
+    monkeypatch.setattr(engine, "repo_root", tmp_path)
     json_path, js_path = engine.generate_web_data_json()
     assert json_path.exists()
     assert js_path.exists()
@@ -230,14 +231,17 @@ def test_web_data_json_generation(engine):
         assert len(data["provinces"]) == 81
 
 
-def test_map_generator_produces_valid_html():
+def test_map_generator_produces_valid_html(tmp_path):
     """MapGenerator'ın katman kontrolü ve katlanabilir panel içeren HTML harita ürettiğini doğrular."""
     mg = MapGenerator()
+    mg.output_file = tmp_path / "travel_map.html"
     out = mg.generate()
     assert out.exists()
     html_text = out.read_text(encoding="utf-8")
     assert "ANADOLU SEYAHATNAMESİ" in html_text
     assert "seyyah-panel-toggle" in html_text
+    assert "map-quick-city-search" in html_text
+    assert "Aktif Sefer Rotasına Odaklan" in html_text
     assert "leaflet" in html_text.lower()
 
 
@@ -261,3 +265,91 @@ def test_cli_commands_execute_cleanly():
     ]:
         res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
         assert res.returncode == 0, f"CLI hatası ({cmd}): {res.stderr}"
+
+
+def test_compare_provinces(engine):
+    """İki ilin mesafe, bölge, miras ve lezzet açısından doğru karşılaştırıldığını test eder."""
+    comp = engine.compare_provinces("Ankara", "42")
+    assert comp is not None
+    assert comp["city_a"]["name"] == "Ankara"
+    assert comp["city_b"]["name"] == "Konya"
+    assert comp["same_region"] is True
+    assert comp["air_distance_km"] > 100
+    assert comp["road_distance_km"] >= comp["air_distance_km"]
+    assert comp["est_drive_hours"] > 0
+    assert comp["landmarks_a_count"] >= 3
+    assert comp["landmarks_b_count"] >= 3
+    assert comp["specialties_a_count"] >= 2
+    assert comp["specialties_b_count"] >= 2
+
+    diff_reg = engine.compare_provinces("34", "06")
+    assert diff_reg is not None
+    assert diff_reg["same_region"] is False
+    assert engine.compare_provinces("Ankara", "OlmayanSehir") is None
+
+
+def test_get_region_summary(engine):
+    """Bölgesel keşif özeti ve optimal koridor hesabının doğruluğunu test eder."""
+    summary = engine.get_region_summary("01_Marmara")
+    assert summary is not None
+    assert summary["region_code"] == "01_Marmara"
+    assert summary["name"] == "Marmara Bölgesi"
+    assert summary["total"] == 11
+    assert summary["visited"] + summary["unvisited"] == 11
+    assert len(summary["visited_provinces"]) == summary["visited"]
+    assert len(summary["unvisited_provinces"]) == summary["unvisited"]
+    assert summary["total_landmarks"] > 20
+    assert summary["total_specialties"] > 20
+    assert isinstance(summary["optimal_corridor"], list)
+
+    by_name = engine.get_region_summary("Karadeniz")
+    assert by_name is not None
+    assert by_name["region_code"] == "05_Karadeniz"
+    assert by_name["total"] == 18
+    assert engine.get_region_summary("GecersizBolge") is None
+
+
+def test_export_gpx_route(engine):
+    """GPX 1.1 rota dışa aktarımının geçerli XML, <wpt> ve <rte>/<rtept> düğümleri ürettiğini test eder."""
+    import xml.etree.ElementTree as ET
+
+    route = engine.build_custom_route()
+    gpx_str = engine.export_gpx_route(route)
+    assert '<gpx version="1.1"' in gpx_str
+    assert "<wpt " in gpx_str
+    assert "<rte>" in gpx_str
+    assert "<rtept " in gpx_str
+
+    root = ET.fromstring(gpx_str)
+    assert root.tag.endswith("gpx")
+    assert root.attrib.get("version") == "1.1"
+    wpts = [el for el in root if el.tag.endswith("wpt")]
+    assert len(wpts) == len(route)
+
+
+def test_enriched_stats_landmarks_and_specialties(engine):
+    """Zenginleştirilmiş self.stats alanlarının (total_landmarks, total_specialties, geographic_center) doğruluğunu test eder."""
+    stats = engine.stats
+    assert "total_landmarks" in stats
+    assert "total_specialties" in stats
+    assert "geographic_center" in stats
+    assert stats["total_landmarks"] >= 250
+    assert stats["total_specialties"] >= 200
+    center = stats["geographic_center"]
+    assert 35.5 <= center["lat"] <= 42.5
+    assert 25.5 <= center["lng"] <= 45.0
+
+
+def test_cli_compare_and_region_commands(tmp_path):
+    """CLI compare, region ve plan-route --gpx alt komutlarının hatasız çalıştığını doğrular."""
+    gpx_out = tmp_path / "sefer_rotasi.gpx"
+    for cmd in [
+        [sys.executable, "dijital_seyyah.py", "compare", "Ankara", "Konya"],
+        [sys.executable, "dijital_seyyah.py", "region", "01_Marmara"],
+        [sys.executable, "dijital_seyyah.py", "region", "Karadeniz"],
+        [sys.executable, "dijital_seyyah.py", "plan-route", "--start", "Ankara", "--stops", "4", "--gpx", str(gpx_out)],
+    ]:
+        res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+        assert res.returncode == 0, f"CLI hatası ({cmd}): {res.stderr}"
+    assert gpx_out.exists()
+    assert '<gpx version="1.1"' in gpx_out.read_text(encoding="utf-8")

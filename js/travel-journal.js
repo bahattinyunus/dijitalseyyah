@@ -14,6 +14,16 @@
     'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
 
+  const JOURNAL_TAGS = [
+    { id: 'tarih', label: '🏛️ Tarih' },
+    { id: 'gurme', label: '🍽️ Gurme' },
+    { id: 'kutuphane', label: '📚 Kütüphane' },
+    { id: 'doga', label: '🌲 Doğa' },
+    { id: 'maneviyat', label: '🕌 Maneviyat' }
+  ];
+
+  const VALID_TAG_IDS = new Set(JOURNAL_TAGS.map((t) => t.id));
+
   // Fallback helpers in case ctx omits any utility
   function defaultEscapeHtml(str) {
     if (str == null) return '';
@@ -77,7 +87,7 @@
 
   // Storage helpers
   function createEmptyJournal() {
-    return { visited: [], notes: {}, dates: {} };
+    return { visited: [], notes: {}, dates: {}, ratings: {}, tags: {} };
   }
 
   function sanitizeJournal(raw, provinces) {
@@ -119,6 +129,28 @@
       });
     }
 
+    if (raw.ratings && typeof raw.ratings === 'object' && !Array.isArray(raw.ratings)) {
+      Object.keys(raw.ratings).forEach((k) => {
+        if (validKey(k)) {
+          const r = Math.round(Number(raw.ratings[k]));
+          if (r >= 1 && r <= 5) {
+            clean.ratings[k] = r;
+          }
+        }
+      });
+    }
+
+    if (raw.tags && typeof raw.tags === 'object' && !Array.isArray(raw.tags)) {
+      Object.keys(raw.tags).forEach((k) => {
+        if (validKey(k) && Array.isArray(raw.tags[k])) {
+          const validTags = Array.from(new Set(raw.tags[k].filter((t) => VALID_TAG_IDS.has(t))));
+          if (validTags.length > 0) {
+            clean.tags[k] = validTags;
+          }
+        }
+      });
+    }
+
     return clean;
   }
 
@@ -137,7 +169,9 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         visited: journal.visited,
         notes: journal.notes,
-        dates: journal.dates
+        dates: journal.dates,
+        ratings: journal.ratings || {},
+        tags: journal.tags || {}
       }));
       return true;
     } catch (e) {
@@ -201,11 +235,13 @@
       lines.push('');
     }
 
-    // Collect all logged keys (visited OR has note OR has date)
+    // Collect all logged keys (visited OR has note OR has date OR has rating OR has tags)
     const loggedKeys = Array.from(new Set([
       ...journal.visited,
       ...Object.keys(journal.notes),
-      ...Object.keys(journal.dates)
+      ...Object.keys(journal.dates),
+      ...Object.keys(journal.ratings || {}),
+      ...Object.keys(journal.tags || {})
     ])).filter((k) => provinces[k]);
 
     lines.push('## 🏛️ Şehir Kayıtları & Seyahat Notları');
@@ -235,10 +271,22 @@
             const isVisited = visitedSet.has(k);
             const dateStr = journal.dates[k] ? formatDateTR(journal.dates[k]) : '';
             const note = journal.notes[k] || '';
+            const rating = (journal.ratings && journal.ratings[k]) || 0;
+            const cityTags = (journal.tags && Array.isArray(journal.tags[k])) ? journal.tags[k] : [];
+            const ratingStr = rating ? ` · ${'⭐'.repeat(rating)} (${rating}/5)` : '';
             const statusText = isVisited ? '✅ Ziyaret Edildi' : '📌 Not / Plan';
-            const headerMeta = dateStr ? `${statusText} · 📅 ${dateStr}` : statusText;
+            const headerMeta = `${dateStr ? `${statusText} · 📅 ${dateStr}` : statusText}${ratingStr}`;
 
             lines.push(`#### ${formatPlate(p.plate)} — ${p.name} (${headerMeta})`);
+            if (cityTags.length > 0) {
+              const tagLabels = cityTags
+                .map((tid) => {
+                  const found = JOURNAL_TAGS.find((t) => t.id === tid);
+                  return found ? found.label : tid;
+                })
+                .join(' · ');
+              lines.push(`*Etiketler: ${tagLabels}*`);
+            }
             if (note) {
               lines.push('');
               lines.push(note);
@@ -754,10 +802,166 @@
         background: rgba(15, 23, 42, 0.1);
       }
 
+      /* 5-Star Rating & Tag Chips */
+      .journal-rating-tags-row {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        margin-top: 14px;
+        align-items: start;
+      }
+
+      .journal-stars-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 10px;
+        border-radius: var(--radius-md);
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid var(--border-glass);
+      }
+
+      .journal-star-btn {
+        background: transparent;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 2px 3px;
+        line-height: 1;
+        color: rgba(148, 163, 184, 0.35);
+        transition: transform 0.15s ease, color 0.15s ease;
+      }
+
+      .journal-star-btn:hover {
+        transform: scale(1.18);
+      }
+
+      .journal-star-btn.is-active {
+        color: #fbbf24;
+        text-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+      }
+
+      .journal-star-clear {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: 4px;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      .journal-star-clear:hover {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.14);
+      }
+
+      .journal-tags-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .journal-tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 11px;
+        border-radius: var(--radius-full);
+        border: 1px solid var(--border-glass);
+        background: rgba(15, 23, 42, 0.62);
+        color: var(--text-secondary);
+        font-size: 0.77rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .journal-tag-chip:hover {
+        border-color: var(--accent-cyan);
+        color: var(--text-primary);
+      }
+
+      .journal-tag-chip.is-active {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(16, 185, 129, 0.18));
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        box-shadow: 0 0 12px rgba(0, 242, 254, 0.16);
+      }
+
+      .journal-entry-meta-strip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .journal-rating-badge {
+        font-size: 0.73rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+        background: rgba(245, 158, 11, 0.16);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+      }
+
+      .journal-tag-mini {
+        font-size: 0.71rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+        background: rgba(0, 242, 254, 0.1);
+        color: var(--accent-cyan);
+        border: 1px solid rgba(0, 242, 254, 0.24);
+      }
+
+      .journal-sync-seyyah-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 14px;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(16, 185, 129, 0.48);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(0, 242, 254, 0.18));
+        color: #6ee7b7;
+        font-family: var(--font-heading);
+        font-size: 0.81rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .journal-sync-seyyah-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.24);
+        border-color: var(--accent-emerald);
+      }
+
+      body.light-theme .journal-stars-group,
+      body.light-theme .journal-tag-chip {
+        background: rgba(241, 245, 249, 0.92);
+        color: var(--text-primary);
+      }
+
+      body.light-theme .journal-tag-chip.is-active {
+        background: rgba(2, 132, 199, 0.14);
+        color: #0284c7;
+        border-color: #0284c7;
+      }
+
+      body.light-theme .journal-sync-seyyah-btn {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(2, 132, 199, 0.14));
+        color: #047857;
+      }
+
       @media (max-width: 900px) {
         .journal-main-grid,
         .journal-compare-grid,
-        .journal-controls-row {
+        .journal-controls-row,
+        .journal-rating-tags-row {
           grid-template-columns: 1fr;
         }
       }
@@ -822,6 +1026,10 @@
       const personalCount = vSet.size;
       const personalPct = totalCities ? ((personalCount / totalCities) * 100).toFixed(1) : '0.0';
       const notedCount = Object.keys(journal.notes).length;
+      const ratedKeys = Object.keys(journal.ratings || {});
+      const avgRating = ratedKeys.length
+        ? (ratedKeys.reduce((acc, k) => acc + (Number(journal.ratings[k]) || 0), 0) / ratedKeys.length).toFixed(1)
+        : null;
       const coveredRegions = new Set();
       let sharedWithSeyyah = 0;
       let uniqueToUser = 0;
@@ -838,6 +1046,8 @@
         personalCount,
         personalPct,
         notedCount,
+        ratedCount: ratedKeys.length,
+        avgRating,
         coveredRegionsCount: coveredRegions.size,
         sharedWithSeyyah,
         uniqueToUser,
@@ -850,7 +1060,9 @@
       const allLogged = Array.from(new Set([
         ...journal.visited,
         ...Object.keys(journal.notes),
-        ...Object.keys(journal.dates)
+        ...Object.keys(journal.dates),
+        ...Object.keys(journal.ratings || {}),
+        ...Object.keys(journal.tags || {})
       ])).filter((k) => provinces[k]);
 
       const q = normalizeTurkish(ui.listSearch);
@@ -860,14 +1072,22 @@
         const isVisited = vSet.has(k);
         const note = journal.notes[k] || '';
         const date = journal.dates[k] || '';
+        const rating = (journal.ratings && journal.ratings[k]) || 0;
+        const cityTags = (journal.tags && Array.isArray(journal.tags[k])) ? journal.tags[k] : [];
 
         if (ui.listFilter === 'visited' && !isVisited) return false;
         if (ui.listFilter === 'noted' && !note.trim()) return false;
         if (ui.listFilter === 'shared' && !(isVisited && p.visited)) return false;
 
         if (q) {
+          const tagNames = cityTags
+            .map((tid) => {
+              const found = JOURNAL_TAGS.find((t) => t.id === tid);
+              return found ? found.label : tid;
+            })
+            .join(' ');
           const hay = normalizeTurkish(
-            `${p.name} ${p.region || ''} ${formatPlate(p.plate)} ${date} ${formatDateTR(date)} ${note}`
+            `${p.name} ${p.region || ''} ${formatPlate(p.plate)} ${date} ${formatDateTR(date)} ${note} ${tagNames} ${rating ? rating + ' puan' : ''}`
           );
           if (!hay.includes(q)) return false;
         }
@@ -880,6 +1100,11 @@
         }
         if (ui.listSort === 'name') {
           return (provinces[a].name || '').localeCompare(provinces[b].name || '', 'tr');
+        }
+        if (ui.listSort === 'rating') {
+          const ra = (journal.ratings && journal.ratings[a]) || 0;
+          const rb = (journal.ratings && journal.ratings[b]) || 0;
+          if (rb !== ra) return rb - ra;
         }
         // 'recent': sort by visit date desc, then visited first, then name
         const da = journal.dates[a] || '';
@@ -902,13 +1127,14 @@
         <section class="glass-card journal-backup-bar">
           <div>
             <div style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">
-              💾 Yedekleme & Dışa Aktarım
+              💾 Yedekleme, Eşitleme & Dışa Aktarım
             </div>
             <div style="font-size: 0.78rem; color: var(--text-secondary);">
-              Seyir defterin tarayıcında (localStorage) saklanır. JSON ile yedekleyebilir veya Markdown seyahatnameni indirebilirsin.
+              Seyir defterin tarayıcında (localStorage) saklanır. Dijital Seyyah'ın 39 ilini tek tıkla eşitleyebilir veya yedek alabilirsin.
             </div>
           </div>
           <div class="journal-backup-actions">
+            <button type="button" class="journal-sync-seyyah-btn" id="journal-btn-sync-seyyah">🔄 Dijital Seyyah'ın Gezdiği 39 İli Defterime Eşitle</button>
             <button type="button" class="btn btn-outline" id="journal-btn-export-json">📥 JSON Yedek İndir</button>
             <button type="button" class="btn btn-outline" id="journal-btn-import-json">📤 JSON Yedek Yükle</button>
             <button type="button" class="btn btn-primary" id="journal-btn-export-md">📄 Kişisel Markdown İndir</button>
@@ -949,6 +1175,30 @@
               </div>
             </div>
 
+            <div class="journal-rating-tags-row">
+              <div class="journal-field-group" style="margin-bottom: 0;">
+                <span class="journal-label">
+                  <span>⭐ 1-5 Puan</span>
+                  <span id="journal-rating-label" style="color: var(--accent-gold); font-weight: 700;">Puansız</span>
+                </span>
+                <div class="journal-stars-group" id="journal-stars-group" role="group" aria-label="Şehir puanı (1-5 yıldız)">
+                  ${[1, 2, 3, 4, 5].map((star) => `
+                    <button type="button" class="journal-star-btn" data-star="${star}" title="${star} Puan" aria-label="${star} Puan">★</button>
+                  `).join('')}
+                  <button type="button" class="journal-star-clear" id="journal-star-clear" title="Puanı temizle">✕</button>
+                </div>
+              </div>
+
+              <div class="journal-field-group" style="margin-bottom: 0;">
+                <span class="journal-label">Hatıra & Atmosfer Etiketleri</span>
+                <div class="journal-tags-picker" id="journal-tags-picker">
+                  ${JOURNAL_TAGS.map((tag) => `
+                    <button type="button" class="journal-tag-chip" data-tag-id="${escapeHtml(tag.id)}">${escapeHtml(tag.label)}</button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
             <div class="journal-field-group" style="margin-top: 14px; margin-bottom: 8px;">
               <label class="journal-label" for="journal-note-textarea">
                 <span>Kişisel Notların & Hatıraların</span>
@@ -974,9 +1224,10 @@
 
             <div class="journal-list-toolbar">
               <div class="journal-list-search-row">
-                <input type="text" id="journal-list-search" class="journal-input" placeholder="Kayıtlarında ara (şehir, bölge, not, tarih)..." autocomplete="off" />
+                <input type="text" id="journal-list-search" class="journal-input" placeholder="Kayıtlarında ara (şehir, bölge, etiket, not, tarih)..." autocomplete="off" />
                 <select id="journal-list-sort" class="journal-select" style="width: auto;" aria-label="Sıralama">
                   <option value="recent">Tarihe Göre</option>
+                  <option value="rating">Puana Göre (⭐)</option>
                   <option value="name">Alfabetik (A-Z)</option>
                   <option value="plate">Plaka Kodu</option>
                 </select>

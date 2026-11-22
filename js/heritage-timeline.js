@@ -361,8 +361,31 @@
   const uiState = {
     activeEra: 'all',
     searchQuery: '',
-    visitedOnly: false
+    visitedOnly: false,
+    activeScrubId: null
   };
+
+  function dispatchRouteCities(ctx, provinceKeys, toastMsg) {
+    const uniqueKeys = [];
+    (provinceKeys || []).forEach(function (k) {
+      if (k && uniqueKeys.indexOf(k) === -1) uniqueKeys.push(k);
+    });
+    if (!uniqueKeys.length) return;
+    if (ctx && ctx.state) {
+      ctx.state.customRouteCities = uniqueKeys.slice();
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('seyyah_custom_route', JSON.stringify(uniqueKeys));
+      }
+    } catch (_) {}
+    if (ctx && typeof ctx.showToast === 'function' && toastMsg) {
+      ctx.showToast(toastMsg);
+    }
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.hash = '#route';
+    }
+  }
 
   // Inject component-scoped styles once (theme-aware using CSS variables)
   function ensureStyles() {
@@ -963,6 +986,222 @@
         background: rgba(0, 242, 254, 0.24);
       }
 
+      /* Century / Era Jump Scrubber Bar */
+      .ht-scrubber {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: var(--radius-md, 14px);
+        background: var(--bg-card, rgba(30, 41, 59, 0.72));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        backdrop-filter: blur(12px);
+      }
+
+      .ht-scrubber-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .ht-scrubber-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--text-primary, #f8fafc);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .ht-scrubber-hint {
+        font-size: 0.74rem;
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      .ht-scrubber-rail {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 6px 2px 8px;
+        scrollbar-width: thin;
+      }
+
+      .ht-scrubber-tick {
+        appearance: none;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(15, 23, 42, 0.55);
+        color: var(--text-secondary, #cbd5e1);
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.74rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+
+      .ht-scrubber-tick:hover {
+        color: #ffffff;
+        border-color: var(--era-color, #00f2fe);
+        background: rgba(15, 23, 42, 0.85);
+        transform: translateY(-1px);
+        box-shadow: 0 0 12px var(--era-glow, rgba(0, 242, 254, 0.3));
+      }
+
+      .ht-scrubber-tick.active {
+        color: #ffffff;
+        border-color: var(--era-color, #00f2fe);
+        background: linear-gradient(135deg, var(--era-color, #00f2fe), rgba(15, 23, 42, 0.88));
+        box-shadow: 0 0 14px var(--era-glow, rgba(0, 242, 254, 0.35));
+      }
+
+      .ht-scrubber-tick.dimmed {
+        opacity: 0.42;
+      }
+
+      .ht-scrubber-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--era-color, #00f2fe);
+        flex-shrink: 0;
+      }
+
+      /* Epoch Route Action Button */
+      .ht-provinces-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .ht-route-btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 242, 254, 0.4);
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.16), rgba(16, 185, 129, 0.14));
+        color: #e0f2fe;
+        font-family: var(--font-body, sans-serif);
+        font-size: 0.77rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .ht-route-btn:hover {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.3), rgba(16, 185, 129, 0.26));
+        border-color: var(--accent-cyan, #00f2fe);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(0, 242, 254, 0.24);
+      }
+
+      .ht-card.is-scrub-target {
+        border-color: var(--era-color, #00f2fe);
+        box-shadow: 0 0 0 2px var(--era-color, #00f2fe), 0 12px 30px -6px var(--era-glow, rgba(0, 242, 254, 0.35));
+      }
+
+      /* Alabaster Light Theme Overrides */
+      body.light-theme .ht-hero,
+      body.light-theme .ht-controls,
+      body.light-theme .ht-scrubber,
+      body.light-theme .ht-card,
+      body.light-theme .ht-empty {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(15, 23, 42, 0.12);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+      }
+
+      body.light-theme .ht-hero-title {
+        background: linear-gradient(135deg, #0f172a 0%, #b45309 55%, #0284c7 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      body.light-theme .ht-stat-box,
+      body.light-theme .ht-quote {
+        background: rgba(241, 245, 249, 0.9);
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      body.light-theme .ht-era-pill,
+      body.light-theme .ht-toggle-btn,
+      body.light-theme .ht-scrubber-tick,
+      body.light-theme .ht-search-input {
+        background: #f8fafc;
+        border-color: rgba(15, 23, 42, 0.15);
+        color: #334155;
+      }
+
+      body.light-theme .ht-era-pill.active,
+      body.light-theme .ht-scrubber-tick.active {
+        background: #0f172a;
+        color: #ffffff;
+      }
+
+      body.light-theme .ht-toggle-btn.active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #047857;
+      }
+
+      body.light-theme .ht-era-tag,
+      body.light-theme .ht-highlight-tag,
+      body.light-theme .ht-coverage-badge {
+        background: rgba(15, 23, 42, 0.05);
+        border-color: rgba(15, 23, 42, 0.1);
+        color: #334155;
+      }
+
+      body.light-theme .ht-coverage-badge.complete {
+        background: rgba(16, 185, 129, 0.14);
+        color: #047857;
+      }
+
+      body.light-theme .ht-coverage-badge.partial {
+        background: rgba(245, 158, 11, 0.14);
+        color: #b45309;
+      }
+
+      body.light-theme .ht-node {
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(248, 250, 252, 0.95), 0 0 12px var(--era-glow, rgba(0, 242, 254, 0.35));
+      }
+
+      body.light-theme .ht-province-chip.visited {
+        background: rgba(16, 185, 129, 0.12);
+        color: #065f46;
+      }
+
+      body.light-theme .ht-province-chip.planned {
+        background: rgba(245, 158, 11, 0.1);
+        color: #92400e;
+      }
+
+      body.light-theme .ht-route-btn {
+        background: linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(16, 185, 129, 0.12));
+        border-color: rgba(2, 132, 199, 0.35);
+        color: #0369a1;
+      }
+
+      body.light-theme .ht-route-btn:hover {
+        background: linear-gradient(135deg, rgba(2, 132, 199, 0.22), rgba(16, 185, 129, 0.2));
+      }
+
       @media (max-width: 680px) {
         .ht-hero {
           padding: 18px 16px;
@@ -1177,7 +1416,7 @@
                   type="text"
                   class="ht-search-input"
                   id="ht-search-input"
-                  placeholder="Medeniyet, şahsiyet, yıl veya şehir ara..."
+                  placeholder="Dönem, medeniyet, mimar, şahsiyet, yıl veya şehir ara..."
                   value="${escapeHtml(uiState.searchQuery)}"
                   autocomplete="off"
                 />
@@ -1204,6 +1443,29 @@
           </div>
         </section>
 
+        <section class="ht-scrubber" aria-label="Yüzyıl ve Dönem Atlama Çubuğu">
+          <div class="ht-scrubber-head">
+            <span class="ht-scrubber-title">⏳ Yüzyıl &amp; Çağ Atlama Çubuğu</span>
+            <span class="ht-scrubber-hint">Bir tarihe tıklayarak doğrudan o dönüm noktasına atlayın</span>
+          </div>
+          <div class="ht-scrubber-rail" id="ht-scrubber-rail">
+            ${milestones.map(function (m) {
+              return `
+                <button
+                  type="button"
+                  class="ht-scrubber-tick${uiState.activeScrubId === m.id ? ' active' : ''}"
+                  data-scrub-id="${escapeHtml(m.id)}"
+                  style="--era-color: ${escapeHtml(m.eraMeta.color)}; --era-glow: ${escapeHtml(m.eraMeta.glow)};"
+                  title="${escapeHtml(m.year + ' — ' + m.title)}"
+                >
+                  <span class="ht-scrubber-dot" aria-hidden="true"></span>
+                  <span>${escapeHtml(m.year)}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </section>
+
         <div id="ht-timeline-mount"></div>
       </div>
     `;
@@ -1213,7 +1475,22 @@
     const searchClear = container.querySelector('#ht-search-clear');
     const visitedToggle = container.querySelector('#ht-visited-toggle');
     const resultSummary = container.querySelector('#ht-result-summary');
+    const scrubberRail = container.querySelector('#ht-scrubber-rail');
     const timelineMount = container.querySelector('#ht-timeline-mount');
+
+    const milestoneById = {};
+    milestones.forEach(function (m) {
+      milestoneById[m.id] = m;
+    });
+
+    function syncScrubberTicks(filteredIds) {
+      if (!scrubberRail) return;
+      scrubberRail.querySelectorAll('.ht-scrubber-tick[data-scrub-id]').forEach(function (tick) {
+        const tid = tick.getAttribute('data-scrub-id');
+        tick.classList.toggle('dimmed', !filteredIds.has(tid));
+        tick.classList.toggle('active', uiState.activeScrubId === tid);
+      });
+    }
 
     function renderTimelineList() {
       const normQuery = normalizeTurkish(uiState.searchQuery);
@@ -1230,6 +1507,9 @@
         }
         return true;
       });
+
+      const filteredIds = new Set(filtered.map(function (m) { return m.id; }));
+      syncScrubberTicks(filteredIds);
 
       resultSummary.textContent =
         filtered.length + ' / ' + milestones.length + ' kronolojik dönem gösteriliyor';
@@ -1320,13 +1600,19 @@
             })
             .join('');
 
+          const isScrubTarget = uiState.activeScrubId === m.id;
+          const validRouteKeys = m.resolvedProvinces
+            .map(function (p) { return p.key; })
+            .filter(Boolean);
+
           return `
             <article
               class="ht-item"
+              id="ht-item-${escapeHtml(m.id)}"
               style="--era-color: ${escapeHtml(eraColor)}; --era-glow: ${escapeHtml(eraGlow)}; animation-delay: ${Math.min(idx * 35, 280)}ms;"
             >
               <div class="ht-node" aria-hidden="true">${escapeHtml(m.icon)}</div>
-              <div class="ht-card">
+              <div class="ht-card${isScrubTarget ? ' is-scrub-target' : ''}">
                 <div class="ht-card-top">
                   <div class="ht-badges-left">
                     <span class="ht-year-badge">${escapeHtml(m.year)}</span>
@@ -1345,7 +1631,19 @@
                 ${m.quote ? '<blockquote class="ht-quote">“' + escapeHtml(m.quote) + '”</blockquote>' : ''}
 
                 <div class="ht-provinces-section">
-                  <span class="ht-provinces-label">İlgili Şehirler (Keşfetmek için tıklayın)</span>
+                  <div class="ht-provinces-head">
+                    <span class="ht-provinces-label">İlgili Şehirler (Keşfetmek için tıklayın)</span>
+                    ${validRouteKeys.length ? `
+                      <button
+                        type="button"
+                        class="ht-route-btn"
+                        data-ht-route-id="${escapeHtml(m.id)}"
+                        title="Bu çağın ${validRouteKeys.length} şehrini rota planlayıcıya aktar"
+                      >
+                        🗺️ Bu Çağın Şehirlerini Rotaya Ekle (${validRouteKeys.length})
+                      </button>
+                    ` : ''}
+                  </div>
                   <div class="ht-province-chips">${chipsHtml}</div>
                 </div>
               </div>
@@ -1404,8 +1702,60 @@
       });
     }
 
-    // Event delegation: Clickable province chips
+    // Event: Scrubber rail century/era jump
+    if (scrubberRail) {
+      scrubberRail.addEventListener('click', function (e) {
+        const tick = e.target.closest('.ht-scrubber-tick[data-scrub-id]');
+        if (!tick) return;
+        const targetId = tick.getAttribute('data-scrub-id');
+        if (!targetId) return;
+
+        uiState.activeScrubId = targetId;
+
+        // If target is currently hidden by filters, reset filters so jump always succeeds
+        if (!container.querySelector('#ht-item-' + targetId)) {
+          uiState.activeEra = 'all';
+          uiState.searchQuery = '';
+          uiState.visitedOnly = false;
+          if (searchInput) searchInput.value = '';
+          if (searchClear) searchClear.classList.remove('visible');
+          if (visitedToggle) visitedToggle.classList.remove('active');
+          eraButtons.forEach(function (btn) {
+            const isAll = btn.getAttribute('data-era') === 'all';
+            btn.classList.toggle('active', isAll);
+            btn.setAttribute('aria-selected', isAll ? 'true' : 'false');
+          });
+        }
+
+        renderTimelineList();
+        const targetEl = container.querySelector('#ht-item-' + targetId);
+        if (targetEl && typeof targetEl.scrollIntoView === 'function') {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    // Event delegation: Clickable province chips & Epoch route builder
     timelineMount.addEventListener('click', function (e) {
+      const routeBtn = e.target.closest('.ht-route-btn[data-ht-route-id]');
+      if (routeBtn) {
+        const mId = routeBtn.getAttribute('data-ht-route-id');
+        const mObj = mId ? milestoneById[mId] : null;
+        if (mObj) {
+          const keys = mObj.resolvedProvinces
+            .map(function (p) { return p.key; })
+            .filter(Boolean);
+          if (keys.length) {
+            dispatchRouteCities(
+              safeCtx,
+              keys,
+              '🗺️ ' + mObj.title + ' döneminin ' + keys.length + ' şehri rota planlayıcıya aktarıldı!'
+            );
+          }
+        }
+        return;
+      }
+
       const chip = e.target.closest('.ht-province-chip[data-city-key]');
       if (!chip) return;
       const cityKey = chip.getAttribute('data-city-key');

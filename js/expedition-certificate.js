@@ -1799,6 +1799,69 @@
   // Download & Modal Helpers
   // =========================================================================
 
+  function computeVerificationCode(config, statsInfo) {
+    const raw = [
+      (config.serialNo || DEFAULT_CONFIG.serialNo).trim(),
+      (config.travelerName || DEFAULT_CONFIG.travelerName).trim(),
+      String(statsInfo.visitedCities),
+      String(statsInfo.totalCities),
+      (config.issueDate || formatTodayTR()).trim()
+    ].join('|');
+    let hash = 2166136261;
+    for (let i = 0; i < raw.length; i++) {
+      hash ^= raw.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    const hex = (hash >>> 0).toString(16).toUpperCase().padStart(8, '0');
+    return `SDV-${hex.slice(0, 4)}-${hex.slice(4, 8)}`;
+  }
+
+  function copyCertificateVerification(config, statsInfo, ctx) {
+    const code = computeVerificationCode(config, statsInfo);
+    const summaryText = [
+      '📜 ANADOLU SEYAHATNAMESİ — SEFER DER VATAN BERATI DOĞRULAMA ÖZETİ',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      `👤 Seyyah: ${(config.travelerName || DEFAULT_CONFIG.travelerName).trim()}`,
+      `🎖️ Unvan: ${(config.travelerTitle || DEFAULT_CONFIG.travelerTitle).trim()}`,
+      `🔖 Berat Seri No: ${(config.serialNo || DEFAULT_CONFIG.serialNo).trim()}`,
+      `🔐 Doğrulama Kodu: ${code}`,
+      `📅 Tanzim Tarihi: ${(config.issueDate || formatTodayTR()).trim()}`,
+      `🇹🇷 İl Keşfi: ${statsInfo.visitedCities} / ${statsInfo.totalCities} İl (%${statsInfo.progressPct})`,
+      `🛣️ Sefer Menzili: ~${statsInfo.kmFormatted} km`,
+      `📚 Kütüphane Mesaisi: ${statsInfo.libraryHours} saat (${statsInfo.visitedCities} İl Halk Kütüphanesi)`,
+      `🌍 Bölge Kapsamı: ${statsInfo.visitedRegions} / ${statsInfo.totalRegions} Coğrafi Bölge`
+    ].join('\n');
+
+    const onSuccess = () => {
+      notifyToast(ctx, `📋 Berat Doğrulama Kodu (${code}) ve özet panoya kopyalandı!`);
+    };
+
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(summaryText).then(onSuccess).catch(() => {
+        fallbackCopyText(summaryText, onSuccess, ctx);
+      });
+    } else {
+      fallbackCopyText(summaryText, onSuccess, ctx);
+    }
+  }
+
+  function fallbackCopyText(text, onSuccess, ctx) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      onSuccess();
+    } catch (e) {
+      notifyToast(ctx, 'Panoya kopyalama tarayıcı tarafından engellendi.');
+    }
+  }
+
   function downloadCertificatePng(config, statsInfo, ctx) {
     try {
       const offscreen = document.createElement('canvas');
@@ -1932,6 +1995,9 @@
             </p>
           </div>
           <div class="ec-hero-actions">
+            <button type="button" class="ec-btn-secondary" id="ec-btn-copy-verify">
+              📋 Berat Doğrulama Kodu &amp; Özeti Kopyala
+            </button>
             <button type="button" class="ec-btn-secondary" id="ec-btn-fullscreen">
               🔍 Tam Ekran Önizle
             </button>
@@ -2226,6 +2292,13 @@
     if (fullscreenBtn) {
       fullscreenBtn.addEventListener('click', () => {
         openFullscreenModal(studioState, statsInfo, ctx);
+      });
+    }
+
+    const copyVerifyBtn = container.querySelector('#ec-btn-copy-verify');
+    if (copyVerifyBtn) {
+      copyVerifyBtn.addEventListener('click', () => {
+        copyCertificateVerification(studioState, statsInfo, ctx);
       });
     }
   }

@@ -20,17 +20,30 @@
   const RADAR_MAX_R = 172;
   const RING_FRACTIONS = [0.25, 0.5, 0.75, 1.0];
 
-  const COMPASS_DIRS = ['K', 'KD', 'D', 'GD', 'G', 'GB', 'B', 'KB'];
-  const COMPASS_ARROWS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
-  const COMPASS_NAMES = [
-    'Kuzey',
-    'Kuzeydoğu',
-    'Doğu',
-    'Güneydoğu',
-    'Güney',
-    'Güneybatı',
-    'Batı',
-    'Kuzeybatı'
+  const COMPASS_DIRS_16 = [
+    'K', 'KKD', 'KD', 'DKD',
+    'D', 'DGD', 'GD', 'GGD',
+    'G', 'GGB', 'GB', 'BGB',
+    'B', 'BKB', 'KB', 'KKB'
+  ];
+  const COMPASS_ARROWS_16 = [
+    '↑', '↗', '↗', '↗',
+    '→', '↘', '↘', '↘',
+    '↓', '↙', '↙', '↙',
+    '←', '↖', '↖', '↖'
+  ];
+  const COMPASS_NAMES_16 = [
+    'Kuzey', 'Kuzey-Kuzeydoğu', 'Kuzeydoğu', 'Doğu-Kuzeydoğu',
+    'Doğu', 'Doğu-Güneydoğu', 'Güneydoğu', 'Güney-Güneydoğu',
+    'Güney', 'Güney-Güneybatı', 'Güneybatı', 'Batı-Güneybatı',
+    'Batı', 'Batı-Kuzeybatı', 'Kuzeybatı', 'Kuzey-Kuzeybatı'
+  ];
+
+  const QUADRANTS = [
+    { id: 'N', name: 'Kuzey', code: 'K', arrow: '⬆️', rangeLabel: '315°–45°' },
+    { id: 'E', name: 'Doğu', code: 'D', arrow: '➡️', rangeLabel: '45°–135°' },
+    { id: 'S', name: 'Güney', code: 'G', arrow: '⬇️', rangeLabel: '135°–225°' },
+    { id: 'W', name: 'Batı', code: 'B', arrow: '⬅️', rangeLabel: '225°–315°' }
   ];
 
   // Persistent module state across re-renders
@@ -77,15 +90,94 @@
     return (Math.atan2(y, x) + 2 * Math.PI) % (2 * Math.PI);
   }
 
+  function getQuadrantId(deg) {
+    const normalized = ((deg % 360) + 360) % 360;
+    if (normalized >= 45 && normalized < 135) return 'E';
+    if (normalized >= 135 && normalized < 225) return 'S';
+    if (normalized >= 225 && normalized < 315) return 'W';
+    return 'N';
+  }
+
   function getCompassInfo(bearingRad) {
     const deg = ((bearingRad * 180) / Math.PI + 360) % 360;
-    const idx = Math.round(deg / 45) % 8;
+    const roundedDeg = Math.round(deg) % 360;
+    const idx = Math.round(deg / 22.5) % 16;
     return {
-      code: COMPASS_DIRS[idx],
-      arrow: COMPASS_ARROWS[idx],
-      name: COMPASS_NAMES[idx],
-      deg: Math.round(deg)
+      code: COMPASS_DIRS_16[idx],
+      arrow: COMPASS_ARROWS_16[idx],
+      name: COMPASS_NAMES_16[idx],
+      deg: roundedDeg,
+      quadrant: getQuadrantId(deg)
     };
+  }
+
+  function computeQuadrantBreakdown(items) {
+    const map = {};
+    QUADRANTS.forEach(function (q) {
+      map[q.id] = {
+        id: q.id,
+        name: q.name,
+        code: q.code,
+        arrow: q.arrow,
+        rangeLabel: q.rangeLabel,
+        total: 0,
+        visited: 0,
+        unvisited: 0,
+        nearestUnvisited: null
+      };
+    });
+
+    items.forEach(function (item) {
+      const bucket = map[item.compass.quadrant] || map.N;
+      bucket.total += 1;
+      if (item.visited) {
+        bucket.visited += 1;
+      } else {
+        bucket.unvisited += 1;
+        if (!bucket.nearestUnvisited) {
+          bucket.nearestUnvisited = item;
+        }
+      }
+    });
+
+    return QUADRANTS.map(function (q) {
+      return map[q.id];
+    });
+  }
+
+  function buildNearestNeighborRoute(origin, unvisitedItems, calcDistKm, maxStops) {
+    const limit = maxStops || 8;
+    const pool = unvisitedItems.slice();
+    const ordered = [];
+    let curLat = origin.lat;
+    let curLng = origin.lng;
+
+    while (pool.length > 0 && ordered.length < limit) {
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      for (let i = 0; i < pool.length; i++) {
+        const c = pool[i].city;
+        const d = calcDistKm(curLat, curLng, Number(c.lat), Number(c.lng));
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      }
+      const chosen = pool.splice(bestIdx, 1)[0];
+      ordered.push(chosen);
+      curLat = Number(chosen.city.lat);
+      curLng = Number(chosen.city.lng);
+    }
+
+    const names = ordered.map(function (item) {
+      return item.city.name;
+    });
+
+    const startName = !origin.isGps ? origin.name : origin.nearestName;
+    if (startName && names[0] !== startName) {
+      names.unshift(startName);
+    }
+    return names;
   }
 
   function formatKm(num) {
@@ -715,15 +807,15 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-width: 44px;
-        padding: 5px 7px;
+        min-width: 54px;
+        padding: 5px 8px;
         border-radius: var(--radius-sm);
         background: rgba(0, 242, 254, 0.08);
         border: 1px solid rgba(0, 242, 254, 0.24);
         color: var(--accent-cyan);
       }
       .radar-compass-arrow {
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         line-height: 1;
       }
       .radar-compass-code {
@@ -731,6 +823,119 @@
         font-size: 0.72rem;
         font-weight: 800;
         margin-top: 2px;
+        letter-spacing: 0.02em;
+      }
+      .radar-compass-deg {
+        font-size: 0.64rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-top: 1px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Compass Quadrant Breakdown */
+      .radar-quadrant-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .radar-quadrant-card {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        border: 1px solid var(--border-glass);
+      }
+      .radar-quadrant-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+      }
+      .radar-quadrant-title {
+        font-family: var(--font-heading);
+        font-size: 0.86rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .radar-quadrant-count {
+        font-family: var(--font-heading);
+        font-size: 0.76rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+        background: rgba(0, 242, 254, 0.12);
+        border: 1px solid rgba(0, 242, 254, 0.28);
+        color: var(--accent-cyan);
+      }
+      .radar-quadrant-meta {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .radar-quadrant-target-btn {
+        margin-top: 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        width: 100%;
+        padding: 6px 9px;
+        border-radius: var(--radius-sm);
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.32);
+        color: #fbbf24;
+        font-family: var(--font-body);
+        font-size: 0.74rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.18s ease;
+      }
+      .radar-quadrant-target-btn:hover {
+        background: rgba(245, 158, 11, 0.2);
+        border-color: #fbbf24;
+        transform: translateY(-1px);
+      }
+      .radar-quadrant-done {
+        margin-top: 2px;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        padding: 5px 8px;
+        border-radius: var(--radius-sm);
+        background: rgba(15, 23, 42, 0.35);
+      }
+
+      /* Auto-route CTA Button */
+      .radar-autoroute-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 15px;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0, 242, 254, 0.22));
+        border: 1px solid rgba(16, 185, 129, 0.48);
+        color: var(--text-primary);
+        font-family: var(--font-heading);
+        font-size: 0.8rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+      .radar-autoroute-btn:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.34), rgba(0, 242, 254, 0.34));
+        box-shadow: 0 0 18px rgba(16, 185, 129, 0.28);
+        transform: translateY(-1px);
+      }
+      .radar-autoroute-btn.is-empty {
+        opacity: 0.65;
       }
       .radar-dist-col {
         text-align: right;
@@ -788,8 +993,19 @@
         color: #b45309;
       }
       body.light-theme .radar-drive-time,
-      body.light-theme .radar-compass-chip {
+      body.light-theme .radar-compass-chip,
+      body.light-theme .radar-quadrant-count {
         color: #0284c7;
+      }
+      body.light-theme .radar-quadrant-target-btn {
+        color: #b45309;
+        background: rgba(245, 158, 11, 0.14);
+      }
+      body.light-theme .radar-quadrant-done {
+        background: rgba(241, 245, 249, 0.85);
+      }
+      body.light-theme .radar-autoroute-btn {
+        color: #0f172a;
       }
 
       /* Responsive */
@@ -806,7 +1022,8 @@
         .radar-scope-card {
           position: static;
         }
-        .radar-summary-strip {
+        .radar-summary-strip,
+        .radar-quadrant-grid {
           grid-template-columns: repeat(2, 1fr);
         }
       }
@@ -1035,6 +1252,8 @@
       typeof safeCtx.calcDistKm === 'function' ? safeCtx.calcDistKm : fallbackCalcDistKm;
     const selectCity =
       typeof safeCtx.selectCity === 'function' ? safeCtx.selectCity : function () {};
+    const openView =
+      typeof safeCtx.openView === 'function' ? safeCtx.openView : function () {};
     const showToast =
       typeof safeCtx.showToast === 'function' ? safeCtx.showToast : function () {};
 
@@ -1162,11 +1381,15 @@
                   return `<button type="button" class="radar-preset-chip ${radarState.radiusKm === r ? 'active' : ''}" data-radar-preset="${r}">${r} km</button>`;
                 })
                 .join('')}
+              <button type="button" id="radar-auto-route-btn" class="radar-autoroute-btn" title="Menzildeki keşfedilmemiş illerden en yakın komşu sıralı sefer rotası oluştur">
+                🧭 Radar Halkasından Otomatik Rota Oluştur
+              </button>
             </div>
           </div>
         </div>
 
         <div class="radar-summary-strip" id="radar-summary-strip"></div>
+        <div class="radar-quadrant-grid" id="radar-quadrant-strip" aria-label="Pusula Sektör Dağılımı"></div>
 
         <div class="radar-workspace">
           <div class="radar-scope-card">
@@ -1206,6 +1429,8 @@
     const radiusSlider = container.querySelector('#radar-radius-slider');
     const radiusReadout = container.querySelector('#radar-radius-readout');
     const summaryStrip = container.querySelector('#radar-summary-strip');
+    const quadrantStrip = container.querySelector('#radar-quadrant-strip');
+    const autoRouteBtn = container.querySelector('#radar-auto-route-btn');
     const scopeMeta = container.querySelector('#radar-scope-meta');
     const hudBar = container.querySelector('#radar-hud-bar');
     const listTitle = container.querySelector('#radar-list-title');
@@ -1218,6 +1443,8 @@
     const cntUnvisitedEl = container.querySelector('#radar-cnt-unvisited');
 
     let currentFilteredItems = [];
+    let currentAllInRange = [];
+    let currentActiveOrigin = origin;
 
     function syncState() {
       if (state) {
@@ -1238,7 +1465,7 @@
       }
       const badge = item.visited ? '✅' : '⏳';
       hudBar.innerHTML = `
-        <span class="radar-hud-title">${badge} ${escapeHtml(item.city.name)} (${item.compass.arrow} ${item.compass.code})</span>
+        <span class="radar-hud-title">${badge} ${escapeHtml(item.city.name)} (${item.compass.arrow} ${escapeHtml(item.compass.code)} • ${item.compass.deg}°)</span>
         <span class="radar-hud-meta">${formatKm(item.roadKm)} km • ${escapeHtml(item.driveTime)}</span>
       `;
     }
@@ -1325,6 +1552,12 @@
       // Compute discoveries
       const computed = computeDiscoveries(provinces, regions, activeOrigin, radiusKm, calcDistKm);
       const allInRange = computed.allInRange;
+      currentAllInRange = allInRange;
+      currentActiveOrigin = activeOrigin;
+
+      if (autoRouteBtn) {
+        autoRouteBtn.classList.toggle('is-empty', computed.unvisitedCount === 0);
+      }
 
       if (cntAllEl) cntAllEl.textContent = String(allInRange.length);
       if (cntVisitedEl) cntVisitedEl.textContent = String(computed.visitedCount);
@@ -1446,6 +1679,37 @@
         `;
       }
 
+      // Update Compass Quadrant Breakdown (Kuzey, Doğu, Güney, Batı)
+      if (quadrantStrip) {
+        const quadrants = computeQuadrantBreakdown(allInRange);
+        quadrantStrip.innerHTML = quadrants
+          .map(function (q) {
+            const targetHtml = q.nearestUnvisited
+              ? `<button type="button" class="radar-quadrant-target-btn" data-quadrant-city="${escapeHtml(q.nearestUnvisited.key)}" title="En yakın keşfedilmemiş hedefe git">
+                  <span>🎯 ${escapeHtml(q.nearestUnvisited.city.name)}</span>
+                  <span>~${formatKm(q.nearestUnvisited.roadKm)} km (${q.nearestUnvisited.compass.deg}°)</span>
+                </button>`
+              : q.total > 0
+                ? `<div class="radar-quadrant-done">✅ Bu sektördeki tüm iller gezildi</div>`
+                : `<div class="radar-quadrant-done">🔭 Bu sektörde menzilde il yok</div>`;
+
+            return `
+              <div class="glass-card radar-quadrant-card">
+                <div class="radar-quadrant-top">
+                  <span class="radar-quadrant-title">${q.arrow} ${escapeHtml(q.name)} <span style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">(${q.rangeLabel})</span></span>
+                  <span class="radar-quadrant-count">${q.total} İl</span>
+                </div>
+                <div class="radar-quadrant-meta">
+                  <span>✅ ${q.visited} gezildi</span>
+                  <span>⏳ ${q.unvisited} keşif bekliyor</span>
+                </div>
+                ${targetHtml}
+              </div>
+            `;
+          })
+          .join('');
+      }
+
       // Update list title & sorted province cards
       if (listTitle) {
         listTitle.textContent = `Menzildeki İller (${filtered.length})`;
@@ -1525,7 +1789,8 @@
                   <div class="radar-city-metrics">
                     <div class="radar-compass-chip" title="${escapeHtml(item.compass.name)} (${item.compass.deg}°)">
                       <span class="radar-compass-arrow">${item.compass.arrow}</span>
-                      <span class="radar-compass-code">${item.compass.code}</span>
+                      <span class="radar-compass-code">${escapeHtml(item.compass.code)}</span>
+                      <span class="radar-compass-deg">${item.compass.deg}°</span>
                     </div>
                     <div class="radar-dist-col">
                       <div class="radar-road-km">~${formatKm(item.roadKm)} km</div>
@@ -1649,6 +1914,40 @@
             maximumAge: 300000
           }
         );
+      });
+    }
+
+    if (autoRouteBtn) {
+      autoRouteBtn.addEventListener('click', function () {
+        const unvisitedInRange = currentAllInRange.filter(function (item) {
+          return !item.visited;
+        });
+        if (unvisitedInRange.length === 0) {
+          showToast('⚠️ Bu radar menzilinde keşfedilmemiş il bulunamadı. Menzili genişletmeyi deneyin.');
+          return;
+        }
+        const routeNames = buildNearestNeighborRoute(
+          currentActiveOrigin,
+          unvisitedInRange,
+          calcDistKm,
+          8
+        );
+        if (state) {
+          state.customRouteCities = routeNames;
+        }
+        showToast(
+          `🧭 ${routeNames.length} duraklık radar rotası oluşturuldu (${currentActiveOrigin.name} merkezli)`
+        );
+        openView('route');
+      });
+    }
+
+    if (quadrantStrip) {
+      quadrantStrip.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-quadrant-city]');
+        if (!btn) return;
+        const key = btn.getAttribute('data-quadrant-city');
+        if (key) selectCity(key);
       });
     }
 

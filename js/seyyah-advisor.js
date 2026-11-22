@@ -18,9 +18,56 @@
     '🎲 Bana sürpriz bir 3 duraklı hafta sonu rotası kur'
   ];
 
+  const ADVISOR_PERSONAS = [
+    {
+      id: 'modern',
+      label: '🧭 Modern Dijital Seyyah',
+      systemHint:
+        'Üslup: Modern Dijital Seyyah. 5 Gün Kuralı, İl Halk Kütüphanesi çalışma mesaisi, GSB Seyahatsever KYK kültürü ve pratik dijital göçebe ipuçlarını ön plana çıkar.',
+      prefix: '',
+      suffix: ''
+    },
+    {
+      id: 'evliya',
+      label: '📜 Evliya Çelebi Üslubu',
+      systemHint:
+        'Üslup: Evliya Çelebi Seyahatnâmesi. Zarif Osmanlıca/klasik Türkçe nüanslar ("Seyahat ya Resûlallah", "bi-hamdillah", "temaşa eyledik", "ab-ı hayat") kullanarak edebi, hikmetli ve sıcak bir seyyah diliyle anlat.',
+      prefix: '📜 *Seyahatnâme-i Anadolu kaydıdır:* ',
+      suffix: '\n\n*Vesselâm, yolumuz ilim ve hikmet menziline açık ola!*'
+    },
+    {
+      id: 'akademik',
+      label: '🏛️ Akademik Tarihçi',
+      systemHint:
+        'Üslup: Akademik Tarihçi ve Mimarlık Tarihçisi. Medeniyet katmanlarını (Hitit, Roma, Selçuklu, Beylikler, Osmanlı, Cumhuriyet), taş işçiliğini, külliye/kervansaray mimarisini ve kronolojik bağlamı analitik bir dille açıkla.',
+      prefix: '🏛️ **Tarihsel & Mimari Analiz:** ',
+      suffix: '\n\n*Mimari Not:* Şehir dokusunu incelerken portal taş işçiliği, kervansaray aksları ve vakıf kütüphanelerinin mekânsal kurgusuna özellikle dikkat edilmelidir.'
+    },
+    {
+      id: 'gurme',
+      label: '🍽️ Anadolu Gurme Rehberi',
+      systemHint:
+        'Üslup: Anadolu Gurme & Gastronomi Rehberi. Coğrafi işaretli yöresel lezzetleri, asırlık esnaf lokantalarını, pişirme tekniklerini, baharat dengesini ve tatlı-kahve ritüellerini iştah açıcı bir dille vurgula.',
+      prefix: '🍽️ **Anadolu Gastronomi & Lezzet Seçkisi:** ',
+      suffix: '\n\n*Gurme İpucu:* Sabah kütüphane mesaisi sonrası öğle saatlerinde tarihî çarşı esnaf lokantalarında coğrafi işaretli ürünleri yerinde tatmayı unutmayın.'
+    }
+  ];
+
   // In-memory session chat history (persists across view switches during session)
   let chatHistory = [];
   let messageSeq = 0;
+  let activePersonaId = 'modern';
+  let isTtsSpeaking = false;
+
+  function getActivePersona() {
+    return ADVISOR_PERSONAS.find((p) => p.id === activePersonaId) || ADVISOR_PERSONAS[0];
+  }
+
+  function applyPersonaToOfflineText(rawText) {
+    const persona = getActivePersona();
+    if (!rawText || persona.id === 'modern') return rawText;
+    return `${persona.prefix}${rawText}${persona.suffix}`;
+  }
 
   // Gemini API Storage & Helpers (BYOK localStorage + Netlify Serverless Proxy)
   const GEMINI_KEY_STORAGE = 'dijital_seyyah_gemini_api_key';
@@ -92,7 +139,8 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
   async function askGeminiEngine(prompt, provinces, safeCtx, currentUserMsgId) {
     const model = getStoredGeminiModel();
     const byokKey = getStoredGeminiKey();
-    const contextSummary = buildSeyyahContextSummary(provinces, safeCtx);
+    const persona = getActivePersona();
+    const contextSummary = `${buildSeyyahContextSummary(provinces, safeCtx)}\n\nSeçili Üslup / Persona Talimatı:\n${persona.systemHint}`;
 
     // Build strictly alternating user -> model history (excluding welcome msg, loading msg, and current prompt)
     const rawTurns = chatHistory
@@ -124,7 +172,7 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            system_instruction: { parts: [{ text: `${GEMINI_SYSTEM_PROMPT}\n\nGüncel Veri:\n${contextSummary}` }] },
+            system_instruction: { parts: [{ text: `${GEMINI_SYSTEM_PROMPT}\n\n${persona.systemHint}\n\nGüncel Veri:\n${contextSummary}` }] },
             contents,
             generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
           })
@@ -1315,6 +1363,81 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
         border-color: rgba(239, 68, 68, 0.5);
         transform: translateY(-1px);
       }
+      .sa-action-btn {
+        font-family: var(--font-heading, sans-serif);
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 8px 13px;
+        border-radius: var(--radius-md, 12px);
+        border: 1px solid rgba(0, 242, 254, 0.32);
+        background: rgba(0, 242, 254, 0.1);
+        color: #67e8f9;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .sa-action-btn:hover {
+        background: rgba(0, 242, 254, 0.22);
+        border-color: rgba(0, 242, 254, 0.6);
+        transform: translateY(-1px);
+      }
+      .sa-action-btn.gold {
+        border-color: rgba(245, 158, 11, 0.38);
+        background: rgba(245, 158, 11, 0.12);
+        color: #fbbf24;
+      }
+      .sa-action-btn.gold:hover {
+        background: rgba(245, 158, 11, 0.24);
+        border-color: rgba(245, 158, 11, 0.65);
+      }
+      .sa-action-btn.is-speaking {
+        border-color: rgba(16, 185, 129, 0.6);
+        background: rgba(16, 185, 129, 0.22);
+        color: #6ee7b7;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.28);
+      }
+      .sa-persona-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: var(--bg-card, rgba(30, 41, 59, 0.58));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        border-radius: var(--radius-md, 14px);
+      }
+      .sa-persona-label {
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary, #94a3b8);
+        margin-right: 4px;
+      }
+      .sa-persona-pill {
+        font-family: var(--font-body, sans-serif);
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 7px 13px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        background: rgba(15, 23, 42, 0.68);
+        color: var(--text-secondary, #cbd5e1);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .sa-persona-pill:hover {
+        border-color: rgba(0, 242, 254, 0.48);
+        color: var(--text-primary, #f8fafc);
+        transform: translateY(-1px);
+      }
+      .sa-persona-pill.active {
+        border-color: rgba(0, 242, 254, 0.72);
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(168, 85, 247, 0.22));
+        color: #f8fafc;
+        box-shadow: 0 0 16px rgba(0, 242, 254, 0.18);
+      }
       .sa-chips-wrap {
         display: flex;
         flex-wrap: wrap;
@@ -1575,6 +1698,35 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
         background: rgba(14, 165, 233, 0.12);
         color: #0369a1;
       }
+      body.light-theme .sa-persona-bar {
+        background: rgba(255, 255, 255, 0.86);
+        border-color: rgba(15, 23, 42, 0.12);
+      }
+      body.light-theme .sa-persona-pill {
+        background: rgba(241, 245, 249, 0.92);
+        border-color: rgba(15, 23, 42, 0.14);
+        color: #334155;
+      }
+      body.light-theme .sa-persona-pill.active {
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(124, 58, 237, 0.14));
+        border-color: #0284c7;
+        color: #0f172a;
+      }
+      body.light-theme .sa-action-btn {
+        background: rgba(2, 132, 199, 0.1);
+        border-color: rgba(2, 132, 199, 0.32);
+        color: #0369a1;
+      }
+      body.light-theme .sa-action-btn.gold {
+        background: rgba(217, 119, 6, 0.12);
+        border-color: rgba(217, 119, 6, 0.35);
+        color: #b45309;
+      }
+      body.light-theme .sa-action-btn.is-speaking {
+        background: rgba(16, 185, 129, 0.16);
+        border-color: rgba(5, 150, 105, 0.45);
+        color: #047857;
+      }
 
       @media (max-width: 640px) {
         .sa-messages {
@@ -1644,8 +1796,18 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
           </div>
           <div class="sa-header-actions">
             <span class="sa-stat-pill" data-sa-engine-badge>${getStoredGeminiKey() ? '🟢 Gemini AI Aktif' : '✨ Seyyah Akıllı Motor'}</span>
+            <button type="button" class="sa-action-btn ${isTtsSpeaking ? 'is-speaking' : ''}" data-sa-tts>${isTtsSpeaking ? '⏹️ Sesli Okumayı Durdur' : '🔊 Son Yanıtı Sesli Dinle (TTS)'}</button>
+            <button type="button" class="sa-action-btn gold" data-sa-export-md>📥 Sohbeti Markdown İndir</button>
             <button type="button" class="sa-clear-btn" data-sa-clear>🗑️ Temizle</button>
           </div>
+        </div>
+
+        <div class="sa-persona-bar" role="radiogroup" aria-label="Persona ve Üslup Seçici">
+          <span class="sa-persona-label">🎭 Üslup / Persona:</span>
+          ${ADVISOR_PERSONAS.map(
+            (p) =>
+              `<button type="button" class="sa-persona-pill ${p.id === activePersonaId ? 'active' : ''}" data-sa-persona="${escapeHtml(p.id)}" aria-pressed="${p.id === activePersonaId ? 'true' : 'false'}">${escapeHtml(p.label)}</button>`
+          ).join('')}
         </div>
 
         <div class="sa-chips-wrap" role="group" aria-label="Hızlı sorular">
@@ -1815,11 +1977,12 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
 
       // Graceful fallback to local instant Turkish NLP engine
       const reply = resolveQuery(trimmed, provinces, safeCtx);
+      const persona = getActivePersona();
       const fallbackMsg = {
         id: loadingId,
         role: 'assistant',
-        time: `${nowTimeLabel()} • ⚠️ Çevrimdışı Motor${geminiErrMsg ? ` (Gemini: ${geminiErrMsg})` : ''}`,
-        text: reply.text,
+        time: `${nowTimeLabel()} • ⚠️ Çevrimdışı Motor (${persona.label})${geminiErrMsg ? ` (Gemini: ${geminiErrMsg})` : ''}`,
+        text: applyPersonaToOfflineText(reply.text),
         cards: reply.cards || []
       };
       const idx = chatHistory.findIndex((m) => m.id === loadingId);
@@ -1828,6 +1991,182 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
 
       renderMessages();
     }
+
+    const ttsBtn = container.querySelector('[data-sa-tts]');
+    const exportMdBtn = container.querySelector('[data-sa-export-md]');
+
+    function updateTtsButtonUi() {
+      if (!ttsBtn) return;
+      ttsBtn.classList.toggle('is-speaking', isTtsSpeaking);
+      ttsBtn.textContent = isTtsSpeaking ? '⏹️ Sesli Okumayı Durdur' : '🔊 Son Yanıtı Sesli Dinle (TTS)';
+    }
+
+    function stopTtsPlayback() {
+      try {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
+      } catch (_) {}
+      isTtsSpeaking = false;
+      updateTtsButtonUi();
+    }
+
+    function stripForSpeech(rawText) {
+      return String(rawText || '')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/[#>*_~|]/g, ' ')
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\uFE0F]/gu, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    if (ttsBtn) {
+      ttsBtn.addEventListener('click', () => {
+        if (isTtsSpeaking) {
+          stopTtsPlayback();
+          if (typeof safeCtx.showToast === 'function') {
+            safeCtx.showToast('⏹️ Sesli okuma durduruldu.', 'info');
+          }
+          return;
+        }
+
+        if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+          if (typeof safeCtx.showToast === 'function') {
+            safeCtx.showToast('⚠️ Tarayıcınız sesli okuma (TTS) özelliğini desteklemiyor.', 'warning');
+          }
+          return;
+        }
+
+        const lastAssistant = chatHistory
+          .slice()
+          .reverse()
+          .find((m) => m && m.role === 'assistant' && !m.loading && m.text);
+
+        if (!lastAssistant) {
+          if (typeof safeCtx.showToast === 'function') {
+            safeCtx.showToast('⚠️ Okunacak bir asistan yanıtı bulunamadı.', 'warning');
+          }
+          return;
+        }
+
+        const speechText = stripForSpeech(lastAssistant.text);
+        if (!speechText) return;
+
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(speechText);
+          utterance.lang = 'tr-TR';
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+
+          const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+          const trVoice = voices.find((v) => v && /^tr(-|_|$)/i.test(v.lang || ''));
+          if (trVoice) utterance.voice = trVoice;
+
+          utterance.onstart = () => {
+            isTtsSpeaking = true;
+            updateTtsButtonUi();
+          };
+          utterance.onend = () => {
+            isTtsSpeaking = false;
+            updateTtsButtonUi();
+          };
+          utterance.onerror = () => {
+            isTtsSpeaking = false;
+            updateTtsButtonUi();
+          };
+
+          isTtsSpeaking = true;
+          updateTtsButtonUi();
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          isTtsSpeaking = false;
+          updateTtsButtonUi();
+          if (typeof safeCtx.showToast === 'function') {
+            safeCtx.showToast('⚠️ Sesli okuma başlatılamadı.', 'warning');
+          }
+        }
+      });
+    }
+
+    if (exportMdBtn) {
+      exportMdBtn.addEventListener('click', () => {
+        const exportable = chatHistory.filter((m) => m && !m.loading && m.text);
+        if (!exportable.length) {
+          if (typeof safeCtx.showToast === 'function') {
+            safeCtx.showToast('⚠️ İndirilecek sohbet kaydı bulunamadı.', 'warning');
+          }
+          return;
+        }
+
+        const persona = getActivePersona();
+        const now = new Date();
+        const dateSlug = now.toISOString().slice(0, 10);
+        const mdLines = [
+          '# Anadolu Seyahatnamesi — Akıllı Seyyah Rehberi Sohbet Kaydı',
+          '',
+          `- **Tarih:** ${now.toLocaleString('tr-TR')}`,
+          `- **Aktif Üslup / Persona:** ${persona.label}`,
+          `- **Seyyah İlerlemesi:** ${visitedCount}/${provinces.length} il gezildi (${unvisitedCount} il keşif bekliyor)`,
+          '',
+          '---',
+          ''
+        ];
+
+        exportable.forEach((m) => {
+          const speaker = m.role === 'user' ? '🎒 Seyyah' : '🧭 Akıllı Seyyah Rehberi';
+          mdLines.push(`### ${speaker}${m.time ? ` (${m.time})` : ''}`);
+          mdLines.push('');
+          mdLines.push(String(m.text || '').trim());
+          if (Array.isArray(m.cards) && m.cards.length > 0) {
+            mdLines.push('');
+            mdLines.push(
+              `**Önerilen Şehirler:** ${m.cards
+                .map((c) => `${c.name} (${padPlate(c.plate)})`)
+                .join(', ')}`
+            );
+          }
+          mdLines.push('');
+          mdLines.push('---');
+          mdLines.push('');
+        });
+
+        const filename = `anadolu-seyyah-sohbet-${dateSlug}.md`;
+        const blob = new Blob([mdLines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        if (typeof safeCtx.showToast === 'function') {
+          safeCtx.showToast(`📥 ${filename} indirildi!`, 'success');
+        }
+      });
+    }
+
+    // Bind persona selector pills
+    container.querySelectorAll('[data-sa-persona]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const nextId = btn.getAttribute('data-sa-persona');
+        if (!nextId) return;
+        activePersonaId = nextId;
+        container.querySelectorAll('[data-sa-persona]').forEach((b) => {
+          const isActive = b.getAttribute('data-sa-persona') === activePersonaId;
+          b.classList.toggle('active', isActive);
+          b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+        const activePersona = getActivePersona();
+        if (typeof safeCtx.showToast === 'function') {
+          safeCtx.showToast(`🎭 Üslup değiştirildi: ${activePersona.label}`, 'info');
+        }
+      });
+    });
 
     // Bind quick prompt chips
     container.querySelectorAll('[data-sa-prompt]').forEach((btn) => {
@@ -1859,6 +2198,7 @@ Türkiye'nin 81 ili, 7 bölgesi, tarihî/manevi mirası, yöresel lezzetleri, İ
 
     // Bind clear chat button
     clearBtn.addEventListener('click', () => {
+      stopTtsPlayback();
       chatHistory = [createWelcomeMessage(provinces)];
       renderMessages();
       if (typeof safeCtx.showToast === 'function') {

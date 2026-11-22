@@ -11,6 +11,26 @@
 
   const STYLE_ID = 'saw-architecture-styles';
   const PHILOSOPHY_MOTTO = 'Taşa Nakşedilen Tevhid ve Merhamet';
+  const ARCH_BOOKMARKS_STORAGE_KEY = 'dijital_seyyah_arch_bookmarks_v1';
+
+  function loadArchBookmarks() {
+    try {
+      if (typeof localStorage === 'undefined') return new Set();
+      const raw = localStorage.getItem(ARCH_BOOKMARKS_STORAGE_KEY);
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? new Set(parsed) : new Set();
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function saveArchBookmarks(setObj) {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(ARCH_BOOKMARKS_STORAGE_KEY, JSON.stringify(Array.from(setObj)));
+    } catch (_) {}
+  }
 
   // ---------------------------------------------------------------------------
   // Helpers (Escaping, Turkish Normalization, Markdown, Province Resolution)
@@ -1623,9 +1643,203 @@
         font-size: 0.9rem;
       }
 
+      /* Bookmark Toggle & Hendese Comparison Summary */
+      .saw-bookmark-btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(15, 23, 42, 0.72);
+        color: #e2e8f0;
+        font-size: 0.74rem;
+        font-weight: 700;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        transition: all 0.2s ease;
+      }
+
+      .saw-bookmark-btn:hover {
+        border-color: #fbbf24;
+        color: #fde68a;
+        transform: scale(1.04);
+      }
+
+      .saw-bookmark-btn.is-saved {
+        background: rgba(245, 158, 11, 0.25);
+        border-color: #f59e0b;
+        color: #fde68a;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+      }
+
+      .saw-pill.bookmark-pill.active {
+        background: rgba(245, 158, 11, 0.24);
+        border-color: #f59e0b;
+        color: #fde68a;
+      }
+
+      .saw-dim-badge {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        padding: 8px 11px;
+        border-radius: 10px;
+        background: rgba(0, 242, 254, 0.08);
+        border: 1px solid rgba(0, 242, 254, 0.24);
+        font-size: 0.78rem;
+        line-height: 1.45;
+        color: #bae6fd;
+      }
+
+      .saw-dim-badge strong {
+        color: #7dd3fc;
+        white-space: nowrap;
+      }
+
+      .saw-compare-panel {
+        border-radius: 16px;
+        padding: 15px 18px;
+        margin-bottom: 16px;
+        background:
+          radial-gradient(circle at 95% 10%, rgba(245, 158, 11, 0.12), transparent 45%),
+          rgba(15, 23, 42, 0.56);
+        border: 1px solid rgba(0, 242, 254, 0.22);
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+      }
+
+      .saw-compare-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .saw-compare-title {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.94rem;
+        font-weight: 800;
+        color: #fde68a;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .saw-compare-sub {
+        font-size: 0.76rem;
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      .saw-compare-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+      }
+
+      .saw-compare-card {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(30, 41, 59, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .saw-compare-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #38bdf8;
+      }
+
+      .saw-compare-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #f8fafc;
+      }
+
+      .saw-compare-metric {
+        font-size: 0.76rem;
+        color: #cbd5e1;
+        line-height: 1.4;
+      }
+
+      .saw-compare-jump {
+        margin-top: 4px;
+        align-self: flex-start;
+        appearance: none;
+        border: 1px solid rgba(0, 242, 254, 0.3);
+        background: rgba(0, 242, 254, 0.1);
+        color: #7dd3fc;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .saw-compare-jump:hover {
+        background: rgba(0, 242, 254, 0.22);
+        color: #ffffff;
+      }
+
       /* ------------------------------------------------------------------ */
       /* Light Theme Overrides (body.light-theme)                           */
       /* ------------------------------------------------------------------ */
+      body.light-theme .saw-dim-badge {
+        background: rgba(2, 132, 199, 0.08);
+        border-color: rgba(2, 132, 199, 0.25);
+        color: #0c4a6e;
+      }
+
+      body.light-theme .saw-dim-badge strong {
+        color: #0369a1;
+      }
+
+      body.light-theme .saw-compare-panel {
+        background: rgba(248, 250, 252, 0.94);
+        border-color: rgba(2, 132, 199, 0.25);
+      }
+
+      body.light-theme .saw-compare-title {
+        color: #b45309;
+      }
+
+      body.light-theme .saw-compare-card {
+        background: #ffffff;
+        border-color: rgba(15, 23, 42, 0.1);
+      }
+
+      body.light-theme .saw-compare-label {
+        color: #0284c7;
+      }
+
+      body.light-theme .saw-compare-name {
+        color: #0f172a;
+      }
+
+      body.light-theme .saw-compare-metric {
+        color: #475569;
+      }
+
+      body.light-theme .saw-compare-jump {
+        background: rgba(2, 132, 199, 0.1);
+        border-color: rgba(2, 132, 199, 0.3);
+        color: #0369a1;
+      }
+
+      body.light-theme .saw-pill.bookmark-pill.active {
+        background: rgba(245, 158, 11, 0.18);
+        border-color: #d97706;
+        color: #92400e;
+      }
       body.light-theme .saw-root {
         color: #0f172a;
       }
@@ -2082,6 +2296,8 @@
       categoryFilter: 'all',
       regionFilter: 'Tümü',
       visitedFilter: 'all',
+      bookmarkedOnly: false,
+      bookmarks: loadArchBookmarks(),
       searchQuery: '',
       expandedIds: new Set(),
       highlightedId: null,
@@ -2110,6 +2326,7 @@
       return MASTERPIECES.filter(function (item) {
         if (uiState.categoryFilter !== 'all' && item.category !== uiState.categoryFilter) return false;
         if (uiState.regionFilter !== 'Tümü' && item.region !== uiState.regionFilter) return false;
+        if (uiState.bookmarkedOnly && !uiState.bookmarks.has(item.id)) return false;
 
         const prov = provincesMap[item.provinceKey];
         const isVisited = Boolean(prov && prov.visited);
@@ -2118,12 +2335,71 @@
 
         if (q) {
           const hay = normFn(
-            `${item.name} ${item.provinceName} ${item.district} ${item.region} ${item.era} ${item.architect} ${item.patron} ${item.material} ${item.structuralSystem} ${item.philosophy}`
+            `${item.name} ${item.provinceName} ${item.district} ${item.region} ${item.era} ${item.architect} ${item.patron} ${item.material} ${item.structuralSystem} ${item.philosophy} ${item.dimensions}`
           );
           if (hay.indexOf(q) === -1) return false;
         }
         return true;
       });
+    }
+
+    function buildComparisonSummaryHtml(items) {
+      const pool = items && items.length ? items : MASTERPIECES;
+      const highlights = [];
+
+      const byCat = {
+        camiler: pool.find(function (m) { return m.category === 'camiler'; }),
+        kopruler: pool.find(function (m) { return m.category === 'kopruler'; }),
+        darussifalar: pool.find(function (m) { return m.category === 'darussifalar'; }),
+        saraylar: pool.find(function (m) { return m.category === 'saraylar'; })
+      };
+
+      const labels = {
+        camiler: '🕌 Kubbe & Cami Ölçeği',
+        kopruler: '🌉 Kemer & Köprü Açıklığı',
+        darussifalar: '🏥 Darüşşifa Planı',
+        saraylar: '🏰 Saray & Sur Rakımı'
+      };
+
+      Object.keys(byCat).forEach(function (k) {
+        if (byCat[k]) {
+          highlights.push({ label: labels[k], item: byCat[k] });
+        }
+      });
+
+      // If filtered to a single category, show up to 3 items side by side for comparison
+      if (highlights.length <= 1 && pool.length > 1) {
+        highlights.length = 0;
+        pool.slice(0, 3).forEach(function (m, idx) {
+          highlights.push({ label: '📐 Karşılaştırma #' + (idx + 1), item: m });
+        });
+      }
+
+      if (!highlights.length) return '';
+
+      return `
+        <div class="saw-compare-panel" id="saw-compare-panel">
+          <div class="saw-compare-head">
+            <span class="saw-compare-title">📐 Hendese &amp; Ölçü Karşılaştırma Özeti</span>
+            <span class="saw-compare-sub">${items.length} filtrelenmiş eser · ⭐ ${uiState.bookmarks.size} kaydedildi</span>
+          </div>
+          <div class="saw-compare-grid">
+            ${highlights.map(function (h) {
+              const m = h.item;
+              return `
+                <div class="saw-compare-card">
+                  <span class="saw-compare-label">${esc(h.label)}</span>
+                  <span class="saw-compare-name">${esc(m.name)}</span>
+                  <span class="saw-compare-metric">📏 ${esc(m.dimensions)}</span>
+                  <button type="button" class="saw-compare-jump" data-saw-goto="${esc(m.provinceKey)}" title="${esc(m.provinceName)} il detayına git">
+                    📍 ${esc(m.provinceName)} Detayı →
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
     }
 
     function buildHendeseInspectorHtml() {
@@ -2182,6 +2458,7 @@
         const cat = CATEGORY_MAP.get(item.category);
         const isExpanded = uiState.expandedIds.has(item.id);
         const isHighlighted = uiState.highlightedId === item.id;
+        const isBookmarked = uiState.bookmarks.has(item.id);
 
         const secondaryBtn = item.secondaryProvinceKey
           ? `<button type="button" class="saw-btn saw-btn-ghost" data-saw-goto="${esc(item.secondaryProvinceKey)}" title="Batman il sayfasına git">📍 Batman</button>`
@@ -2194,9 +2471,20 @@
               <div class="saw-banner-scrim"></div>
               <div class="saw-banner-top">
                 <span class="saw-era-badge">${esc(item.era)} · ${esc(item.year)}</span>
-                <span class="saw-status-badge ${isVisited ? 'visited' : ''}">
-                  ${isVisited ? '✅ İl Gezildi' : '🧭 Keşif Bekliyor'}
-                </span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <button
+                    type="button"
+                    class="saw-bookmark-btn ${isBookmarked ? 'is-saved' : ''}"
+                    data-saw-bookmark="${esc(item.id)}"
+                    aria-pressed="${isBookmarked ? 'true' : 'false'}"
+                    title="${isBookmarked ? 'Kaydedilenlerden çıkar' : 'Şaheseri kaydet'}"
+                  >
+                    ${isBookmarked ? '⭐ Kaydedildi' : '☆ Kaydet'}
+                  </button>
+                  <span class="saw-status-badge ${isVisited ? 'visited' : ''}">
+                    ${isVisited ? '✅ İl Gezildi' : '🧭 Keşif Bekliyor'}
+                  </span>
+                </div>
               </div>
               <div class="saw-banner-bottom">
                 <div class="saw-card-cat">${cat ? esc(cat.icon + ' ' + cat.shortLabel) : ''} · ${esc(item.region)}</div>
@@ -2209,6 +2497,11 @@
               <div class="saw-meta-chips">
                 <span class="saw-meta-chip">👷 ${esc(item.architect)}</span>
                 ${item.unesco ? `<span class="saw-meta-chip unesco">🏛️ ${esc(item.unesco)}</span>` : ''}
+              </div>
+
+              <div class="saw-dim-badge">
+                <strong>📐 Hendese &amp; Ölçü:</strong>
+                <span>${esc(item.dimensions)}</span>
               </div>
 
               <div class="saw-card-block">
@@ -2264,7 +2557,15 @@
       const items = getFilteredMasterpieces();
       const grid = root.querySelector('#saw-cards-grid');
       const meta = root.querySelector('#saw-results-meta');
+      const compareHost = root.querySelector('#saw-compare-host');
+      const bookmarkToggleBtn = root.querySelector('#saw-bookmark-filter-btn');
       if (grid) grid.innerHTML = buildCardsHtml(items);
+      if (compareHost) compareHost.innerHTML = buildComparisonSummaryHtml(items);
+      if (bookmarkToggleBtn) {
+        bookmarkToggleBtn.classList.toggle('active', uiState.bookmarkedOnly);
+        bookmarkToggleBtn.setAttribute('aria-pressed', uiState.bookmarkedOnly ? 'true' : 'false');
+        bookmarkToggleBtn.textContent = '⭐ Kaydedilen Şaheserler (' + uiState.bookmarks.size + ')';
+      }
       if (meta) {
         meta.textContent = `${items.length} / ${MASTERPIECES.length} mimari şaheser gösteriliyor`;
       }
@@ -2572,6 +2873,14 @@
                   <button type="button" class="saw-pill ${uiState.visitedFilter === 'all' ? 'active' : ''}" data-saw-visited="all">Tümü</button>
                   <button type="button" class="saw-pill ${uiState.visitedFilter === 'visited' ? 'active' : ''}" data-saw-visited="visited">✅ Gezilen İller</button>
                   <button type="button" class="saw-pill ${uiState.visitedFilter === 'unvisited' ? 'active' : ''}" data-saw-visited="unvisited">🧭 Keşfedilecekler</button>
+                  <button
+                    type="button"
+                    id="saw-bookmark-filter-btn"
+                    class="saw-pill bookmark-pill ${uiState.bookmarkedOnly ? 'active' : ''}"
+                    aria-pressed="${uiState.bookmarkedOnly ? 'true' : 'false'}"
+                  >
+                    ⭐ Kaydedilen Şaheserler (${uiState.bookmarks.size})
+                  </button>
                 </div>
 
                 <div class="saw-search-box">
@@ -2584,6 +2893,10 @@
                   />
                 </div>
               </div>
+            </div>
+
+            <div id="saw-compare-host">
+              ${buildComparisonSummaryHtml(filteredItems)}
             </div>
 
             <div class="saw-results-meta" id="saw-results-meta">
@@ -2684,6 +2997,7 @@
             uiState.categoryFilter = 'all';
             uiState.regionFilter = 'Tümü';
             uiState.visitedFilter = 'all';
+            uiState.bookmarkedOnly = false;
             uiState.searchQuery = '';
             uiState.highlightedId = jumpId;
             uiState.expandedIds.add(jumpId);
@@ -2693,6 +3007,37 @@
               cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
           }
+          return;
+        }
+
+        // Bookmark toggle on card
+        const bookmarkBtn = target.closest('[data-saw-bookmark]');
+        if (bookmarkBtn) {
+          const itemId = bookmarkBtn.getAttribute('data-saw-bookmark');
+          if (itemId) {
+            if (uiState.bookmarks.has(itemId)) {
+              uiState.bookmarks.delete(itemId);
+              if (typeof safeCtx.showToast === 'function') {
+                safeCtx.showToast('☆ Şaheser kaydedilenlerden çıkarıldı.');
+              }
+            } else {
+              uiState.bookmarks.add(itemId);
+              if (typeof safeCtx.showToast === 'function') {
+                const m = MASTERPIECE_BY_ID.get(itemId);
+                safeCtx.showToast('⭐ ' + (m ? m.name : 'Şaheser') + ' kaydedildi!');
+              }
+            }
+            saveArchBookmarks(uiState.bookmarks);
+            updateCardsOnly();
+          }
+          return;
+        }
+
+        // Bookmark filter toggle
+        const bookmarkFilterBtn = target.closest('#saw-bookmark-filter-btn');
+        if (bookmarkFilterBtn) {
+          uiState.bookmarkedOnly = !uiState.bookmarkedOnly;
+          updateCardsOnly();
           return;
         }
 

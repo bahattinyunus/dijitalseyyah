@@ -1585,3 +1585,208 @@ body.light-theme .logo-text h1 {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   GLOBAL ACCESSIBILITY (:focus-visible), CUSTOM SCROLLBARS & @media print
+   ========================================================================== */
+
+/* Keyboard Focus-Visible Accessibility Rings */
+:is(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex="-1"]),
+  [role="button"]
+):focus-visible {
+  outline: 2px solid var(--accent-cyan, #00f2fe);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 242, 254, 0.22);
+}
+
+body.light-theme :is(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex="-1"]),
+  [role="button"]
+):focus-visible {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.2);
+}
+
+/* Refined Custom Scrollbars (WebKit & Standard) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.25);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.34);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 254, 0.55);
+  background-clip: content-box;
+}
+
+body.light-theme * {
+  scrollbar-color: rgba(15, 23, 42, 0.25) transparent;
+}
+
+body.light-theme ::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+body.light-theme ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.24);
+  background-clip: content-box;
+}
+
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgba(2, 132, 199, 0.5);
+  background-clip: content-box;
+}
+
+/* Clean PDF / Paper Print Layout (@media print) */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #0f172a !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide non-printable navigation, chrome, modals, and floating widgets */
+  header,
+  aside,
+  .sidebar,
+  #sidebar,
+  .sidebar-backdrop,
+  nav.module-nav-strip,
+  .module-nav-strip,
+  #mnav-dropdown-portal,
+  .modal,
+  .modal-overlay,
+  .lightbox-overlay,
+  .toast-container,
+  #toast-container,
+  #seyyah-quick-dock,
+  #seyyah-back-to-top,
+  #seyyah-mobile-scroll-top,
+  .seyyah-back-to-top,
+  .sc-orb-btn,
+  .sc-drawer,
+  .ambient-popover,
+  .mobile-menu-btn,
+  .header-actions,
+  .bl-confetti-layer,
+  .no-print {
+    display: none !important;
+  }
+
+  .app-container,
+  .main-layout,
+  .content-viewport,
+  #viewport-content {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* Ensure dark-on-white readability across cards, heroes, and studio modules */
+  .glass,
+  .glass-card,
+  .detail-card,
+  .stat-card,
+  .hero-banner,
+  .hero-banner-visual,
+  .bl-hero,
+  .bl-card,
+  .bl-add-card,
+  .bl-controls,
+  .bl-cat-breakdown,
+  .bp-hero,
+  .bp-card,
+  .bp-savings-card,
+  .packing-hero,
+  .packing-telemetry,
+  .packing-optimizer,
+  .packing-cat-card,
+  .compare-card,
+  .compare-telemetry,
+  .compare-summary-banner,
+  .mzp-hero,
+  .mzp-section,
+  .mzp-bento-card,
+  .mzp-dossier-card {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3, h4, h5, h6,
+  p, li, span, strong, td, th, blockquote, code {
+    color: #0f172a !important;
+    text-shadow: none !important;
+  }
+
+  .compare-hero-title,
+  .city-hero h1,
+  .city-hero h2 {
+    color: #0f172a !important;
+  }
+
+  .compare-hero-overlay {
+    display: none !important;
+  }
+
+  img,
+  svg {
+    max-width: 100% !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  a {
+    color: #0369a1 !important;
+    text-decoration: underline !important;
+  }
+}

@@ -34,6 +34,7 @@
     {
       id: 'ai',
       title: 'Yapay Zekâ (Gemini AI)',
+      shortLabel: 'AI',
       icon: '✨',
       accent: 'var(--accent-cyan, #00f2fe)',
       accentBg: 'rgba(0, 242, 254, 0.14)',
@@ -51,6 +52,7 @@
     {
       id: 'irfan',
       title: 'İrfan, Tefekkür & Felsefe',
+      shortLabel: 'İrfan',
       icon: '🕌',
       accent: 'var(--accent-gold, #f59e0b)',
       accentBg: 'rgba(245, 158, 11, 0.14)',
@@ -66,6 +68,7 @@
     {
       id: 'explore',
       title: 'Keşif & Harita',
+      shortLabel: 'Keşif',
       icon: '🗺️',
       accent: 'var(--accent-cyan, #00f2fe)',
       accentBg: 'rgba(0, 242, 254, 0.12)',
@@ -81,6 +84,7 @@
     {
       id: 'culture',
       title: 'Kültür & Miras',
+      shortLabel: 'Kültür',
       icon: '🏛️',
       accent: 'var(--accent-gold, #f59e0b)',
       accentBg: 'rgba(245, 158, 11, 0.12)',
@@ -96,6 +100,7 @@
     {
       id: 'studio',
       title: 'Stüdyo, Odak & Oyun',
+      shortLabel: 'Stüdyo',
       icon: '🎬',
       accent: 'var(--accent-purple, #a855f7)',
       accentBg: 'rgba(168, 85, 247, 0.12)',
@@ -111,6 +116,7 @@
     {
       id: 'planning',
       title: 'Planlama, Başarım & Defter',
+      shortLabel: 'Planlama',
       icon: '🧳',
       accent: 'var(--accent-emerald, #10b981)',
       accentBg: 'rgba(16, 185, 129, 0.12)',
@@ -171,6 +177,53 @@
       }
     }
     return null;
+  }
+
+  function getFavoriteKeys(state) {
+    const favs = new Set();
+    if (state && state.favorites) {
+      if (state.favorites instanceof Set) {
+        state.favorites.forEach((k) => favs.add(k));
+      } else if (Array.isArray(state.favorites)) {
+        state.favorites.forEach((k) => favs.add(k));
+      }
+    }
+    if (!favs.size) {
+      try {
+        const raw = localStorage.getItem('dijital_seyyah_favorites');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) parsed.forEach((k) => favs.add(k));
+        }
+      } catch (e) {}
+    }
+    return favs;
+  }
+
+  function selectMarqueeProvinces(provinces, mode, state) {
+    if (!provinces) return [];
+    const entries = Object.entries(provinces).map(([key, prov]) => ({ key, prov }));
+
+    if (mode === 'visited') {
+      return entries
+        .filter(({ prov }) => prov && prov.visited)
+        .sort((a, b) => (a.prov.plate || 99) - (b.prov.plate || 99));
+    }
+
+    if (mode === 'mesopotamia') {
+      return entries
+        .filter(({ prov }) => prov && prov.region_code === '07_GuneydoguAnadolu')
+        .sort((a, b) => (a.prov.plate || 99) - (b.prov.plate || 99));
+    }
+
+    if (mode === 'favorites') {
+      const favKeys = getFavoriteKeys(state);
+      return entries
+        .filter(({ key }) => favKeys.has(key))
+        .sort((a, b) => (a.prov.plate || 99) - (b.prov.plate || 99));
+    }
+
+    return selectShowcaseProvinces(provinces);
   }
 
   function selectShowcaseProvinces(provinces) {
@@ -294,6 +347,86 @@
       /* ---------------------------------------------------------------------
          1. Canlı Anadolu Vitrin Şeridi (Horizontal Photo Marquee)
          --------------------------------------------------------------------- */
+      .dv3-marquee-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
+      .dv3-marquee-filters {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+
+      .dv3-marquee-pill {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+        background: var(--bg-card, rgba(30, 41, 59, 0.6));
+        color: var(--text-secondary, #94a3b8);
+        font-family: inherit;
+        font-size: 0.74rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .dv3-marquee-pill:hover {
+        color: var(--text-primary, #f8fafc);
+        border-color: rgba(0, 242, 254, 0.4);
+      }
+
+      .dv3-marquee-pill.active {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.22), rgba(79, 172, 254, 0.18));
+        border-color: rgba(0, 242, 254, 0.58);
+        color: var(--text-primary, #f8fafc);
+        box-shadow: 0 0 14px rgba(0, 242, 254, 0.16);
+      }
+
+      .dv3-marquee-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .dv3-marquee-toggle {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 158, 11, 0.34);
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent-gold, #fbbf24);
+        font-family: inherit;
+        font-size: 0.74rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .dv3-marquee-toggle:hover {
+        background: rgba(245, 158, 11, 0.2);
+        border-color: rgba(245, 158, 11, 0.58);
+      }
+
+      .dv3-marquee-toggle.is-paused {
+        border-color: rgba(16, 185, 129, 0.45);
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--accent-emerald, #34d399);
+      }
+
       .dv3-marquee-shell {
         position: relative;
         overflow: hidden;
@@ -303,17 +436,42 @@
         mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
       }
 
+      .dv3-marquee-shell.is-static {
+        overflow-x: auto;
+        -webkit-mask-image: none;
+        mask-image: none;
+      }
+
       .dv3-marquee-track {
         display: flex;
         width: max-content;
         gap: 14px;
         will-change: transform;
-        animation: dv3MarqueeGlide 48s linear infinite;
+        animation: dv3MarqueeGlide var(--dv3-marquee-duration, 48s) linear infinite;
+      }
+
+      .dv3-marquee-shell.is-static .dv3-marquee-track {
+        animation: none;
       }
 
       .dv3-marquee-shell:hover .dv3-marquee-track,
-      .dv3-marquee-shell:focus-within .dv3-marquee-track {
+      .dv3-marquee-shell:focus-within .dv3-marquee-track,
+      .dv3-marquee-shell.is-paused .dv3-marquee-track {
         animation-play-state: paused;
+      }
+
+      .dv3-marquee-empty {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: var(--bg-card, rgba(30, 41, 59, 0.65));
+        border: 1px dashed var(--border-glass, rgba(255, 255, 255, 0.16));
+        color: var(--text-secondary, #94a3b8);
+        font-size: 0.84rem;
       }
 
       .dv3-city-card {
@@ -643,6 +801,102 @@
         gap: 14px;
       }
 
+      .dv3-hub-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px 14px;
+        flex-wrap: wrap;
+      }
+
+      .dv3-hub-search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        flex: 1 1 240px;
+        max-width: 340px;
+      }
+
+      .dv3-hub-search-icon {
+        position: absolute;
+        left: 12px;
+        font-size: 0.84rem;
+        opacity: 0.72;
+        pointer-events: none;
+      }
+
+      #dv3-hub-search {
+        width: 100%;
+        padding: 8px 34px 8px 34px;
+        border-radius: 999px;
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.14));
+        background: rgba(15, 23, 42, 0.72);
+        color: var(--text-primary, #f8fafc);
+        font-family: inherit;
+        font-size: 0.8rem;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      #dv3-hub-search::placeholder {
+        color: var(--text-muted, #64748b);
+      }
+
+      #dv3-hub-search:focus {
+        border-color: rgba(0, 242, 254, 0.62);
+        background: rgba(15, 23, 42, 0.92);
+        box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.14);
+      }
+
+      .dv3-hub-search-clear {
+        position: absolute;
+        right: 8px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--text-secondary, #cbd5e1);
+        font-size: 0.78rem;
+        line-height: 1;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.18s ease, color 0.18s ease;
+      }
+
+      .dv3-hub-search-clear.is-visible {
+        display: inline-flex;
+      }
+
+      .dv3-hub-search-clear:hover {
+        background: rgba(239, 68, 68, 0.28);
+        color: #ffffff;
+      }
+
+      .dv3-launch-pill.is-hidden {
+        display: none;
+      }
+
+      .dv3-hub-empty {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: var(--bg-card, rgba(30, 41, 59, 0.68));
+        border: 1px dashed var(--border-glass, rgba(255, 255, 255, 0.16));
+        color: var(--text-secondary, #94a3b8);
+        font-size: 0.84rem;
+      }
+
+      .dv3-hub-empty.is-visible {
+        display: flex;
+      }
+
       .dv3-cat-tabs {
         display: flex;
         align-items: center;
@@ -855,6 +1109,62 @@
         border-color: rgba(2, 132, 199, 0.25);
       }
 
+      body.light-theme .dv3-marquee-pill,
+      body.light-theme .dv3-cat-tab {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(15, 23, 42, 0.11);
+        color: #475569;
+      }
+
+      body.light-theme .dv3-marquee-pill:hover,
+      body.light-theme .dv3-cat-tab:hover {
+        color: #0f172a;
+        border-color: rgba(2, 132, 199, 0.42);
+      }
+
+      body.light-theme .dv3-marquee-pill.active,
+      body.light-theme .dv3-cat-tab.active {
+        background: linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(37, 99, 235, 0.12));
+        border-color: #0284c7;
+        color: #0369a1;
+        box-shadow: 0 2px 10px rgba(2, 132, 199, 0.14);
+      }
+
+      body.light-theme .dv3-marquee-toggle {
+        background: rgba(217, 119, 6, 0.1);
+        border-color: rgba(180, 83, 9, 0.32);
+        color: #b45309;
+      }
+
+      body.light-theme .dv3-marquee-toggle.is-paused {
+        background: rgba(5, 150, 105, 0.12);
+        border-color: rgba(5, 150, 105, 0.36);
+        color: #047857;
+      }
+
+      body.light-theme #dv3-hub-search {
+        background: #ffffff;
+        border-color: rgba(15, 23, 42, 0.14);
+        color: #0f172a;
+      }
+
+      body.light-theme #dv3-hub-search:focus {
+        border-color: #0284c7;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.14);
+      }
+
+      body.light-theme .dv3-hub-search-clear {
+        background: rgba(15, 23, 42, 0.08);
+        color: #475569;
+      }
+
+      body.light-theme .dv3-marquee-empty,
+      body.light-theme .dv3-hub-empty {
+        background: rgba(248, 250, 252, 0.94);
+        border-color: rgba(15, 23, 42, 0.16);
+        color: #475569;
+      }
+
       /* Responsive */
       @media (max-width: 960px) {
         .dv3-groups-grid {
@@ -893,53 +1203,84 @@
     document.head.appendChild(style);
   }
 
+  function renderMarqueeCard({ key, prov }, isDuplicate, esc) {
+    const imgSrc = prov.has_banner && prov.banner_rel ? prov.banner_rel : 'assets/banner.jpg';
+    const plateStr = String(prov.plate || 0).padStart(2, '0');
+    const isMesopotamia = prov.region_code === '07_GuneydoguAnadolu';
+    const statusClass = prov.visited ? 'visited' : (isMesopotamia ? 'mesopotamia' : 'planned');
+    const statusLabel = prov.visited ? '✓ Gezildi' : (isMesopotamia ? '🏜️ Mezopotamya' : '⏳ Hedef');
+
+    return `
+      <div class="dv3-city-card"
+           role="button"
+           tabindex="${isDuplicate ? '-1' : '0'}"
+           aria-label="${esc(prov.name)} — ${esc(prov.region)}"
+           data-dv3-city="${esc(key)}"
+           data-dv3-img="${esc(imgSrc)}"
+           data-dv3-caption="${esc(prov.name)} • ${esc(prov.region)}">
+        <img src="${esc(imgSrc)}" alt="${esc(prov.name)}" loading="lazy" />
+        <div class="dv3-city-scrim"></div>
+        <div class="dv3-city-top">
+          <span class="dv3-plate-chip">${plateStr}</span>
+          <span class="dv3-status-chip ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="dv3-city-bottom">
+          <div>
+            <div class="dv3-city-name">${esc(prov.name)}</div>
+            <div class="dv3-city-region">${esc(prov.region)}</div>
+          </div>
+          <button type="button"
+                  class="dv3-zoom-btn"
+                  title="Fotoğrafı Büyüt"
+                  aria-label="${esc(prov.name)} fotoğrafını büyüt"
+                  data-dv3-zoom="1">🔍</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMarqueeShellContent(shellEl, items, mode, esc) {
+    if (!shellEl) return;
+    if (!items.length) {
+      shellEl.classList.add('is-static');
+      const emptyMsg = mode === 'favorites'
+        ? '⭐ Henüz favori il eklemediniz. Herhangi bir şehrin detayından ⭐ Favori butonuna tıklayarak buraya ekleyebilirsiniz.'
+        : 'Bu vitrin filtresinde gösterilecek il bulunamadı.';
+      shellEl.innerHTML = `
+        <div class="dv3-marquee-empty">
+          <span>${esc(emptyMsg)}</span>
+          <button type="button" class="dv3-ghost-link" data-dv3-marquee-reset="curated">🌟 Seçkin Vitrine Dön</button>
+        </div>
+      `;
+      return;
+    }
+
+    const shouldAnimate = items.length >= 4;
+    shellEl.classList.toggle('is-static', !shouldAnimate);
+    const durationSec = Math.max(28, items.length * 4);
+
+    const trackHtml = shouldAnimate
+      ? items.map((item) => renderMarqueeCard(item, false, esc)).join('') +
+        items.map((item) => renderMarqueeCard(item, true, esc)).join('')
+      : items.map((item) => renderMarqueeCard(item, false, esc)).join('');
+
+    shellEl.innerHTML = `
+      <div class="dv3-marquee-track" style="--dv3-marquee-duration: ${durationSec}s;">
+        ${trackHtml}
+      </div>
+    `;
+  }
+
   /**
    * Block 1: Canlı Anadolu Vitrin Şeridi (Horizontal Auto-Gliding Photo Marquee)
    */
-  function buildMarqueeBlock(provinces, esc) {
-    const items = selectShowcaseProvinces(provinces);
-    if (!items.length) return null;
+  function buildMarqueeBlock(provinces, state, esc) {
+    const curatedItems = selectMarqueeProvinces(provinces, 'curated', state);
+    if (!curatedItems.length) return null;
 
-    const renderCard = ({ key, prov }, isDuplicate) => {
-      const imgSrc = prov.has_banner && prov.banner_rel ? prov.banner_rel : 'assets/banner.jpg';
-      const plateStr = String(prov.plate || 0).padStart(2, '0');
-      const isMesopotamia = prov.region_code === '07_GuneydoguAnadolu';
-      const statusClass = prov.visited ? 'visited' : (isMesopotamia ? 'mesopotamia' : 'planned');
-      const statusLabel = prov.visited ? '✓ Gezildi' : (isMesopotamia ? '🏜️ Mezopotamya' : '⏳ Hedef');
-
-      return `
-        <div class="dv3-city-card"
-             role="button"
-             tabindex="${isDuplicate ? '-1' : '0'}"
-             aria-label="${esc(prov.name)} — ${esc(prov.region)}"
-             data-dv3-city="${esc(key)}"
-             data-dv3-img="${esc(imgSrc)}"
-             data-dv3-caption="${esc(prov.name)} • ${esc(prov.region)}">
-          <img src="${esc(imgSrc)}" alt="${esc(prov.name)}" loading="lazy" />
-          <div class="dv3-city-scrim"></div>
-          <div class="dv3-city-top">
-            <span class="dv3-plate-chip">${plateStr}</span>
-            <span class="dv3-status-chip ${statusClass}">${statusLabel}</span>
-          </div>
-          <div class="dv3-city-bottom">
-            <div>
-              <div class="dv3-city-name">${esc(prov.name)}</div>
-              <div class="dv3-city-region">${esc(prov.region)}</div>
-            </div>
-            <button type="button"
-                    class="dv3-zoom-btn"
-                    title="Fotoğrafı Büyüt"
-                    aria-label="${esc(prov.name)} fotoğrafını büyüt"
-                    data-dv3-zoom="1">🔍</button>
-          </div>
-        </div>
-      `;
-    };
-
-    // Duplicate items seamlessly for continuous infinite marquee glide
-    const trackHtml =
-      items.map((item) => renderCard(item, false)).join('') +
-      items.map((item) => renderCard(item, true)).join('');
+    const visitedCount = selectMarqueeProvinces(provinces, 'visited', state).length;
+    const mesoCount = selectMarqueeProvinces(provinces, 'mesopotamia', state).length;
+    const favCount = selectMarqueeProvinces(provinces, 'favorites', state).length;
 
     const section = document.createElement('section');
     section.className = 'dv3-block dv3-marquee-section';
@@ -950,18 +1291,34 @@
         <div class="dv3-title-group">
           <span class="dv3-live-dot" aria-hidden="true"></span>
           <h3 class="dv3-title">🎞️ Canlı Anadolu Vitrin Şeridi</h3>
-          <span class="dv3-subtitle-pill">12 İkonik Menzil • Üzerine Gelince Durur</span>
+          <span class="dv3-subtitle-pill" data-dv3-marquee-subtitle>${curatedItems.length} İkonik Menzil • Üzerine Gelince Durur</span>
         </div>
-        <button type="button" class="dv3-ghost-link" data-dv3-view="gallery">
-          📸 Tüm 162 Fotoğraf ➔
-        </button>
-      </div>
-      <div class="dv3-marquee-shell">
-        <div class="dv3-marquee-track">
-          ${trackHtml}
+        <div class="dv3-marquee-actions">
+          <button type="button"
+                  class="dv3-marquee-toggle"
+                  data-dv3-marquee-toggle
+                  aria-pressed="false"
+                  title="Şerit akışını duraklat veya sürdür">
+            ⏸️ Duraklat
+          </button>
+          <button type="button" class="dv3-ghost-link" data-dv3-view="gallery">
+            📸 Tüm 162 Fotoğraf ➔
+          </button>
         </div>
       </div>
+      <div class="dv3-marquee-toolbar">
+        <div class="dv3-marquee-filters" role="tablist" aria-label="Vitrin Şeridi Filtreleri">
+          <button type="button" class="dv3-marquee-pill active" role="tab" aria-selected="true" data-dv3-marquee-filter="curated">🌟 Seçkin Vitrin (${curatedItems.length})</button>
+          <button type="button" class="dv3-marquee-pill" role="tab" aria-selected="false" data-dv3-marquee-filter="visited">✅ Gezilen ${visitedCount} İl</button>
+          <button type="button" class="dv3-marquee-pill" role="tab" aria-selected="false" data-dv3-marquee-filter="mesopotamia">🏜️ Mezopotamya (${mesoCount})</button>
+          <button type="button" class="dv3-marquee-pill" role="tab" aria-selected="false" data-dv3-marquee-filter="favorites">⭐ Favorilerim${favCount ? ` (${favCount})` : ''}</button>
+        </div>
+      </div>
+      <div class="dv3-marquee-shell" data-dv3-marquee-shell></div>
     `;
+
+    const shellEl = section.querySelector('[data-dv3-marquee-shell]');
+    renderMarqueeShellContent(shellEl, curatedItems, 'curated', esc);
 
     return section;
   }
@@ -1080,20 +1437,22 @@
     const totalFeatures = FEATURE_GROUPS.reduce((sum, g) => sum + g.items.length, 0);
 
     const tabsHtml = [
-      `<button type="button" class="dv3-cat-tab active" data-dv3-cat="all">✨ Tümü (${totalFeatures})</button>`,
+      `<button type="button" class="dv3-cat-tab active" role="tab" aria-selected="true" data-dv3-cat="all">Tümü (${totalFeatures})</button>`,
       ...FEATURE_GROUPS.map(
-        (g) => `<button type="button" class="dv3-cat-tab" data-dv3-cat="${esc(g.id)}">${g.icon} ${esc(g.title)} (${g.items.length})</button>`
+        (g) => `<button type="button" class="dv3-cat-tab" role="tab" aria-selected="false" data-dv3-cat="${esc(g.id)}">${g.icon} ${esc(g.shortLabel || g.title)} (${g.items.length})</button>`
       )
     ].join('');
 
     const groupsHtml = FEATURE_GROUPS.map((g) => {
       const pillsHtml = g.items
-        .map(
-          (item) => `
+        .map((item) => {
+          const searchHaystack = normalizeTr(`${item.label} ${item.tag} ${item.view} ${g.title} ${g.shortLabel || ''}`);
+          return `
           <button type="button"
                   class="dv3-launch-pill"
                   style="--dv3-accent: ${g.accent};"
                   data-dv3-view="${esc(item.view)}"
+                  data-dv3-search="${esc(searchHaystack)}"
                   title="${esc(item.label)} modülünü aç">
             <span class="dv3-launch-left">
               <span class="dv3-launch-icon" aria-hidden="true">${item.icon}</span>
@@ -1101,18 +1460,18 @@
             </span>
             <span class="dv3-launch-tag">${esc(item.tag)}</span>
           </button>
-        `
-        )
+        `;
+        })
         .join('');
 
       return `
-        <div class="dv3-group-card" data-dv3-group="${esc(g.id)}">
+        <div class="dv3-group-card" data-dv3-group="${esc(g.id)}" data-dv3-total="${g.items.length}">
           <div class="dv3-group-head">
             <div class="dv3-group-title">
               <span class="dv3-group-icon" style="background: ${g.accentBg}; color: ${g.accent};">${g.icon}</span>
               <span>${esc(g.title)}</span>
             </div>
-            <span class="dv3-group-count">${g.items.length} Modül</span>
+            <span class="dv3-group-count" data-dv3-group-count>${g.items.length} Modül</span>
           </div>
           <div class="dv3-pill-grid">
             ${pillsHtml}
@@ -1129,7 +1488,18 @@
       <div class="dv3-header-row">
         <div class="dv3-title-group">
           <h3 class="dv3-title">✨ Tüm 24+ Özellik Keşif Merkezi</h3>
-          <span class="dv3-subtitle-pill">${totalFeatures} İnteraktif Modül • Tek Tıkla Erişim</span>
+          <span class="dv3-subtitle-pill" data-dv3-hub-summary>${totalFeatures} İnteraktif Modül • Tek Tıkla Erişim</span>
+        </div>
+      </div>
+      <div class="dv3-hub-controls">
+        <div class="dv3-hub-search-wrap">
+          <span class="dv3-hub-search-icon" aria-hidden="true">🔎</span>
+          <input type="search"
+                 id="dv3-hub-search"
+                 placeholder="Stüdyo veya modül ara (ör. pomodoro, irfan, bütçe, AI)..."
+                 autocomplete="off"
+                 aria-label="Özellik ve stüdyo ara" />
+          <button type="button" class="dv3-hub-search-clear" data-dv3-hub-clear title="Aramayı temizle" aria-label="Aramayı temizle">×</button>
         </div>
         <div class="dv3-cat-tabs" role="tablist" aria-label="Özellik Kategorileri">
           ${tabsHtml}
@@ -1137,6 +1507,10 @@
       </div>
       <div class="dv3-groups-grid">
         ${groupsHtml}
+      </div>
+      <div class="dv3-hub-empty" data-dv3-hub-empty>
+        <span>Aradığınız kritere uygun modül bulunamadı.</span>
+        <button type="button" class="dv3-ghost-link" data-dv3-hub-reset>✨ Tümünü Göster</button>
       </div>
     `;
 
@@ -1146,37 +1520,97 @@
   /**
    * Wire interactive events cleanly on all injected V3 blocks
    */
-  function wireEvents(dashboardEl, ctx) {
+  function wireEvents(dashboardEl, ctx, provinces, state, esc) {
     const selectCity = ctx && typeof ctx.selectCity === 'function' ? ctx.selectCity : null;
     const openView = ctx && typeof ctx.openView === 'function' ? ctx.openView : null;
     const openLightbox = ctx && typeof ctx.openLightbox === 'function' ? ctx.openLightbox : null;
 
-    // 1. Marquee cards: click card -> selectCity, click zoom button -> openLightbox
-    dashboardEl.querySelectorAll('.dv3-city-card[data-dv3-city]').forEach((card) => {
-      const cityKey = card.getAttribute('data-dv3-city');
-      const imgSrc = card.getAttribute('data-dv3-img');
-      const caption = card.getAttribute('data-dv3-caption') || '';
+    // 1. Marquee block: delegated card click / zoom / filter pills / pause-resume toggle
+    const marqueeSection = dashboardEl.querySelector('[data-dv3-block="marquee"]');
+    if (marqueeSection) {
+      const marqueeShell = marqueeSection.querySelector('[data-dv3-marquee-shell]');
+      const marqueeSubtitle = marqueeSection.querySelector('[data-dv3-marquee-subtitle]');
+      const marqueeToggle = marqueeSection.querySelector('[data-dv3-marquee-toggle]');
+      const marqueeFilterBtns = marqueeSection.querySelectorAll('[data-dv3-marquee-filter]');
+      let isPaused = false;
 
-      card.addEventListener('click', (e) => {
-        if (e.target && e.target.closest('[data-dv3-zoom]')) {
-          e.stopPropagation();
-          if (openLightbox && imgSrc) {
-            openLightbox([{ src: imgSrc, caption }], 0);
+      const applyMarqueeFilter = (mode) => {
+        const items = selectMarqueeProvinces(provinces, mode, state);
+        marqueeFilterBtns.forEach((btn) => {
+          const isMatch = btn.getAttribute('data-dv3-marquee-filter') === mode;
+          btn.classList.toggle('active', isMatch);
+          btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+        });
+
+        renderMarqueeShellContent(marqueeShell, items, mode, esc);
+        if (marqueeShell) {
+          marqueeShell.classList.toggle('is-paused', isPaused);
+        }
+
+        if (marqueeSubtitle) {
+          const labels = {
+            curated: `${items.length} İkonik Menzil • Üzerine Gelince Durur`,
+            visited: `${items.length} Gezilen İl • Üzerine Gelince Durur`,
+            mesopotamia: `${items.length} Mezopotamya İli • Üzerine Gelince Durur`,
+            favorites: items.length ? `${items.length} Favori Menzil` : 'Favori Listesi Boş'
+          };
+          marqueeSubtitle.textContent = labels[mode] || labels.curated;
+        }
+      };
+
+      marqueeFilterBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-dv3-marquee-filter') || 'curated';
+          applyMarqueeFilter(mode);
+        });
+      });
+
+      if (marqueeToggle && marqueeShell) {
+        marqueeToggle.addEventListener('click', () => {
+          isPaused = !isPaused;
+          marqueeShell.classList.toggle('is-paused', isPaused);
+          marqueeToggle.classList.toggle('is-paused', isPaused);
+          marqueeToggle.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
+          marqueeToggle.textContent = isPaused ? '▶️ Sürdür' : '⏸️ Duraklat';
+        });
+      }
+
+      if (marqueeShell) {
+        marqueeShell.addEventListener('click', (e) => {
+          const resetBtn = e.target && e.target.closest('[data-dv3-marquee-reset]');
+          if (resetBtn) {
+            applyMarqueeFilter('curated');
+            return;
           }
-          return;
-        }
-        if (selectCity && cityKey) {
-          selectCity(cityKey);
-        }
-      });
+          const card = e.target && e.target.closest('.dv3-city-card[data-dv3-city]');
+          if (!card) return;
+          const cityKey = card.getAttribute('data-dv3-city');
+          const imgSrc = card.getAttribute('data-dv3-img');
+          const caption = card.getAttribute('data-dv3-caption') || '';
 
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          if (selectCity && cityKey) selectCity(cityKey);
-        }
-      });
-    });
+          if (e.target && e.target.closest('[data-dv3-zoom]')) {
+            e.stopPropagation();
+            if (openLightbox && imgSrc) {
+              openLightbox([{ src: imgSrc, caption }], 0);
+            }
+            return;
+          }
+          if (selectCity && cityKey) {
+            selectCity(cityKey);
+          }
+        });
+
+        marqueeShell.addEventListener('keydown', (e) => {
+          const card = e.target && e.target.closest('.dv3-city-card[data-dv3-city]');
+          if (!card) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const cityKey = card.getAttribute('data-dv3-city');
+            if (selectCity && cityKey) selectCity(cityKey);
+          }
+        });
+      }
+    }
 
     // 2. Expedition stepper pills -> selectCity
     dashboardEl.querySelectorAll('.dv3-stop-pill[data-dv3-city]').forEach((pill) => {
@@ -1196,20 +1630,107 @@
       });
     });
 
-    // 4. Category filter tabs in the 24+ Feature Hub
-    const tabs = dashboardEl.querySelectorAll('.dv3-cat-tab[data-dv3-cat]');
-    const groupCards = dashboardEl.querySelectorAll('.dv3-group-card[data-dv3-group]');
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const targetCat = tab.getAttribute('data-dv3-cat');
-        tabs.forEach((t) => t.classList.toggle('active', t === tab));
+    // 4. Live instant search + category filter tabs in the 24+ Feature Hub
+    const hubSection = dashboardEl.querySelector('[data-dv3-block="launchers"]');
+    if (hubSection) {
+      const searchInput = hubSection.querySelector('#dv3-hub-search');
+      const clearBtn = hubSection.querySelector('[data-dv3-hub-clear]');
+      const resetBtn = hubSection.querySelector('[data-dv3-hub-reset]');
+      const summaryEl = hubSection.querySelector('[data-dv3-hub-summary]');
+      const emptyEl = hubSection.querySelector('[data-dv3-hub-empty]');
+      const tabs = hubSection.querySelectorAll('.dv3-cat-tab[data-dv3-cat]');
+      const groupCards = hubSection.querySelectorAll('.dv3-group-card[data-dv3-group]');
+      const totalFeatures = FEATURE_GROUPS.reduce((sum, g) => sum + g.items.length, 0);
+      let activeCat = 'all';
+
+      const applyHubFilter = () => {
+        const rawQuery = searchInput ? searchInput.value : '';
+        const normQuery = normalizeTr(rawQuery);
+        if (clearBtn) {
+          clearBtn.classList.toggle('is-visible', rawQuery.trim().length > 0);
+        }
+
+        let visibleTotal = 0;
+
         groupCards.forEach((card) => {
           const cardCat = card.getAttribute('data-dv3-group');
-          const visible = targetCat === 'all' || cardCat === targetCat;
-          card.classList.toggle('is-hidden', !visible);
+          const catMatch = activeCat === 'all' || cardCat === activeCat;
+          const pills = card.querySelectorAll('.dv3-launch-pill');
+          let visibleInGroup = 0;
+
+          pills.forEach((pill) => {
+            const haystack = pill.getAttribute('data-dv3-search') || '';
+            const match = catMatch && (!normQuery || haystack.indexOf(normQuery) !== -1);
+            pill.classList.toggle('is-hidden', !match);
+            if (match) visibleInGroup += 1;
+          });
+
+          card.classList.toggle('is-hidden', visibleInGroup === 0);
+          visibleTotal += visibleInGroup;
+
+          const countEl = card.querySelector('[data-dv3-group-count]');
+          const groupTotal = Number(card.getAttribute('data-dv3-total')) || pills.length;
+          if (countEl) {
+            countEl.textContent = normQuery
+              ? `${visibleInGroup}/${groupTotal} Modül`
+              : `${groupTotal} Modül`;
+          }
+        });
+
+        if (summaryEl) {
+          summaryEl.textContent = normQuery || activeCat !== 'all'
+            ? `${visibleTotal} / ${totalFeatures} Modül Gösteriliyor`
+            : `${totalFeatures} İnteraktif Modül • Tek Tıkla Erişim`;
+        }
+
+        if (emptyEl) {
+          emptyEl.classList.toggle('is-visible', visibleTotal === 0);
+        }
+      };
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          activeCat = tab.getAttribute('data-dv3-cat') || 'all';
+          tabs.forEach((t) => {
+            const isActive = t === tab;
+            t.classList.toggle('active', isActive);
+            t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          });
+          applyHubFilter();
         });
       });
-    });
+
+      if (searchInput) {
+        searchInput.addEventListener('input', applyHubFilter);
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && searchInput.value) {
+            searchInput.value = '';
+            applyHubFilter();
+          }
+        });
+      }
+
+      if (clearBtn && searchInput) {
+        clearBtn.addEventListener('click', () => {
+          searchInput.value = '';
+          applyHubFilter();
+          searchInput.focus();
+        });
+      }
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          activeCat = 'all';
+          if (searchInput) searchInput.value = '';
+          tabs.forEach((t) => {
+            const isAll = t.getAttribute('data-dv3-cat') === 'all';
+            t.classList.toggle('active', isAll);
+            t.setAttribute('aria-selected', isAll ? 'true' : 'false');
+          });
+          applyHubFilter();
+        });
+      }
+    }
   }
 
   /**
@@ -1233,7 +1754,7 @@
     const provinces = (data && data.provinces) || {};
 
     // Build the 3 visual showcase blocks
-    const marqueeBlock = buildMarqueeBlock(provinces, esc);
+    const marqueeBlock = buildMarqueeBlock(provinces, state, esc);
     const expeditionBlock = buildExpeditionBlock(data, state, esc, distFn);
     const launcherHubBlock = buildLauncherHubBlock(esc);
 
@@ -1264,7 +1785,7 @@
       }
     }
 
-    wireEvents(dashboardEl, safeCtx);
+    wireEvents(dashboardEl, safeCtx, provinces, state, esc);
   }
 
   window.SEYYAH_MODULES.dashboardV3 = {

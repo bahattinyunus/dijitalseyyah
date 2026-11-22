@@ -439,7 +439,8 @@
     aiSource: '',
     aiRecommendedMakamId: '',
     aiRecommendedCityKey: '',
-    aiRunId: 0
+    aiRunId: 0,
+    keyboardMakamId: ''
   };
 
   const audioEngine = {
@@ -453,7 +454,8 @@
     neyPlaying: false,
     rootEl: null,
     domObserver: null,
-    hashListener: null
+    hashListener: null,
+    keyListener: null
   };
 
   function defaultEscapeHtml(str) {
@@ -522,6 +524,54 @@
     if (h >= 15 && h < 18) return 'İkindi (15:00–18:00)';
     if (h >= 18 && h < 21) return 'Akşam (18:00–21:00)';
     return 'Yatsı / Gece (21:00–04:00)';
+  }
+
+  function getFarabiHourlyRecommendation() {
+    const now = new Date();
+    const h = now.getHours();
+    const hhmm = String(h).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    let makamId = 'hicaz';
+    let periodLabel = 'Yatsı & Gece Tefekkürü';
+    let cue = 'Gece sükûnetinde derin tefekkür, dua ve kalp dinginliği vakti';
+
+    if (h >= 4 && h < 6) {
+      makamId = 'saba';
+      periodLabel = 'Seher (Gün Doğumu Öncesi)';
+      cue = 'Seherin uyanışında gönle cesaret, dirilik ve ince bir şükür verir';
+    } else if (h >= 6 && h < 9) {
+      makamId = 'rast';
+      periodLabel = 'Sabah & Güneş Doğuşu';
+      cue = 'Güne zihin berraklığı, sefâ ve tabiî denge ile başlamak için ana makam';
+    } else if (h >= 9 && h < 11) {
+      makamId = 'segah';
+      periodLabel = 'Kuşluk Vakti';
+      cue = 'Zihin dağınıklığını toparlar; kütüphane ve çalışma saatlerine berraklık katar';
+    } else if (h >= 11 && h < 14) {
+      makamId = 'irak';
+      periodLabel = 'Öğle Vakti';
+      cue = 'Günün ortasında harareti ve aceleciliği söndüren serin, vakur makam';
+    } else if (h >= 14 && h < 16) {
+      makamId = 'nihavend';
+      periodLabel = 'Öğle Sonu & İkindi Başı';
+      cue = 'Kalp ritmini yumuşatan ve zihni yorgunluktan arındıran zarif seyir';
+    } else if (h >= 16 && h < 18) {
+      makamId = 'huseyni';
+      periodLabel = 'İkindi Vakti';
+      cue = 'Gönül genişliği, içsel sulh ve Anadolu yayla serinliği taşıyan makam';
+    } else if (h >= 18 && h < 21) {
+      makamId = 'ussak';
+      periodLabel = 'Akşam Üzeri';
+      cue = 'Günün yorgunluğunu yumuşak bir neşe ve huzura çeviren âşıklar makamı';
+    }
+
+    const makam = MAKAMLAR.find(function (m) { return m.id === makamId; }) || MAKAMLAR[0];
+    return {
+      hour: h,
+      clock: hhmm,
+      periodLabel: periodLabel,
+      cue: cue,
+      makam: makam
+    };
   }
 
   // =========================================================================
@@ -823,6 +873,55 @@
     notify(ctxHelpers, '🎵 ' + makam.name + ' makamı demi ve seyri çalınıyor...', 'info');
   }
 
+  function playSinglePerdeNote(hz, keyBtnEl, ctxHelpers) {
+    const ac = ensureAudioContext();
+    if (!ac) {
+      notify(ctxHelpers, '⚠️ Tarayıcınız Web Audio API desteklemiyor.', 'warning');
+      return;
+    }
+    const now = ac.currentTime;
+    const dur = 0.95;
+
+    const oscSine = ac.createOscillator();
+    oscSine.type = 'sine';
+    oscSine.frequency.setValueAtTime(hz, now);
+
+    const oscTri = ac.createOscillator();
+    oscTri.type = 'triangle';
+    oscTri.frequency.setValueAtTime(hz, now);
+
+    const triMix = ac.createGain();
+    triMix.gain.setValueAtTime(0.26, now);
+
+    const lowpass = ac.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.setValueAtTime(1850, now);
+
+    const env = ac.createGain();
+    env.gain.setValueAtTime(0.0001, now);
+    env.gain.linearRampToValueAtTime(0.28, now + 0.04);
+    env.gain.exponentialRampToValueAtTime(0.12, now + 0.35);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    oscSine.connect(env);
+    oscTri.connect(triMix);
+    triMix.connect(env);
+    env.connect(lowpass);
+    lowpass.connect(ac.destination);
+
+    oscSine.start(now);
+    oscTri.start(now);
+    oscSine.stop(now + dur + 0.04);
+    oscTri.stop(now + dur + 0.04);
+
+    if (keyBtnEl) {
+      keyBtnEl.classList.add('is-pressed');
+      setTimeout(function () {
+        keyBtnEl.classList.remove('is-pressed');
+      }, 360);
+    }
+  }
+
   function toggleNeyTaksimi(ctxHelpers) {
     if (audioEngine.neyPlaying && audioEngine.neyAudio) {
       stopNeyAudio();
@@ -876,6 +975,10 @@
     if (audioEngine.hashListener) {
       window.removeEventListener('hashchange', audioEngine.hashListener);
       audioEngine.hashListener = null;
+    }
+    if (audioEngine.keyListener) {
+      window.removeEventListener('keydown', audioEngine.keyListener);
+      audioEngine.keyListener = null;
     }
 
     syncAudioUI();
@@ -1740,7 +1843,204 @@
         color: #0f172a;
       }
 
+      /* Fârâbî Saat Pusulası Banner */
+      .makam-farabi-banner {
+        border-radius: 18px;
+        padding: 16px 20px;
+        background:
+          linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(0, 242, 254, 0.1)),
+          rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(245, 158, 11, 0.36);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .makam-farabi-banner-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-width: 740px;
+      }
+
+      .makam-farabi-eyebrow {
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accent-gold, #fbbf24);
+      }
+
+      .makam-farabi-title {
+        margin: 0;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1.06rem;
+        font-weight: 800;
+      }
+
+      .makam-farabi-desc {
+        margin: 0;
+        font-size: 0.84rem;
+        color: var(--text-secondary, #cbd5e1);
+        line-height: 1.5;
+      }
+
+      .makam-farabi-cta {
+        cursor: pointer;
+        border: none;
+        border-radius: 12px;
+        padding: 11px 18px;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #0f172a;
+        background: linear-gradient(135deg, #fbbf24, #00f2fe);
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.24);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .makam-farabi-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(0, 242, 254, 0.28);
+      }
+
+      /* Interactive 7-Note Makam Perde Klavyesi */
+      .makam-keyboard-panel {
+        border-radius: 18px;
+        padding: 18px 20px;
+        background: var(--bg-card, rgba(20, 30, 52, 0.72));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .makam-kb-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .makam-kb-head h3 {
+        margin: 0 0 2px;
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 1rem;
+        font-weight: 800;
+      }
+
+      .makam-kb-sub {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--text-secondary, #94a3b8);
+      }
+
+      .makam-kb-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 9px;
+      }
+
+      .makam-kb-key {
+        cursor: pointer;
+        border-radius: 14px;
+        padding: 14px 8px 12px;
+        background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-bottom: 4px solid var(--kb-accent, #00f2fe);
+        color: var(--text-primary, #f8fafc);
+        font-family: inherit;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      }
+
+      .makam-kb-key:hover {
+        transform: translateY(-2px);
+        border-color: var(--kb-accent, #00f2fe);
+      }
+
+      .makam-kb-key.is-pressed,
+      .makam-kb-key:active {
+        transform: translateY(2px) scale(0.98);
+        background: linear-gradient(180deg, rgba(0, 242, 254, 0.25), rgba(245, 158, 11, 0.2));
+        box-shadow: 0 0 18px rgba(0, 242, 254, 0.35);
+      }
+
+      .makam-kb-num {
+        font-size: 0.7rem;
+        font-weight: 800;
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--kb-accent, #00f2fe);
+      }
+
+      .makam-kb-name {
+        font-family: var(--font-heading, 'Outfit', sans-serif);
+        font-size: 0.86rem;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .makam-kb-hz {
+        font-size: 0.69rem;
+        color: var(--text-muted, #94a3b8);
+      }
+
+      body.light-theme .makam-farabi-banner {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(2, 132, 199, 0.08)), #ffffff;
+        border-color: rgba(180, 83, 9, 0.28);
+        color: #0f172a;
+      }
+
+      body.light-theme .makam-farabi-eyebrow {
+        color: #b45309;
+      }
+
+      body.light-theme .makam-farabi-desc {
+        color: #334155;
+      }
+
+      body.light-theme .makam-keyboard-panel {
+        background: #ffffff;
+        border-color: rgba(15, 23, 42, 0.12);
+        color: #0f172a;
+      }
+
+      body.light-theme .makam-kb-key {
+        background: linear-gradient(180deg, #ffffff, #f1f5f9);
+        border-color: rgba(15, 23, 42, 0.14);
+        border-bottom-color: var(--kb-accent, #0284c7);
+        color: #0f172a;
+      }
+
+      body.light-theme .makam-kb-key.is-pressed,
+      body.light-theme .makam-kb-key:active {
+        background: linear-gradient(180deg, rgba(2, 132, 199, 0.16), rgba(245, 158, 11, 0.14));
+      }
+
+      body.light-theme .makam-kb-num {
+        background: rgba(15, 23, 42, 0.07);
+        color: #0369a1;
+      }
+
       @media (max-width: 720px) {
+        .makam-kb-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
         .makam-grid {
           grid-template-columns: 1fr;
         }
@@ -1961,6 +2261,52 @@
       );
     }
 
+    const farabiRec = getFarabiHourlyRecommendation();
+    if (!uiState.keyboardMakamId) {
+      uiState.keyboardMakamId = farabiRec.makam.id;
+    }
+
+    function renderKeyboardPanel() {
+      const kbMakam =
+        MAKAMLAR.find(function (m) {
+          return m.id === uiState.keyboardMakamId;
+        }) || farabiRec.makam;
+      const notes = kbMakam.scale.slice(0, 7);
+
+      const makamOptionsHtml = MAKAMLAR.map(function (m) {
+        return (
+          '<option value="' + esc(m.id) + '"' + (m.id === kbMakam.id ? ' selected' : '') + '>' +
+            esc(m.name + ' Makamı (' + m.vakit + ')') +
+          '</option>'
+        );
+      }).join('');
+
+      const keysHtml = notes
+        .map(function (note, idx) {
+          return (
+            '<button type="button" class="makam-kb-key" data-kb-note-idx="' + idx + '" data-kb-hz="' + note.hz + '" style="--kb-accent:' + esc(kbMakam.accent) + ';">' +
+              '<span class="makam-kb-num">' + (idx + 1) + '</span>' +
+              '<span class="makam-kb-name">' + esc(note.label) + '</span>' +
+              '<span class="makam-kb-hz">' + note.hz + ' Hz</span>' +
+            '</button>'
+          );
+        })
+        .join('');
+
+      return (
+        '<div class="makam-kb-head">' +
+          '<div>' +
+            '<h3>🎹 7 Perdeli Makam Klavyesi — ' + esc(kbMakam.name) + ' Makamı</h3>' +
+            '<p class="makam-kb-sub">Perdelere tıklayın veya klavyenizden <strong>1–7</strong> tuşlarına basarak mikrotonal Web Audio seslerini canlı çalın.</p>' +
+          '</div>' +
+          '<select id="makam-kb-select" class="makam-select" aria-label="Klavye Makam Seçimi">' +
+            makamOptionsHtml +
+          '</select>' +
+        '</div>' +
+        '<div class="makam-kb-grid">' + keysHtml + '</div>'
+      );
+    }
+
     const vakitButtonsHtml = VAKIT_FILTERS.map(function (vf) {
       const cls = vf.id === uiState.vakitFilter ? ' active' : '';
       return (
@@ -2018,6 +2364,17 @@
         '</div>' +
       '</section>' +
 
+      '<section class="makam-farabi-banner" aria-label="Fârâbî Saat Pusulası">' +
+        '<div class="makam-farabi-banner-info">' +
+          '<span class="makam-farabi-eyebrow">🕰️ Vakte Göre Şifalı Makam Önerisi (Fârâbî Saat Pusulası) • Saat ' + esc(farabiRec.clock) + ' · ' + esc(farabiRec.periodLabel) + '</span>' +
+          '<h3 class="makam-farabi-title">Şu Anın Şifalı Makamı: ' + esc(farabiRec.makam.name) + ' Makamı</h3>' +
+          '<p class="makam-farabi-desc">' + esc(farabiRec.cue) + ' — ' + esc(farabiRec.makam.farabiNote) + '</p>' +
+        '</div>' +
+        '<button type="button" class="makam-farabi-cta" data-play-vakit-makam="' + esc(farabiRec.makam.id) + '">' +
+          '🎶 Vaktin Makamını Dinle (' + esc(farabiRec.makam.name) + ')' +
+        '</button>' +
+      '</section>' +
+
       '<div id="makam-audio-status" class="makam-audio-status">' +
         '<div>' +
           '<span class="makam-eq-bars"><span></span><span></span><span></span><span></span></span>' +
@@ -2025,6 +2382,10 @@
         '</div>' +
         '<button type="button" class="makam-chip" data-stop-all="1">🔇 Sustur</button>' +
       '</div>' +
+
+      '<section class="makam-keyboard-panel" id="makam-keyboard-panel" aria-label="7 Perdeli Makam Klavyesi">' +
+        renderKeyboardPanel() +
+      '</section>' +
 
       '<section class="makam-section">' +
         '<div class="makam-section-head">' +
@@ -2217,10 +2578,74 @@
       revealNext();
     }
 
+    function updateKeyboardPanelDom() {
+      const kbPanel = rootEl.querySelector('#makam-keyboard-panel');
+      if (kbPanel) {
+        kbPanel.innerHTML = renderKeyboardPanel();
+        const kbSel = kbPanel.querySelector('#makam-kb-select');
+        if (kbSel) {
+          kbSel.addEventListener('change', function () {
+            uiState.keyboardMakamId = kbSel.value;
+            updateKeyboardPanelDom();
+          });
+        }
+      }
+    }
+
+    // Bind initial keyboard makam selector
+    const initialKbSel = rootEl.querySelector('#makam-kb-select');
+    if (initialKbSel) {
+      initialKbSel.addEventListener('change', function () {
+        uiState.keyboardMakamId = initialKbSel.value;
+        updateKeyboardPanelDom();
+      });
+    }
+
+    // Keyboard shortcut 1–7 for 7-Note Makam Perde Klavyesi
+    audioEngine.keyListener = function (e) {
+      if (!rootEl.isConnected) {
+        stop();
+        return;
+      }
+      const tag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) {
+        return;
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const num = Number(e.key);
+      if (num >= 1 && num <= 7) {
+        const keyBtn = rootEl.querySelector('[data-kb-note-idx="' + (num - 1) + '"]');
+        if (keyBtn) {
+          const hz = Number(keyBtn.getAttribute('data-kb-hz'));
+          if (Number.isFinite(hz) && hz > 0) {
+            playSinglePerdeNote(hz, keyBtn, ctxHelpers);
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', audioEngine.keyListener);
+
     // Event Delegation inside rootEl
     rootEl.addEventListener('click', function (e) {
       const target = e.target && e.target.closest ? e.target.closest('button') : null;
       if (!target) return;
+
+      const kbHz = target.getAttribute('data-kb-hz');
+      if (kbHz) {
+        const hzVal = Number(kbHz);
+        if (Number.isFinite(hzVal) && hzVal > 0) {
+          playSinglePerdeNote(hzVal, target, ctxHelpers);
+        }
+        return;
+      }
+
+      const vakitMakamId = target.getAttribute('data-play-vakit-makam');
+      if (vakitMakamId) {
+        uiState.keyboardMakamId = vakitMakamId;
+        updateKeyboardPanelDom();
+        playMakamSynth(vakitMakamId, ctxHelpers);
+        return;
+      }
 
       const vakitId = target.getAttribute('data-vakit-filter');
       if (vakitId) {
@@ -2234,6 +2659,8 @@
 
       const playMakamId = target.getAttribute('data-play-makam');
       if (playMakamId) {
+        uiState.keyboardMakamId = playMakamId;
+        updateKeyboardPanelDom();
         playMakamSynth(playMakamId, ctxHelpers);
         return;
       }

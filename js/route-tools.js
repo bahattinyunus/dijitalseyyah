@@ -31,6 +31,16 @@
       usesFuel: true,
       note: 'Ortalama binek araç yakıt tüketimi ve pompa fiyatı baz alınır'
     },
+    motorcycle: {
+      id: 'motorcycle',
+      label: '🏍️ Motosiklet / Enduro Touring',
+      shortLabel: 'Motosiklet / Enduro',
+      defaultConsumption: 3.8, // L / 100 km
+      defaultFuelPriceTl: 46.0, // TL / L
+      co2KgPerLiter: 2.31,
+      usesFuel: true,
+      note: 'Anadolu virajları ve yayla geçitleri için çevik enduro/touring (~3,8 L/100km) • Düşük yakıt, yüksek özgürlük'
+    },
     train: {
       id: 'train',
       label: '🚆 Tren / Karma',
@@ -228,22 +238,43 @@
     return gpxXml;
   }
 
+  function resolveProvinceData(stop, ctx) {
+    if (!stop) return null;
+    const data = (ctx && ctx.data) || (typeof window !== 'undefined' && window.TRAVEL_DATA) || null;
+    const provinces = data && data.provinces ? data.provinces : null;
+    if (!provinces) return stop;
+    if (stop.key && provinces[stop.key]) return provinces[stop.key];
+    if (stop.name) {
+      const target = String(stop.name).toLocaleLowerCase('tr-TR').trim();
+      const found = Object.values(provinces).find(
+        p => p && p.name && String(p.name).toLocaleLowerCase('tr-TR').trim() === target
+      );
+      if (found) return found;
+    }
+    return stop;
+  }
+
   /**
-   * Formats the calculated route as shareable plain text.
+   * Formats the calculated route as shareable plain text summary.
    * @param {Array} route
+   * @param {string} [mode]
+   * @param {Object} [opts]
    * @returns {string}
    */
-  function buildRouteText(route) {
+  function buildRouteText(route, mode, opts) {
     if (!Array.isArray(route) || route.length === 0) return '';
 
     const totalKm = getTotalKm(route);
     const estHours = (totalKm / 80).toFixed(1);
     const seferDays = Math.max(0, route.length - 1) * DAYS_PER_STOP;
     const gmapsUrl = buildGoogleMapsUrl(route);
+    const calc = calculateBudget(route, mode || 'bus', opts);
 
     const lines = [
-      '🧭 DİJİTAL SEYYAH — ANADOLU ROTA PLANI',
+      '🧭 DİJİTAL SEYYAH — ANADOLU ROTA ÖZETİ',
       `📍 ${route.length} Durak • 🛣️ ${formatNumber(totalKm)} km • ⏱️ ~${estHours} saat sürüş • ⛺ ${seferDays} gün (5 Gün Kuralı)`,
+      `💸 Ulaşım (${calc.modeSpec.shortLabel}): ~${formatNumber(calc.transportCostTl)} ₺${calc.fuelLiters != null ? ` (${formatNumber(calc.fuelLiters, 1)} L yakıt)` : ''} • 🌱 ${formatNumber(calc.co2Kg, 1)} kg CO₂`,
+      `🏨 GSB KYK Tasarrufu: +${formatNumber(calc.kykSavingsTl)} ₺ (${formatNumber(calc.kykNights)} gece × 0 ₺)`,
       '----------------------------------------'
     ];
 
@@ -263,9 +294,155 @@
   }
 
   /**
-   * Computes budget, fuel liters (for car), CO2 footprint (kg), and GSB KYK 5-day savings.
+   * Generates a rich day-by-day 5 Gün Kuralı Markdown expedition itinerary.
    * @param {Array} route
-   * @param {string} mode - 'bus' | 'car' | 'train'
+   * @param {string} [mode]
+   * @param {Object} [opts]
+   * @param {Object} [ctx]
+   * @returns {string}
+   */
+  function buildMarkdownItinerary(route, mode, opts, ctx) {
+    if (!Array.isArray(route) || route.length === 0) return '';
+
+    const totalKm = getTotalKm(route);
+    const estHours = (totalKm / 80).toFixed(1);
+    const overnightStops = Math.max(0, route.length - 1);
+    const totalDays = overnightStops * DAYS_PER_STOP;
+    const calc = calculateBudget(route, mode || 'bus', opts);
+    const gmapsUrl = buildGoogleMapsUrl(route);
+    const firstCity = route[0].name || 'Başlangıç';
+    const lastCity = route[route.length - 1].name || firstCity;
+    const todayStr = new Date().toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const lines = [
+      `# 🧭 Dijital Seyyah — Anadolu Sefer Planı (${firstCity} → ${lastCity})`,
+      '',
+      `> **Oluşturulma Tarihi:** ${todayStr}  `,
+      `> **Metodoloji:** GSB Seyahatsever **5 Gün Kuralı** (Sabah Kütüphane Ofis + Öğleden Sonra Kültür Keşfi)  `,
+      `> **Toplam Rota:** ${route.length} Durak • ${formatNumber(totalKm)} km • ~${estHours} saat sürüş • ${totalDays} Gün`,
+      '',
+      '## 💸 Bütçe, Yakıt & Karbon Özeti',
+      '',
+      '| Metrik | Değer |',
+      '| --- | --- |',
+      `| **Ulaşım Modu** | ${calc.modeSpec.label} |`,
+      `| **Toplam Mesafe** | ${formatNumber(totalKm)} km |`,
+      `| **Tahmini Ulaşım Bütçesi** | ${formatNumber(calc.transportCostTl)} ₺ (~${formatNumber(calc.costPerStopTl)} ₺/durak) |`,
+      `| **Tahmini Yakıt** | ${calc.fuelLiters != null ? `${formatNumber(calc.fuelLiters, 1)} L` : '0 L (Toplu Taşıma)'} |`,
+      `| **CO₂ Ayak İzi** | ${formatNumber(calc.co2Kg, 1)} kg (~${formatNumber(calc.treesEquivalent)} ağaç/yıl dengeleme) |`,
+      `| **GSB KYK Tasarrufu** | +${formatNumber(calc.kykSavingsTl)} ₺ (${formatNumber(calc.kykNights)} gece × ${formatNumber(DEFAULT_KYK_NIGHTLY_SAVING_TL)} ₺) |`,
+      '',
+      `🗺️ **Google Maps Navigasyon:** [Rotayı Haritada Aç](${gmapsUrl})`,
+      '',
+      '---',
+      '',
+      '## 📅 Gün Gün 5 Gün Kuralı Sefer Programı',
+      ''
+    ];
+
+    let dayCursor = 1;
+
+    route.forEach((stop, idx) => {
+      const prov = resolveProvinceData(stop, ctx) || stop;
+      const distPrev = Number(stop.distFromPrev) || 0;
+      const cumKm = Number(stop.cumulativeKm) || 0;
+      const legHours = distPrev > 0 ? (distPrev / 80).toFixed(1) : '0.0';
+      const landmarks = Array.isArray(prov.landmarks) && prov.landmarks.length > 0
+        ? prov.landmarks
+        : [`${stop.name} Tarihi Kent Merkezi`, `${stop.name} Müzesi`, `${stop.name} Kültür Rotası`];
+      const specialties = Array.isArray(prov.specialties) && prov.specialties.length > 0
+        ? prov.specialties
+        : [`${stop.name} Yöresel Mutfağı`];
+      const workOffice = (Array.isArray(prov.libraries) && prov.libraries[0])
+        || (prov.kyk && prov.kyk.library)
+        || `${stop.name} İl Halk Kütüphanesi / Gençlik Merkezi Çalışma Ofisi`;
+
+      if (idx === 0) {
+        lines.push(`### 🚩 Durak 1: ${stop.name} (Başlangıç Noktası • 0 km)`);
+        lines.push('');
+        lines.push(`- **Hazırlık & Hareket:** Sefer çantası, powerbank, GSB Seyahatsever rezervasyonu ve çevrimdışı harita kontrolü.`);
+        lines.push(`- **Son Çalışma / Kahve Durağı:** ${workOffice}`);
+        if (landmarks.length > 0) {
+          lines.push(`- **Öne Çıkanlar:** ${landmarks.slice(0, 3).join(' • ')}`);
+        }
+        lines.push('');
+        return;
+      }
+
+      const startDay = dayCursor;
+      const endDay = dayCursor + DAYS_PER_STOP - 1;
+      dayCursor += DAYS_PER_STOP;
+
+      lines.push(`### 📍 Durak ${idx + 1}: ${stop.name} (Gün ${startDay}–${endDay})`);
+      lines.push('');
+      lines.push(`- **Etap Mesafesi:** +${formatNumber(distPrev)} km (~${legHours} saat) | **Kümülatif:** ${formatNumber(cumKm)} km`);
+      lines.push(`- **Konaklama:** ⛺ GSB Seyahatsever KYK Yurdu (5 Gece • 0 ₺)`);
+      lines.push(`- **Sabah Ofis (09:00–13:00):** 📚 ${workOffice}`);
+      lines.push(`- **Yöresel Lezzetler:** 🍽️ ${specialties.slice(0, 4).join(', ')}`);
+      lines.push('');
+
+      for (let d = 0; d < DAYS_PER_STOP; d++) {
+        const currentDay = startDay + d;
+        const lm = landmarks[d % landmarks.length];
+        const sp = specialties[d % specialties.length];
+        if (d === 0) {
+          lines.push(`  - **Gün ${currentDay} (Varış & Yerleşme):** ${stop.name} varış (+${formatNumber(distPrev)} km), KYK yurdu girişi, akşamüstü **${lm}** keşfi ve **${sp}** tadımı.`);
+        } else if (d === DAYS_PER_STOP - 1) {
+          lines.push(`  - **Gün ${currentDay} (Kapanış & Hazırlık):** Sabah odak bloğu (${workOffice}), öğleden sonra **${lm}** ziyareti, seyahatname günlüğü notları ve sonraki etaba hazırlık.`);
+        } else {
+          lines.push(`  - **Gün ${currentDay}:** Sabah 09:00–13:00 uzaktan çalışma (${workOffice}) → Öğleden sonra **${lm}** keşfi • Akşam: **${sp}**.`);
+        }
+      }
+      lines.push('');
+    });
+
+    lines.push('---');
+    lines.push('*Anadolu Seyahatnamesi — Dijital Seyyah Rota Planlayıcı tarafından oluşturuldu.*');
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Downloads the Markdown expedition itinerary file (dijital_seyyah_sefer_plani.md).
+   * @param {Array} route
+   * @param {string} [mode]
+   * @param {Object} [opts]
+   * @param {Object} [ctx]
+   * @returns {string|null}
+   */
+  function downloadMarkdown(route, mode, opts, ctx) {
+    if (!Array.isArray(route) || route.length === 0) {
+      notify(ctx, '⚠️ Sefer planı indirmek için rotada en az 1 durak olmalıdır.');
+      return null;
+    }
+
+    const mdContent = buildMarkdownItinerary(route, mode, opts, ctx);
+
+    if (typeof Blob !== 'undefined' && typeof document !== 'undefined' && typeof URL !== 'undefined') {
+      const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dijital_seyyah_sefer_plani.md';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      notify(ctx, '📄 Markdown sefer planı indirildi (dijital_seyyah_sefer_plani.md)');
+    }
+
+    return mdContent;
+  }
+
+  /**
+   * Computes budget, fuel liters (for car/motorcycle), CO2 footprint (kg), and GSB KYK 5-day savings.
+   * @param {Array} route
+   * @param {string} mode - 'bus' | 'car' | 'motorcycle' | 'train'
    * @param {Object} [opts]
    */
   function calculateBudget(route, mode, opts) {
@@ -280,7 +457,7 @@
     let fuelLiters = null;
     let co2Kg = 0;
 
-    if (modeKey === 'car') {
+    if (spec.usesFuel) {
       const consumption = Math.max(
         1,
         Number(opts && opts.consumption) || spec.defaultConsumption
@@ -348,7 +525,7 @@
 
     return `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 10px;">
-        <div style="padding: 12px 14px; border-radius: var(--radius-md); background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-glass);">
+        <div style="padding: 12px 14px; border-radius: var(--radius-md); background: var(--bg-secondary, rgba(15, 23, 42, 0.55)); border: 1px solid var(--border-glass);">
           <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Tahmini Ulaşım</div>
           <div style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;">
             ${formatNumber(calc.transportCostTl)} ₺
@@ -358,7 +535,7 @@
           </div>
         </div>
 
-        <div style="padding: 12px 14px; border-radius: var(--radius-md); background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-glass);">
+        <div style="padding: 12px 14px; border-radius: var(--radius-md); background: var(--bg-secondary, rgba(15, 23, 42, 0.55)); border: 1px solid var(--border-glass);">
           <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
             ${calc.fuelLiters != null ? 'Tahmini Yakıt' : 'Ulaşım Verimi'}
           </div>
@@ -370,7 +547,7 @@
           </div>
         </div>
 
-        <div style="padding: 12px 14px; border-radius: var(--radius-md); background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-glass);">
+        <div style="padding: 12px 14px; border-radius: var(--radius-md); background: var(--bg-secondary, rgba(15, 23, 42, 0.55)); border: 1px solid var(--border-glass);">
           <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">CO₂ Ayak İzi</div>
           <div style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--accent-purple); margin-top: 2px;">
             ${formatNumber(calc.co2Kg, 1)} kg
@@ -436,8 +613,11 @@
             <button type="button" class="btn btn-outline" data-rt-action="gpx">
               📡 GPX İndir (GPS)
             </button>
+            <button type="button" class="btn btn-outline" data-rt-action="markdown">
+              📄 Sefer Planını Markdown İndir
+            </button>
             <button type="button" class="btn btn-outline" data-rt-action="copy">
-              📋 Rotayı Metin Olarak Kopyala
+              📋 Rota Özeti Kopyala
             </button>
           </div>
         </div>
@@ -458,16 +638,16 @@
             </div>
           </div>
 
-          <div data-rt-car-settings style="display: none; gap: 10px; flex-wrap: wrap; align-items: center; padding: 8px 12px; border-radius: var(--radius-sm); background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-glass);">
+          <div data-rt-car-settings style="display: none; gap: 10px; flex-wrap: wrap; align-items: center; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--bg-secondary, rgba(30, 41, 59, 0.5)); border: 1px solid var(--border-glass);">
             <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--text-secondary);">
               <span>⛽ Tüketim (L/100km):</span>
-              <input type="number" step="0.1" min="2" max="25" value="${TRANSPORT_MODES.car.defaultConsumption}" data-rt-input="consumption"
-                style="width: 68px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.78rem;" />
+              <input type="number" step="0.1" min="1.5" max="25" value="${TRANSPORT_MODES.car.defaultConsumption}" data-rt-input="consumption"
+                style="width: 68px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-primary, #0f172a); color: var(--text-primary); font-size: 0.78rem;" />
             </label>
             <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--text-secondary);">
               <span>🏷️ Yakıt Fiyatı (₺/L):</span>
               <input type="number" step="0.5" min="10" max="200" value="${TRANSPORT_MODES.car.defaultFuelPriceTl}" data-rt-input="fuelPrice"
-                style="width: 72px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.78rem;" />
+                style="width: 72px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-glass); background: var(--bg-primary, #0f172a); color: var(--text-primary); font-size: 0.78rem;" />
             </label>
           </div>
 
@@ -497,15 +677,18 @@
     const consumptionInput = panel.querySelector('[data-rt-input="consumption"]');
     const fuelPriceInput = panel.querySelector('[data-rt-input="fuelPrice"]');
 
+    function getActiveOpts() {
+      const spec = TRANSPORT_MODES[activeMode];
+      if (!spec || !spec.usesFuel) return undefined;
+      return {
+        consumption: consumptionInput ? parseFloat(consumptionInput.value) : spec.defaultConsumption,
+        fuelPrice: fuelPriceInput ? parseFloat(fuelPriceInput.value) : spec.defaultFuelPriceTl
+      };
+    }
+
     function refreshBudget() {
       if (!metricsEl) return;
-      const opts = activeMode === 'car'
-        ? {
-            consumption: consumptionInput ? parseFloat(consumptionInput.value) : TRANSPORT_MODES.car.defaultConsumption,
-            fuelPrice: fuelPriceInput ? parseFloat(fuelPriceInput.value) : TRANSPORT_MODES.car.defaultFuelPriceTl
-          }
-        : undefined;
-      const calc = calculateBudget(route, activeMode, opts);
+      const calc = calculateBudget(route, activeMode, getActiveOpts());
       metricsEl.innerHTML = renderMetricsHtml(calc, esc);
     }
 
@@ -523,13 +706,20 @@
       });
     }
 
+    const mdBtn = panel.querySelector('[data-rt-action="markdown"]');
+    if (mdBtn) {
+      mdBtn.addEventListener('click', () => {
+        downloadMarkdown(route, activeMode, getActiveOpts(), ctx);
+      });
+    }
+
     const copyBtn = panel.querySelector('[data-rt-action="copy"]');
     if (copyBtn) {
       copyBtn.addEventListener('click', () => {
-        const text = buildRouteText(route);
+        const text = buildRouteText(route, activeMode, getActiveOpts());
         copyToClipboard(text)
           .then(() => {
-            notify(ctx, '📋 Rota metni panoya kopyalandı!');
+            notify(ctx, '📋 Rota özeti panoya kopyalandı!');
           })
           .catch(() => {
             notify(ctx, '⚠️ Pano erişimi engellendi; metin kopyalanamadı.');
@@ -543,13 +733,23 @@
         const nextMode = btn.getAttribute('data-rt-mode');
         if (!TRANSPORT_MODES[nextMode]) return;
         activeMode = nextMode;
+        const spec = TRANSPORT_MODES[activeMode];
 
         modeButtons.forEach(b => {
           b.classList.toggle('active', b.getAttribute('data-rt-mode') === activeMode);
         });
 
+        if (spec.usesFuel) {
+          if (consumptionInput) {
+            consumptionInput.value = String(spec.defaultConsumption);
+          }
+          if (fuelPriceInput && !fuelPriceInput.value) {
+            fuelPriceInput.value = String(spec.defaultFuelPriceTl);
+          }
+        }
+
         if (carSettingsEl) {
-          carSettingsEl.style.display = activeMode === 'car' ? 'flex' : 'none';
+          carSettingsEl.style.display = spec.usesFuel ? 'flex' : 'none';
         }
 
         refreshBudget();
@@ -571,6 +771,8 @@
     buildGoogleMapsUrl,
     downloadGpx,
     buildRouteText,
+    buildMarkdownItinerary,
+    downloadMarkdown,
     calculateBudget
   };
 })();
