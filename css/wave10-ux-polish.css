@@ -391,3 +391,122 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Live Reading Progress Hairline & Quick-Float Scroll/Share Dock
+   ========================================================================== */
+.seyyah-reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  z-index: 10500;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #f59e0b);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: width 0.12s linear, opacity 0.25s ease;
+}
+
+.seyyah-reading-progress.visible {
+  opacity: 1;
+}
+
+.seyyah-quick-float-dock {
+  position: fixed;
+  right: 22px;
+  bottom: 92px;
+  z-index: 9400;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.seyyah-quick-float-dock.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.seyyah-float-pill {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.84);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.seyyah-float-pill:hover {
+  transform: translateY(-2px) scale(1.06);
+  background: rgba(56, 189, 248, 0.28);
+  border-color: rgba(56, 189, 248, 0.75);
+}
+
+/* ==========================================================================
+   Editorial Print / Save-as-PDF Stylesheet
+   ========================================================================== */
+@media print {
+  header,
+  aside,
+  nav,
+  .sidebar,
+  .module-nav-strip,
+  .sidebar-backdrop,
+  .toast-container,
+  .modal-overlay,
+  .monument-lb-overlay,
+  .vault-modal-overlay,
+  .seyyah-reading-progress,
+  .seyyah-quick-float-dock,
+  #floating-ai-copilot,
+  .floating-ai-orb,
+  .mobile-bottom-dock {
+    display: none !important;
+  }
+
+  html,
+  body,
+  .app-container,
+  .main-layout,
+  #viewport-content {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    height: auto !important;
+    overflow: visible !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .glass,
+  .glass-card,
+  .detail-card {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+}

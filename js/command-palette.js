@@ -655,6 +655,46 @@
         run: () => safeCall('openView', 'quoteVault')
       },
       {
+        id: 'action-data-vault',
+        type: 'action',
+        icon: '🗄️',
+        title: 'Seyyah Veri Kasası (JSON Yedekle / Geri Yükle / GeoJSON)',
+        subtitle: 'Kişisel verilerini yedekle veya 81 ili RFC 7946 GeoJSON indir (Alt+B)',
+        category: 'Araçlar',
+        keywords: 'veri kasasi yedek backup restore geojson indir disa aktar json vault',
+        run: () => {
+          if (window.SEYYAH_MODULES && window.SEYYAH_MODULES.dataVault) {
+            window.SEYYAH_MODULES.dataVault.open();
+          }
+        }
+      },
+      {
+        id: 'action-print-pdf',
+        type: 'action',
+        icon: '🖨️',
+        title: 'Mevcut Sayfayı Yazdır / PDF Olarak Kaydet',
+        subtitle: 'Şehir dosyasını veya aktif görünümü temiz editoryal PDF çıktısına dönüştür',
+        category: 'Araçlar',
+        keywords: 'yazdir print pdf cikti dosya kaydet',
+        run: () => setTimeout(() => window.print(), 120)
+      },
+      {
+        id: 'action-copy-link',
+        type: 'action',
+        icon: '🔗',
+        title: 'Aktif Sayfa Bağlantısını Kopyala',
+        subtitle: 'Şu an açık olan il veya stüdyonun doğrudan bağlantısını panoya al',
+        category: 'Araçlar',
+        keywords: 'baglanti link paylas share kopyala url',
+        run: () => {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+              safeCall('showToast', '🔗 Sayfa bağlantısı panoya kopyalandı!');
+            }).catch(() => {});
+          }
+        }
+      },
+      {
         id: 'action-pomodoro',
         type: 'action',
         icon: '🍅',
