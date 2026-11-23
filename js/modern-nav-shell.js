@@ -22,9 +22,11 @@
       accent: 'cyan',
       items: [
         { view: 'dashboard', icon: '🏠', title: 'Genel Bakış', subtitle: 'Anadolu seyahat özet paneli' },
+        { view: 'holoGlobe', icon: '🌐', title: '3D Hologram Küre', subtitle: '360° 3D küre, 81 il yörünge ağı ve 3D sefer yayları' },
+        { view: 'fogReplay', icon: '🌫️', title: 'Fog of War & Sefer Replay', subtitle: 'Keşif sisi, ısı haritası, Bezier yay & WebM video kayıt' },
         { view: 'atlas', icon: '🗺️', title: 'Vektör Atlas', subtitle: 'Etkileşimli 81 il haritası' },
         { view: 'regions', icon: '🌍', title: '7 Bölge', subtitle: 'Coğrafi bölge keşif dosyaları' },
-        { view: 'photoWall', icon: '🖼️', title: '162 Mozaik', subtitle: 'Tüm illerin fotoğraf duvarı' },
+        { view: 'photoWall', icon: '🖼️', title: '248 Mozaik (162 İl + 86 Anıt)', subtitle: '81 il ve 86 özgün anıtın fotoğraf duvarı' },
         { view: 'gallery', icon: '📸', title: 'Galeri', subtitle: 'Yüksek çözünürlüklü şehir kareleri' },
         { view: 'cinematicTour', icon: '🎬', title: 'Sinematik Tur', subtitle: 'Otomatik görsel Anadolu yolculuğu' },
         { view: 'skyMap', icon: '🌌', title: 'Anadolu Semâsı (81 Yıldız)', subtitle: '81 il takımyıldızı ve rasathane gök haritası' },
@@ -76,6 +78,7 @@
       label: 'Rota & Plan',
       accent: 'emerald',
       items: [
+        { view: 'missionControl', icon: '🎛️', title: 'Sefer Komuta Merkezi', subtitle: 'Kalan 42 il için akıllı hedef matrisi & 2-Opt GPX/GeoJSON' },
         { view: 'route', icon: '🧭', title: 'Rota & GPX', subtitle: 'Mesafe hesapla ve GPX indir' },
         { view: 'radar', icon: '📡', title: 'Menzil Radarı', subtitle: 'Konumuna yakın şehirleri keşfet' },
         { view: 'bucketList', icon: '🎯', title: 'Bucket List', subtitle: 'Gezilecek hayal hedeflerini yönet' },

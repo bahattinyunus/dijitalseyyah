@@ -393,9 +393,13 @@ def test_pwa_manifest_shortcuts_and_sw_sync(engine):
     assert "259+" in manifest["description"]
     assert len(manifest.get("shortcuts", [])) >= 4
     sw_text = (engine.repo_root / "sw.js").read_text(encoding="utf-8")
-    assert "dijital-seyyah-v41" in sw_text
+    assert "dijital-seyyah-v42" in sw_text
     assert "wave10-ux-polish.css" in sw_text
     assert "wave11-futuristic-hud.css" in sw_text
+    nav_text = (engine.repo_root / "js" / "modern-nav-shell.js").read_text(encoding="utf-8")
+    assert "holoGlobe" in nav_text
+    assert "fogReplay" in nav_text
+    assert "missionControl" in nav_text
     catalog_text = (engine.repo_root / "js" / "monuments-catalog.js").read_text(encoding="utf-8")
     assert catalog_text.count('"assets/monuments/') == 86
     cmd_text = (engine.repo_root / "js" / "command-palette.js").read_text(encoding="utf-8")

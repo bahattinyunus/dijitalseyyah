@@ -83,12 +83,17 @@
     el.innerHTML = `
       <div class="daily-featured-topbar">
         <div class="daily-featured-heading">
-          <span class="daily-featured-tag">✨ Günün Seçkisi</span>
+          <span class="daily-featured-tag">✨ Günün Seçkisi &amp; Fütüristik Stüdyolar</span>
           <span class="daily-featured-date">${escapeHtml(formatTodayTr())}</span>
         </div>
-        <button type="button" class="daily-featured-shuffle" id="daily-featured-shuffle-btn" title="Yeni İl ve Anıt Önerisi Getir">
-          🎲 Yeni Öneri
-        </button>
+        <div class="daily-featured-quickbar">
+          <a class="daily-featured-link" href="#holoGlobe">🌐 3D Hologram Küre</a>
+          <a class="daily-featured-link" href="#fogReplay">🌫️ Fog of War &amp; Replay</a>
+          <a class="daily-featured-link" href="#missionControl">🎛️ Sefer Komuta</a>
+          <button type="button" class="daily-featured-shuffle" id="daily-featured-shuffle-btn" title="Yeni İl ve Anıt Önerisi Getir">
+            🎲 Yeni Öneri
+          </button>
+        </div>
       </div>
       <div class="daily-featured-grid">
         <article class="daily-featured-card">
