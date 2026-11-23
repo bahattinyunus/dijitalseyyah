@@ -875,3 +875,321 @@
     padding: 0 14px 14px;
   }
 }
+
+/* ==========================================================================
+   Fog of War, Heatmap & Bezier Trip Replay Studio (Wave 15)
+   ========================================================================== */
+.fow-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px;
+  border-radius: 18px;
+  flex-wrap: wrap;
+}
+
+.fow-kicker {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #38bdf8;
+  margin-bottom: 6px;
+}
+
+.fow-header h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.45rem;
+  color: var(--text-primary, #f8fafc);
+}
+
+.fow-header p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-secondary, #94a3b8);
+  max-width: 640px;
+}
+
+.fow-kpi-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fow-kpi {
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  text-align: center;
+  min-width: 96px;
+}
+
+.fow-kpi strong {
+  display: block;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.15rem;
+  color: #f8fafc;
+}
+
+.fow-kpi span {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.fow-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  flex-wrap: wrap;
+}
+
+.fow-layer-group,
+.fow-vehicle-group,
+.fow-export-group,
+.fow-playback-btns,
+.fow-speed-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fow-chip,
+.fow-vbtn,
+.fow-speed-btn,
+.fow-action-btn,
+.fow-play-btn {
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.fow-chip.active,
+.fow-vbtn.active,
+.fow-speed-btn.active {
+  background: rgba(56, 189, 248, 0.24);
+  border-color: rgba(56, 189, 248, 0.65);
+  color: #ffffff;
+}
+
+.fow-action-btn {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #d1fae5;
+}
+
+.fow-action-btn.gold {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fef3c7;
+}
+
+.fow-play-btn {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-color: rgba(56, 189, 248, 0.6);
+  color: #ffffff;
+  min-width: 112px;
+}
+
+.fow-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 295px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.fow-canvas-card {
+  position: relative;
+  padding: 10px;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#fow-canvas {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+}
+
+.fow-canvas-tooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 7px 11px;
+  border-radius: 10px;
+  background: rgba(10, 15, 29, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #f8fafc;
+  font-size: 0.76rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+  z-index: 6;
+}
+
+.fow-canvas-tooltip[hidden] {
+  display: none;
+}
+
+.fow-canvas-tooltip span {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.fow-recording-pill {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.9);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  animation: pulse 1.2s infinite;
+}
+
+.fow-telemetry-card {
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.fow-tele-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #0f172a;
+}
+
+.fow-tele-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fow-tele-badge {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(10, 15, 29, 0.86);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #e0f2fe;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.fow-tele-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.fow-tele-step {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.05em;
+}
+
+.fow-tele-body h3 {
+  margin: 0;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.2rem;
+  color: #f8fafc;
+}
+
+.fow-tele-quote {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.fow-tele-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fow-tele-metrics small {
+  display: block;
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.fow-tele-metrics strong {
+  font-size: 0.92rem;
+  color: #38bdf8;
+}
+
+.fow-open-city-btn {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.16);
+  color: #e0f2fe;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fow-open-city-btn:hover {
+  background: rgba(56, 189, 248, 0.3);
+}
+
+.fow-timeline-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  flex-wrap: wrap;
+}
+
+.fow-scrubber {
+  flex: 1;
+  min-width: 180px;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
+
+@media (max-width: 980px) {
+  .fow-main-grid {
+    grid-template-columns: 1fr;
+  }
+}

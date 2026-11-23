@@ -393,12 +393,14 @@ def test_pwa_manifest_shortcuts_and_sw_sync(engine):
     assert "259+" in manifest["description"]
     assert len(manifest.get("shortcuts", [])) >= 4
     sw_text = (engine.repo_root / "sw.js").read_text(encoding="utf-8")
-    assert "dijital-seyyah-v38" in sw_text
+    assert "dijital-seyyah-v39" in sw_text
     assert "wave10-ux-polish.css" in sw_text
     catalog_text = (engine.repo_root / "js" / "monuments-catalog.js").read_text(encoding="utf-8")
     assert catalog_text.count('"assets/monuments/') == 86
     cmd_text = (engine.repo_root / "js" / "command-palette.js").read_text(encoding="utf-8")
     assert "SEYYAH_MONUMENTS_CATALOG" in cmd_text
+    assert "fogReplay" in cmd_text
+    assert (engine.repo_root / "js" / "fog-of-war-replay.js").exists()
 
 
 def test_cli_doctor_and_export_geojson(tmp_path):

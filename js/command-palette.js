@@ -656,6 +656,16 @@
         run: () => safeCall('openView', 'quoteVault')
       },
       {
+        id: 'action-fog-replay',
+        type: 'action',
+        icon: '🌫️',
+        title: 'Fog of War, Isı Haritası & Sinematik Sefer Replay',
+        subtitle: 'Dawarich keşif sisi, TripTrail Bezier yay animasyonu, HD PNG Poster & WebM Video kayıt',
+        category: 'Keşif',
+        keywords: 'fog of war sis isi haritasi heatmap replay video webm png bezier animasyon dawarich triptrail',
+        run: () => safeCall('openView', 'fogReplay')
+      },
+      {
         id: 'action-data-vault',
         type: 'action',
         icon: '🗄️',

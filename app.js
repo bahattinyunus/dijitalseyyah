@@ -245,6 +245,9 @@
     if (state.currentView === 'makamAtlas' && viewName !== 'makamAtlas' && mods.makamAtlas && typeof mods.makamAtlas.stop === 'function') {
       mods.makamAtlas.stop();
     }
+    if (state.currentView === 'fogReplay' && viewName !== 'fogReplay' && mods.fogReplay && typeof mods.fogReplay.stop === 'function') {
+      mods.fogReplay.stop();
+    }
 
     const normalized = viewName === 'library' ? 'libraries' : viewName;
     if (normalized === 'dashboard') {
@@ -314,6 +317,7 @@
       photoWall: mods.photoWall,
       bucketList: mods.bucketList,
       deepStats: mods.deepStats,
+      fogReplay: mods.fogReplay,
       admin: mods.admin
     };
 
@@ -434,7 +438,7 @@
       '#irfanAtlas', '#sevenValleys', '#halvet', '#hikmetMeclisi', '#ethos', '#civLayers',
       '#skyMap', '#caravanserai', '#divan', '#workLog', '#certificate', '#proverbs',
       '#natureWonders', '#bazaar', '#expeditionLog', '#mesopotamia', '#makamAtlas', '#architecture', '#quoteVault',
-      '#pomodoro', '#achievements', '#photoWall', '#bucketList', '#deepStats', '#admin'
+      '#pomodoro', '#achievements', '#photoWall', '#bucketList', '#deepStats', '#fogReplay', '#admin'
     ].includes(h)) {
       openView(h.slice(1), false);
       return true;
