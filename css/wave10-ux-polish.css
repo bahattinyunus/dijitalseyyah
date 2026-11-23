@@ -510,3 +510,164 @@
     page-break-inside: avoid;
   }
 }
+
+/* ==========================================================================
+   City Monuments Bridge & Neighbor Quick-Jump Strip
+   ========================================================================== */
+.city-bridge-section {
+  margin-top: 22px;
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.city-bridge-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.city-bridge-header h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.12rem;
+  color: var(--text-primary, #f8fafc);
+}
+
+.city-bridge-sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.city-bridge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent-cyan, #38bdf8);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.city-monuments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.city-monument-card {
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.city-monument-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(56, 189, 248, 0.48);
+}
+
+.city-monument-img-wrap {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.city-monument-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.city-monument-cat {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(10, 15, 29, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.city-monument-cat:hover {
+  background: rgba(56, 189, 248, 0.35);
+  border-color: rgba(56, 189, 248, 0.7);
+}
+
+.city-monument-body {
+  padding: 10px 12px;
+}
+
+.city-monument-body h4 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  line-height: 1.35;
+}
+
+.city-neighbors-wrap {
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.city-neighbors-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary, #94a3b8);
+  margin-bottom: 10px;
+}
+
+.city-neighbors-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.city-neighbor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.city-neighbor-chip.visited {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.city-neighbor-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.city-neighbor-chip small {
+  color: var(--accent-cyan, #38bdf8);
+  font-weight: 700;
+  font-size: 0.72rem;
+}

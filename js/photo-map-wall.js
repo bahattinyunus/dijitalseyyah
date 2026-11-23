@@ -186,6 +186,37 @@
       }
     }
 
+    // Include all 86 authentic monument & heritage photos from SEYYAH_MONUMENTS_CATALOG
+    const catalog = Array.isArray(window.SEYYAH_MONUMENTS_CATALOG) ? window.SEYYAH_MONUMENTS_CATALOG : [];
+    for (let i = 0; i < catalog.length; i++) {
+      const m = catalog[i];
+      const primaryKey = Array.isArray(m.provinces) && m.provinces.length ? m.provinces[0] : '';
+      const p = primaryKey && provinces[primaryKey] ? provinces[primaryKey] : null;
+      const plateNum = p ? Number(p.plate) || 0 : 0;
+      const plateStr = p ? formatPlate(plateNum) : '🏛️';
+      const regionCode = p ? p.region_code || '' : '';
+      const regionInfo = regionsMap[regionCode] || {};
+      const id = `monument::${m.id}`;
+
+      photos.push({
+        id,
+        key: primaryKey || '',
+        plate: plateNum,
+        plateStr,
+        city: m.title,
+        region: p ? `${p.name} • ${m.category}` : m.category,
+        regionCode,
+        regionIcon: regionInfo.icon || '🏛️',
+        regionColor: regionInfo.color || '#f59e0b',
+        visited: p ? Boolean(p.visited) : true,
+        photoType: 'monument',
+        typeLabel: m.category || 'Anıt',
+        src: m.src,
+        caption: `${m.title} (${p ? p.name : 'Anadolu'}) — ${m.category}`,
+        aspect: pickAspectRatio(id)
+      });
+    }
+
     return photos;
   }
 
@@ -1291,9 +1322,9 @@
         <section class="pmw-hero">
           <div class="pmw-hero-copy">
             <span class="pmw-kicker">Pinterest Mozaik Stüdyosu • 81 İl</span>
-            <h2 class="pmw-title">🖼️ 162 Kare Mozaik Duvarı</h2>
+            <h2 class="pmw-title">🖼️ 248 Kare Mozaik Duvarı</h2>
             <p class="pmw-subtitle">
-              Anadolu'nun 81 iline ait kapak ve şehir vitrini karelerini kesintisiz Pinterest duvarında keşfedin; görsele tıklayarak Lightbox'ı açın veya doğrudan ile gidin.
+              Anadolu'nun 81 iline ait 162 şehir karesi ve 86 özgün anıt/miras fotoğrafını kesintisiz Pinterest duvarında keşfedin; görsele tıklayarak Lightbox'ı açın veya doğrudan ile gidin.
             </p>
           </div>
           <div class="pmw-stats">
@@ -1331,6 +1362,7 @@
                 <button type="button" class="pmw-seg-btn ${uiState.photoType === 'all' ? 'active' : ''}" data-pmw-type="all">Hepsi</button>
                 <button type="button" class="pmw-seg-btn ${uiState.photoType === 'banner' ? 'active' : ''}" data-pmw-type="banner">Kapak</button>
                 <button type="button" class="pmw-seg-btn ${uiState.photoType === 'gallery' ? 'active' : ''}" data-pmw-type="gallery">Galeri</button>
+                <button type="button" class="pmw-seg-btn ${uiState.photoType === 'monument' ? 'active' : ''}" data-pmw-type="monument">🏛️ Anıtlar</button>
               </div>
 
               <div class="pmw-search-wrap">
@@ -1539,7 +1571,7 @@
         const shuffled = fisherYatesShuffle(allPhotos);
         uiState.shuffledIds = shuffled.map((p) => p.id);
         renderGrid();
-        notifyToast(ctx, '🔀 162 kare mozaik duvarı karıştırıldı!');
+        notifyToast(ctx, '🔀 248 kare mozaik duvarı karıştırıldı!');
       });
     }
 
