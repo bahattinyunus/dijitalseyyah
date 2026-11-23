@@ -1761,10 +1761,11 @@
       const regionName = prov && prov.region ? prov.region : regionCode;
       const plate = prov && prov.plate != null ? String(prov.plate).padStart(2, '0') : '--';
       const visited = Boolean(prov && prov.visited);
-      const bannerSrc =
-        prov && prov.has_banner && prov.banner_rel
-          ? prov.banner_rel
-          : w.provinceKey + '/banner.jpg';
+      const bannerSrc = w.id
+        ? 'assets/monuments/' + w.id + '.jpg'
+        : (prov && prov.has_banner && prov.banner_rel
+            ? prov.banner_rel
+            : w.provinceKey + '/banner.jpg');
       const library = prov && prov.library ? prov.library : '';
       const catMeta = CATEGORY_MAP[w.category] || CATEGORIES[0];
 

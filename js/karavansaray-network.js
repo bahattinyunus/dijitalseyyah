@@ -131,7 +131,8 @@
     return String(n).padStart(2, '0');
   }
 
-  function resolveBannerPath(p) {
+  function resolveBannerPath(p, itemId) {
+    if (itemId) return 'assets/monuments/' + itemId + '.jpg';
     if (p && p.has_banner && p.banner_rel) return p.banner_rel;
     if (p && p.banner_rel) return p.banner_rel;
     if (p && Array.isArray(p.images) && p.images[0]) return p.images[0];
@@ -1836,7 +1837,7 @@
       }
       return hans.map(function (han) {
         const p = provincesMap[han.provinceKey] || {};
-        const bannerSrc = resolveBannerPath(p);
+        const bannerSrc = resolveBannerPath(p, han.id);
         const isVisited = Boolean(p.visited);
         const plateText = p.plate ? formatPlate(p.plate) : '--';
         return `

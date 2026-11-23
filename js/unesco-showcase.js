@@ -1341,10 +1341,11 @@
       const prov = (provinces && provinces[site.provinceKey]) || null;
       const visited = Boolean(prov && prov.visited);
       const personalChecked = safeChecked.has(site.id);
-      const bannerSrc =
-        prov && prov.has_banner && prov.banner_rel
-          ? prov.banner_rel
-          : 'assets/banner.jpg';
+      const bannerSrc = site.id
+        ? `assets/monuments/${site.id}.jpg`
+        : (prov && prov.has_banner && prov.banner_rel
+            ? prov.banner_rel
+            : 'assets/banner.jpg');
       const provinceName = prov ? prov.name : site.provinceKey.split('/').pop();
       const plate = prov && prov.plate != null ? String(prov.plate).padStart(2, '0') : '--';
       const regionName = prov ? prov.region : '';

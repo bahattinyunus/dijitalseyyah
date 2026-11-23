@@ -146,7 +146,8 @@
     return {};
   }
 
-  function resolveBannerPath(prov) {
+  function resolveBannerPath(prov, itemId) {
+    if (itemId) return 'assets/monuments/' + itemId + '.jpg';
     if (prov && prov.has_banner && prov.banner_rel) return prov.banner_rel;
     if (prov && prov.banner_rel) return prov.banner_rel;
     if (prov && Array.isArray(prov.images) && prov.images[0]) return prov.images[0];
@@ -2452,7 +2453,7 @@
 
       return items.map(function (item) {
         const prov = provincesMap[item.provinceKey] || {};
-        const bannerSrc = resolveBannerPath(prov);
+        const bannerSrc = resolveBannerPath(prov, item.id);
         const isVisited = Boolean(prov.visited);
         const plate = prov.plate ? formatPlate(prov.plate) : '--';
         const cat = CATEGORY_MAP.get(item.category);

@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Yapay_Zekâ-Gemini_AI_Streaming-a855f7?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini AI">
   <img src="https://img.shields.io/badge/Keşif-48.1%25-brightgreen?style=for-the-badge&logo=target&logoColor=white" alt="Coverage">
   <img src="https://img.shields.io/badge/Bölgeler-6%2F7-blue?style=for-the-badge&logo=map&logoColor=white" alt="Regions">
-  <img src="https://img.shields.io/badge/Görsel_Arşivi-173+_Özgün_Görsel-f59e0b?style=for-the-badge&logo=unsplash&logoColor=04121d" alt="Photos">
+  <img src="https://img.shields.io/badge/Görsel_Arşivi-259+_Özgün_Görsel-f59e0b?style=for-the-badge&logo=unsplash&logoColor=04121d" alt="Photos">
   <img src="https://img.shields.io/badge/Stüdyolar-48+_İnteraktif_Modül-10b981?style=for-the-badge" alt="Modules">
   <img src="https://img.shields.io/badge/Testler-25%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
