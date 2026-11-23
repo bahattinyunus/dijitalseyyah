@@ -656,6 +656,16 @@
         run: () => safeCall('openView', 'quoteVault')
       },
       {
+        id: 'action-mission-control',
+        type: 'action',
+        icon: '🎛️',
+        title: 'Sefer Komuta Merkezi & 2-Opt Hedef Matrisi',
+        subtitle: 'Kalan 42 il için akıllı öncelik skoru, özel sefer kuyruğu & GPX / GeoJSON ihracı',
+        category: 'Keşif',
+        keywords: 'komuta merkezi mission control hedef matrisi ozel sefer 2-opt gpx geojson planlayici',
+        run: () => safeCall('openView', 'missionControl')
+      },
+      {
         id: 'action-holo-globe',
         type: 'action',
         icon: '🌐',

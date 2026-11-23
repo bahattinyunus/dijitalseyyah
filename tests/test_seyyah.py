@@ -393,7 +393,7 @@ def test_pwa_manifest_shortcuts_and_sw_sync(engine):
     assert "259+" in manifest["description"]
     assert len(manifest.get("shortcuts", [])) >= 4
     sw_text = (engine.repo_root / "sw.js").read_text(encoding="utf-8")
-    assert "dijital-seyyah-v40" in sw_text
+    assert "dijital-seyyah-v41" in sw_text
     assert "wave10-ux-polish.css" in sw_text
     assert "wave11-futuristic-hud.css" in sw_text
     catalog_text = (engine.repo_root / "js" / "monuments-catalog.js").read_text(encoding="utf-8")
@@ -402,9 +402,22 @@ def test_pwa_manifest_shortcuts_and_sw_sync(engine):
     assert "SEYYAH_MONUMENTS_CATALOG" in cmd_text
     assert "fogReplay" in cmd_text
     assert "holoGlobe" in cmd_text
+    assert "missionControl" in cmd_text
     assert (engine.repo_root / "js" / "fog-of-war-replay.js").exists()
     assert (engine.repo_root / "js" / "holo-globe-3d.js").exists()
     assert (engine.repo_root / "js" / "futuristic-fx-engine.js").exists()
+    assert (engine.repo_root / "js" / "mission-control-hud.js").exists()
+
+
+def test_index_html_jsonld_structured_data(engine):
+    """index.html içinde geçerli schema.org WebApplication JSON-LD bloğunun bulunduğunu doğrular."""
+    import re as _re
+    html = (engine.repo_root / "index.html").read_text(encoding="utf-8")
+    m = _re.search(r'<script type="application/ld\+json">([\s\S]*?)</script>', html)
+    assert m is not None, "JSON-LD bloğu bulunamadı"
+    payload = json.loads(m.group(1))
+    assert payload["@type"] == "WebApplication"
+    assert "bahattinyunus.github.io/dijitalseyyah" in payload["url"]
 
 
 def test_cli_doctor_and_export_geojson(tmp_path):

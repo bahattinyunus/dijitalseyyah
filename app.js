@@ -322,6 +322,7 @@
       deepStats: mods.deepStats,
       fogReplay: mods.fogReplay,
       holoGlobe: mods.holoGlobe,
+      missionControl: mods.missionControl,
       admin: mods.admin
     };
 
@@ -442,7 +443,7 @@
       '#irfanAtlas', '#sevenValleys', '#halvet', '#hikmetMeclisi', '#ethos', '#civLayers',
       '#skyMap', '#caravanserai', '#divan', '#workLog', '#certificate', '#proverbs',
       '#natureWonders', '#bazaar', '#expeditionLog', '#mesopotamia', '#makamAtlas', '#architecture', '#quoteVault',
-      '#pomodoro', '#achievements', '#photoWall', '#bucketList', '#deepStats', '#fogReplay', '#holoGlobe', '#admin'
+      '#pomodoro', '#achievements', '#photoWall', '#bucketList', '#deepStats', '#fogReplay', '#holoGlobe', '#missionControl', '#admin'
     ].includes(h)) {
       openView(h.slice(1), false);
       return true;
