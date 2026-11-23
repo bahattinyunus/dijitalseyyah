@@ -16,6 +16,7 @@
   const CATEGORY_CHIPS = [
     { id: 'all', label: 'Tümü' },
     { id: 'provinces', label: '🗺️ İller (81)' },
+    { id: 'monuments', label: '🏛️ Anıtlar (86)' },
     { id: 'ai', label: '✨ Yapay Zekâ' },
     { id: 'irfan', label: '🕌 İrfan' },
     { id: 'studio', label: '🛠️ Stüdyo & Araçlar' }
@@ -843,6 +844,31 @@
       }
     ];
 
+    // Append all 86 verified authentic monuments from SEYYAH_MONUMENTS_CATALOG
+    const monumentsCatalog = Array.isArray(window.SEYYAH_MONUMENTS_CATALOG) ? window.SEYYAH_MONUMENTS_CATALOG : [];
+    const provData = (_ctx && _ctx.data && _ctx.data.provinces) || (typeof TRAVEL_DATA !== 'undefined' && TRAVEL_DATA && TRAVEL_DATA.provinces) || {};
+    const catIcons = { UNESCO: '🏛️', Kervansaray: '🐪', Mimari: '🕌', 'Doğa & Termal': '🌿' };
+    monumentsCatalog.forEach((m) => {
+      const primaryKey = Array.isArray(m.provinces) && m.provinces.length ? m.provinces[0] : '';
+      const provNames = (m.provinces || []).map((k) => (provData[k] ? provData[k].name : k)).join(', ');
+      rawActions.push({
+        id: `monument-${m.id}`,
+        type: 'action',
+        icon: catIcons[m.category] || '🏛️',
+        title: m.title,
+        subtitle: `${m.category}${provNames ? ` • ${provNames}` : ''} — Özgün Anıt & Miras`,
+        category: 'Anıt & Miras',
+        keywords: `${m.id} ${m.title} ${m.category} ${provNames} anit miras`,
+        run: () => {
+          if (primaryKey) {
+            safeCall('selectCity', primaryKey);
+          } else if (m.view) {
+            safeCall('openView', m.view);
+          }
+        }
+      });
+    });
+
     _actionsIndex = rawActions.map((a) => ({
       ...a,
       _normTitle: norm(a.title),
@@ -916,6 +942,12 @@
     if (!chipId || chipId === 'all') return true;
     if (chipId === 'provinces') return false;
     const cat = action.category || '';
+    if (chipId === 'monuments') {
+      return cat === 'Anıt & Miras';
+    }
+    if (cat === 'Anıt & Miras') {
+      return false;
+    }
     if (chipId === 'ai') {
       return cat === 'Yapay Zekâ' || cat === 'Asistan' || action.id.indexOf('action-ai-') === 0 || action.id === 'action-advisor';
     }
@@ -1133,10 +1165,13 @@
       }
 
       const filteredActions = _actionsIndex
-        .filter((a) => matchActionToChip(a, chipId))
+        .filter((a) => {
+          if (chipId === 'all' && a.category === 'Anıt & Miras') return false;
+          return matchActionToChip(a, chipId);
+        })
         .map((a) => ({
           kind: 'action',
-          group: 'Hızlı Eylemler',
+          group: chipId === 'monuments' ? '🏛️ 86 Özgün Anıt & Miras' : 'Hızlı Eylemler',
           item: a,
           score: 100
         }));

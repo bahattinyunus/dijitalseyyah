@@ -671,3 +671,207 @@
   font-weight: 700;
   font-size: 0.72rem;
 }
+
+/* ==========================================================================
+   Daily Featured Province & Monument Showcase (Dashboard)
+   ========================================================================== */
+.daily-featured-wrap {
+  margin: 18px 0 22px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.72), rgba(10, 15, 29, 0.84));
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.24);
+}
+
+.daily-featured-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.daily-featured-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.daily-featured-tag {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.daily-featured-date {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.daily-featured-shuffle {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.14);
+  color: #fef3c7;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.daily-featured-shuffle:hover {
+  background: rgba(245, 158, 11, 0.28);
+  transform: translateY(-1px);
+}
+
+.daily-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.daily-featured-card {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.22s ease, transform 0.22s ease;
+}
+
+.daily-featured-card:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  transform: translateY(-2px);
+}
+
+.daily-featured-card.monument-accent:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.daily-featured-media {
+  position: relative;
+  min-height: 146px;
+  background: #0f172a;
+}
+
+.daily-featured-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.daily-featured-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(10, 15, 29, 0.84);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #e0f2fe;
+  font-size: 0.68rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
+.daily-featured-badge.gold {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fef3c7;
+}
+
+.daily-featured-info {
+  padding: 12px 14px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.daily-featured-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.daily-featured-card.monument-accent .daily-featured-kicker {
+  color: #fbbf24;
+}
+
+.daily-featured-info h3 {
+  margin: 0;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.05rem;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily-featured-info p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.daily-featured-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.daily-featured-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 9px;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #e0f2fe;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.daily-featured-link:hover {
+  background: rgba(56, 189, 248, 0.3);
+}
+
+.daily-featured-link.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+}
+
+@media (max-width: 960px) {
+  .daily-featured-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .daily-featured-card {
+    grid-template-columns: 1fr;
+  }
+  .daily-featured-media {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
+  .daily-featured-info {
+    padding: 0 14px 14px;
+  }
+}
