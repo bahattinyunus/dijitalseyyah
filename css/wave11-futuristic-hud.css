@@ -1,0 +1,386 @@
+/* ==========================================================================
+   Wave 11 — CYBER-ANATOLIA 2099 FUTURISTIC HUD & HOLOGRAPHIC DESIGN SYSTEM
+   Activates when body.cyber-mode is enabled (default on dark theme; toggle Alt+F)
+   ========================================================================== */
+
+/* Ambient Deep-Space Neural Constellation Canvas */
+#cyber-bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+body.cyber-mode:not([data-theme="light"]) #cyber-bg-canvas {
+  opacity: 0.55;
+}
+
+/* Pointer Holographic Spotlight Aura (Desktop Only) */
+#cyber-cursor-aura {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 420px;
+  height: 420px;
+  margin-left: -210px;
+  margin-top: -210px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(circle, rgba(0, 242, 254, 0.10) 0%, rgba(129, 140, 248, 0.04) 42%, transparent 72%);
+  opacity: 0;
+  will-change: transform;
+  transition: opacity 0.35s ease;
+}
+
+body.cyber-mode:not([data-theme="light"]) #cyber-cursor-aura.active {
+  opacity: 1;
+}
+
+/* Futuristic Header & Glassmorphic Neon Borders */
+body.cyber-mode:not([data-theme="light"]) header.glass {
+  background: linear-gradient(90deg, rgba(6, 12, 26, 0.88), rgba(10, 20, 42, 0.84), rgba(6, 12, 26, 0.88));
+  border-bottom: 1px solid rgba(0, 242, 254, 0.28);
+  box-shadow: 0 6px 28px rgba(0, 242, 254, 0.08), inset 0 -1px 0 rgba(0, 242, 254, 0.16);
+}
+
+body.cyber-mode:not([data-theme="light"]) .logo-text h1 {
+  background: linear-gradient(90deg, #00f2fe 0%, #a5f3fc 45%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.09em;
+  text-shadow: 0 0 24px rgba(0, 242, 254, 0.22);
+}
+
+body.cyber-mode:not([data-theme="light"]) .glass-card {
+  position: relative;
+  border: 1px solid rgba(0, 242, 254, 0.18);
+  box-shadow: 0 12px 34px rgba(2, 6, 23, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+body.cyber-mode:not([data-theme="light"]) .glass-card:hover {
+  border-color: rgba(0, 242, 254, 0.38);
+  box-shadow: 0 16px 42px rgba(0, 242, 254, 0.10), inset 0 1px 0 rgba(0, 242, 254, 0.18);
+}
+
+/* Futuristic Glowing Scrollbars */
+body.cyber-mode:not([data-theme="light"]) ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+body.cyber-mode:not([data-theme="light"]) ::-webkit-scrollbar-track {
+  background: rgba(6, 11, 24, 0.7);
+}
+
+body.cyber-mode:not([data-theme="light"]) ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 242, 254, 0.55), rgba(129, 140, 248, 0.55));
+  border-radius: 999px;
+}
+
+/* Futuristic Active Nav Pill Glow */
+body.cyber-mode:not([data-theme="light"]) .module-nav-btn.active {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.22), rgba(129, 140, 248, 0.22));
+  border-color: rgba(0, 242, 254, 0.62);
+  box-shadow: 0 0 18px rgba(0, 242, 254, 0.22);
+}
+
+/* Live Cyber Telemetry Status Pill (Bottom-Left) */
+.cyber-hud-pill {
+  position: fixed;
+  left: 16px;
+  bottom: 14px;
+  z-index: 9300;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(5, 11, 24, 0.86);
+  border: 1px solid rgba(0, 242, 254, 0.34);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.cyber-hud-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00f2fe;
+  box-shadow: 0 0 10px #00f2fe;
+  animation: cyberPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes cyberPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.82); }
+}
+
+.cyber-mode-toggle {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 242, 254, 0.45);
+  background: rgba(0, 242, 254, 0.14);
+  color: #7dd3fc;
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cyber-mode-toggle:hover {
+  background: rgba(0, 242, 254, 0.3);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   3D Holographic Globe Studio (#holoGlobe)
+   ========================================================================== */
+.holo-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.holo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-radius: 18px;
+  flex-wrap: wrap;
+}
+
+.holo-kicker {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #00f2fe;
+  margin-bottom: 6px;
+}
+
+.holo-header h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.48rem;
+  color: var(--text-primary, #f8fafc);
+}
+
+.holo-header p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-secondary, #94a3b8);
+  max-width: 620px;
+}
+
+.holo-controls-top {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.holo-btn,
+.holo-toggle {
+  padding: 8px 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 242, 254, 0.28);
+  background: rgba(0, 242, 254, 0.08);
+  color: #e0f2fe;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.holo-btn.active,
+.holo-toggle.active {
+  background: rgba(0, 242, 254, 0.24);
+  border-color: rgba(0, 242, 254, 0.72);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(0, 242, 254, 0.22);
+}
+
+.holo-btn.gold {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.14);
+  color: #fef3c7;
+}
+
+.holo-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.holo-viewport-card {
+  position: relative;
+  padding: 10px;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 242, 254, 0.34);
+}
+
+#holo-globe-canvas {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+}
+
+.holo-hud-corner {
+  position: absolute;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  color: rgba(0, 242, 254, 0.82);
+  background: rgba(3, 8, 20, 0.72);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 242, 254, 0.26);
+  pointer-events: none;
+}
+
+.holo-hud-corner.tl { top: 18px; left: 18px; }
+.holo-hud-corner.tr { top: 18px; right: 18px; }
+.holo-hud-corner.bl { bottom: 18px; left: 18px; }
+.holo-hud-corner.br { bottom: 18px; right: 18px; }
+
+.holo-tooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 7px 11px;
+  border-radius: 10px;
+  background: rgba(4, 10, 24, 0.94);
+  border: 1px solid rgba(0, 242, 254, 0.55);
+  color: #f8fafc;
+  font-size: 0.76rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+  z-index: 8;
+}
+
+.holo-tooltip[hidden] { display: none; }
+.holo-tooltip span { font-size: 0.69rem; color: #7dd3fc; }
+
+.holo-side-panel {
+  padding: 18px;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.holo-side-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 800;
+  font-size: 1rem;
+  color: #00f2fe;
+}
+
+.holo-toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.holo-zoom-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+}
+
+.holo-zoom-control input {
+  width: 100%;
+  accent-color: #00f2fe;
+}
+
+.holo-selected-box {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(0, 242, 254, 0.06);
+  border: 1px solid rgba(0, 242, 254, 0.24);
+  flex: 1;
+}
+
+.holo-sel-kicker {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  color: #fbbf24;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.holo-selected-box h3 {
+  margin: 0 0 6px;
+  font-size: 1.02rem;
+  color: #f8fafc;
+}
+
+.holo-selected-box p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.holo-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: #cbd5e1;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.holo-legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.holo-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+@media (max-width: 960px) {
+  .holo-main-grid {
+    grid-template-columns: 1fr;
+  }
+  .cyber-hud-pill {
+    display: none;
+  }
+}
+
+@media print {
+  #cyber-bg-canvas,
+  #cyber-cursor-aura,
+  .cyber-hud-pill {
+    display: none !important;
+  }
+}

@@ -656,6 +656,30 @@
         run: () => safeCall('openView', 'quoteVault')
       },
       {
+        id: 'action-holo-globe',
+        type: 'action',
+        icon: '🌐',
+        title: '3D Hologram Küre & Anadolu Yörünge Ağı',
+        subtitle: '360° döndürülebilir 3D küre, 81 il yörünge düğümü, 3D sefer yayları & uydular',
+        category: 'Keşif',
+        keywords: '3d kure globe hologram yorunge uydu uzay futuristik cyber anadolu',
+        run: () => safeCall('openView', 'holoGlobe')
+      },
+      {
+        id: 'action-cyber-mode',
+        type: 'action',
+        icon: '⚡',
+        title: 'Cyber-Anatolia Fütüristik Modu Aç / Kapat',
+        subtitle: 'Nöral takımyıldızı arka planı, holografik aura ve neon HUD görünümü (Alt+F)',
+        category: 'Araçlar',
+        keywords: 'cyber futuristik mod neon hologram tema aura alt f',
+        run: () => {
+          if (window.SEYYAH_MODULES && window.SEYYAH_MODULES.futuristicFx) {
+            window.SEYYAH_MODULES.futuristicFx.toggle();
+          }
+        }
+      },
+      {
         id: 'action-fog-replay',
         type: 'action',
         icon: '🌫️',
