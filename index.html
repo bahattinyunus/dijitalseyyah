@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anadolu Seyahatnamesi - Dijital Seyyah Seyir Defteri</title>
-  <meta name="description" content="81 il, 7 bölge, 162 yüksek çözünürlüklü görsel, kütüphane ofisleri, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.">
+  <meta name="description" content="81 il, 7 bölge, 259+ özgün görsel (162 il + 86 anıt ve miras fotoğrafı), kütüphane ofisleri, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.">
   <meta name="theme-color" content="#0a0f1d">
   <meta property="og:title" content="Dijital Seyyah — Anadolu Seyahatnamesi">
-  <meta property="og:description" content="81 il, 7 bölge, 162 fotoğraf, 2-Opt TSP rota planlayıcı, başarım rozetleri ve interaktif keşif haritası.">
+  <meta property="og:description" content="81 il, 7 bölge, 259+ özgün fotoğraf, 2-Opt TSP rota planlayıcı, başarım rozetleri ve interaktif keşif haritası.">
   <meta property="og:image" content="assets/og-cover.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="css/wave7-irfan-aesthetic.css?v=32">
   <link rel="stylesheet" href="css/wave8-magnum-opus.css?v=32">
   <link rel="stylesheet" href="css/wave9-encyclopedia.css?v=32">
+  <link rel="stylesheet" href="css/wave10-ux-polish.css?v=35">
   <link rel="stylesheet" href="css/mobile-responsive-fix.css?v=32">
 </head>
 <body>
@@ -131,6 +132,10 @@
 
         <button class="btn btn-outline" id="btn-export" title="Seyahatnameyi Markdown E-Kitap Olarak İndir">
           📥
+        </button>
+
+        <button class="btn btn-outline" id="btn-data-vault" title="Veri Kasası: Yedekle / Geri Yükle / GeoJSON (Alt+B)" aria-label="Veri Kasası" onclick="window.SEYYAH_MODULES && window.SEYYAH_MODULES.dataVault && window.SEYYAH_MODULES.dataVault.open()">
+          🗄️
         </button>
       </div>
     </header>
@@ -355,6 +360,8 @@
   <script src="js/architectural-wonders.js?v=34"></script>
   <script src="js/city-quick-preview-modal.js?v=32"></script>
   <script src="js/reading-highlights-notes.js?v=32"></script>
+  <script src="js/monument-lightbox-ux.js?v=35"></script>
+  <script src="js/data-vault-sync.js?v=35"></script>
   <script src="app.js?v=33"></script>
 </body>
 </html>

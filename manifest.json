@@ -1,7 +1,7 @@
 {
   "name": "Dijital Seyyah — Anadolu Seyahatnamesi",
   "short_name": "Dijital Seyyah",
-  "description": "81 il, 7 bölge, 162 yüksek çözünürlüklü görsel, kütüphane ofisleri, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.",
+  "description": "81 il, 7 bölge, 259+ özgün görsel (162 il + 86 anıt & miras fotoğrafı), kütüphane ofisleri, 2-opt rota optimizasyonu ve modern seyyahın interaktif seyahat günlüğü.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -50,6 +50,36 @@
       "type": "image/jpeg",
       "form_factor": "wide",
       "label": "Anadolu İrfan Atlası ve Tefekkür Stüdyoları"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "UNESCO Miras Alanları",
+      "short_name": "UNESCO",
+      "description": "Türkiye'nin 21 UNESCO Dünya Mirası alanını keşfet",
+      "url": "./index.html#unesco",
+      "icons": [{ "src": "assets/logo-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Selçuklu Kervansaray Ağı",
+      "short_name": "Kervansaray",
+      "description": "İpek Yolu üzerindeki tarihi Selçuklu hanları ve menzilleri",
+      "url": "./index.html#caravanserai",
+      "icons": [{ "src": "assets/logo-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Mimari Şaheserler",
+      "short_name": "Mimari",
+      "description": "Anadolu'nun 24 eşsiz mimari eseri ve hendese sanatı",
+      "url": "./index.html#architecture",
+      "icons": [{ "src": "assets/logo-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Mezopotamya Seferi",
+      "short_name": "Mezopotamya",
+      "description": "Güneydoğu Anadolu 9 il sefer komuta merkezi",
+      "url": "./index.html#mesopotamia",
+      "icons": [{ "src": "assets/logo-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

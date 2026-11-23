@@ -353,3 +353,67 @@ def test_cli_compare_and_region_commands(tmp_path):
         assert res.returncode == 0, f"CLI hatası ({cmd}): {res.stderr}"
     assert gpx_out.exists()
     assert '<gpx version="1.1"' in gpx_out.read_text(encoding="utf-8")
+
+
+def test_full_repository_integrity_audit(engine):
+    """81 il görseli (162), 86 anıt/miras fotoğrafı, index.html varlıkları ve PWA bütünlüğünü doğrular."""
+    report = engine.audit_integrity()
+    assert report["missing_province_banners"] == [], f"Eksik banner: {report['missing_province_banners']}"
+    assert report["missing_province_galleries"] == [], f"Eksik gallery: {report['missing_province_galleries']}"
+    assert report["missing_monuments"] == [], f"Eksik anıt görseli: {report['missing_monuments']}"
+    assert report["missing_html_assets"] == [], f"index.html kırık bağlantı: {report['missing_html_assets']}"
+    assert report["monument_photos_expected"] >= 86
+    assert report["monument_photos_found"] == report["monument_photos_expected"]
+    assert report["manifest_ok"] is True
+    assert report["sw_ok"] is True
+    assert report["healthy"] is True
+
+
+def test_export_geojson_all_and_visited(engine):
+    """RFC 7946 uyumlu GeoJSON dışa aktarımının 81 il ve ziyaret edilen iller için doğruluğunu test eder."""
+    all_fc = engine.export_geojson(visited_only=False)
+    visited_fc = engine.export_geojson(visited_only=True)
+
+    assert all_fc["type"] == "FeatureCollection"
+    assert len(all_fc["features"]) == 81
+    assert len(visited_fc["features"]) == engine.stats["visited_cities"]
+    assert all(f["properties"]["visited"] is True for f in visited_fc["features"])
+
+    sample = all_fc["features"][0]
+    assert sample["type"] == "Feature"
+    assert sample["geometry"]["type"] == "Point"
+    lng, lat = sample["geometry"]["coordinates"]
+    assert 25.5 <= lng <= 45.0
+    assert 35.5 <= lat <= 42.5
+
+
+def test_pwa_manifest_shortcuts_and_sw_sync(engine):
+    """manifest.json kısayollarını ve sw.js önbellek sürümünü doğrular."""
+    manifest = json.loads((engine.repo_root / "manifest.json").read_text(encoding="utf-8"))
+    assert "259+" in manifest["description"]
+    assert len(manifest.get("shortcuts", [])) >= 4
+    sw_text = (engine.repo_root / "sw.js").read_text(encoding="utf-8")
+    assert "dijital-seyyah-v35" in sw_text
+    assert "wave10-ux-polish.css" in sw_text
+
+
+def test_cli_doctor_and_export_geojson(tmp_path):
+    """CLI doctor ve export-geojson alt komutlarının hatasız çalıştığını doğrular."""
+    geo_out = tmp_path / "anadolu.geojson"
+    res_doc = subprocess.run(
+        [sys.executable, "dijital_seyyah.py", "doctor"],
+        capture_output=True, text=True, encoding="utf-8"
+    )
+    assert res_doc.returncode == 0, f"doctor hatası: {res_doc.stderr}\n{res_doc.stdout}"
+    assert "%100 sağlıklı" in res_doc.stdout
+
+    res_geo = subprocess.run(
+        [sys.executable, "dijital_seyyah.py", "export-geojson", "--visited", "--output", str(geo_out)],
+        capture_output=True, text=True, encoding="utf-8"
+    )
+    assert res_geo.returncode == 0, f"export-geojson hatası: {res_geo.stderr}"
+    assert geo_out.exists()
+    parsed = json.loads(geo_out.read_text(encoding="utf-8"))
+    assert parsed["type"] == "FeatureCollection"
+    assert len(parsed["features"]) >= 30
+

@@ -4,6 +4,7 @@ Terminal Üzerinden Seyahat Yönetimi, 2-Opt Rota Optimizasyonu, Arama, Başarı
 """
 
 import sys
+import json
 import argparse
 import random
 from pathlib import Path
@@ -349,6 +350,47 @@ def cmd_region(args):
     print("=" * 82 + "\n")
 
 
+def cmd_doctor(args):
+    print_banner()
+    engine = SeyyahEngine()
+    report = engine.audit_integrity()
+
+    print("=" * 78)
+    print("               DİJİTAL SEYYAH SAĞLIK & BÜTÜNLÜK DENETİMİ (DOCTOR)")
+    print("=" * 78)
+    print(f" 📸 İl Görselleri (81x2)    : {report['province_photos']} / 162")
+    print(f" 🏛️  Anıt & Miras Görselleri : {report['monument_photos_found']} / {report['monument_photos_expected']}")
+    print(f" 🧩 index.html Kırık Bağlantı: {len(report['missing_html_assets'])}")
+    print(f" 📱 PWA Manifest / SW       : {'✅ OK' if report['manifest_ok'] else '❌ HATA'} / {'✅ OK' if report['sw_ok'] else '❌ HATA'}")
+    print("-" * 78)
+
+    if report["missing_province_banners"]:
+        print(f" ✗ Eksik banner.jpg  : {', '.join(report['missing_province_banners'])}")
+    if report["missing_province_galleries"]:
+        print(f" ✗ Eksik gallery.jpg : {', '.join(report['missing_province_galleries'])}")
+    if report["missing_monuments"]:
+        print(f" ✗ Eksik anıt görseli: {', '.join(report['missing_monuments'])}")
+    if report["missing_html_assets"]:
+        print(f" ✗ Eksik HTML dosyası: {', '.join(report['missing_html_assets'])}")
+
+    if report["healthy"]:
+        print(" ✅ SONUÇ: Tüm 81 il, anıt arşivleri, SPA varlıkları ve PWA katmanı %100 sağlıklı!\n")
+    else:
+        print(" ⚠️  SONUÇ: Yukarıdaki eksik varlıklar tespit edildi.\n")
+        sys.exit(1)
+
+
+def cmd_export_geojson(args):
+    print_banner()
+    engine = SeyyahEngine()
+    visited_only = getattr(args, "visited", False)
+    fc = engine.export_geojson(visited_only=visited_only)
+    out_path = Path(args.output)
+    out_path.write_text(json.dumps(fc, ensure_ascii=False, indent=2), encoding="utf-8")
+    scope = "ziyaret edilen" if visited_only else "tüm 81"
+    print(f"🗺️  GeoJSON (RFC 7946) dışa aktarıldı: {out_path} ({len(fc['features'])} {scope} il)\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Dijital Seyyah - Anadolu Seyahatnamesi CLI")
     subparsers = parser.add_subparsers(dest="command", help="Komutlar")
@@ -399,6 +441,16 @@ def main():
     p_region = subparsers.add_parser("region", help="Belirli bir coğrafi bölgenin detaylı keşif dosyasını göster")
     p_region.add_argument("region", help="Bölge kodu veya adı (örn: 01_Marmara, Marmara, Karadeniz)")
     p_region.set_defaults(func=cmd_region)
+
+    # doctor
+    p_doctor = subparsers.add_parser("doctor", help="81 il, 86 anıt görseli, HTML varlıkları ve PWA bütünlüğünü denetle")
+    p_doctor.set_defaults(func=cmd_doctor)
+
+    # export-geojson
+    p_geojson = subparsers.add_parser("export-geojson", help="İlleri RFC 7946 uyumlu GeoJSON olarak dışa aktar")
+    p_geojson.add_argument("--visited", action="store_true", help="Yalnızca ziyaret edilen illeri dışa aktar")
+    p_geojson.add_argument("--output", default="anadolu_seyahatnamesi.geojson", help="Çıktı GeoJSON dosya yolu")
+    p_geojson.set_defaults(func=cmd_export_geojson)
 
     args = parser.parse_args()
     if args.command and hasattr(args, "func"):

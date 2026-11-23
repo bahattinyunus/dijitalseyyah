@@ -1564,6 +1564,128 @@ class SeyyahEngine:
         readme_path.write_text(content, encoding="utf-8")
         return True
 
+    def export_geojson(self, visited_only=False):
+        """Anadolu Seyahatnamesi illerini RFC 7946 uyumlu GeoJSON FeatureCollection sözlüğü olarak döndürür."""
+        features = []
+        provinces_sorted = sorted(
+            self.provinces.items(),
+            key=lambda item: item[1]["plate"]
+        )
+        for key, prov in provinces_sorted:
+            if visited_only and not prov["visited"]:
+                continue
+            features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [prov["lng"], prov["lat"]]
+                },
+                "properties": {
+                    "id": key,
+                    "plate": prov["plate"],
+                    "name": prov["name"],
+                    "slug": prov["slug"],
+                    "region": prov["region"],
+                    "region_code": prov["region_code"],
+                    "visited": bool(prov["visited"]),
+                    "library": prov.get("custom_library") or prov.get("library", ""),
+                    "landmarks": prov.get("landmarks", []),
+                    "specialties": prov.get("specialties", []),
+                    "quote": prov.get("custom_quote") or prov.get("quote", ""),
+                    "banner": prov.get("banner_rel"),
+                    "gallery": prov.get("gallery_rel"),
+                }
+            })
+
+        return {
+            "type": "FeatureCollection",
+            "name": "Dijital_Seyyah_Ziyaret_Edilen_Iller" if visited_only else "Dijital_Seyyah_81_Il_Anadolu",
+            "metadata": {
+                "visited_cities": self.stats["visited_cities"],
+                "total_cities": self.stats["total_cities"],
+                "progress_pct": self.stats["progress_pct"],
+            },
+            "features": features,
+        }
+
+    def audit_integrity(self):
+        """Repo genelinde 81 il görselleri, 86 anıt fotoğrafı, index.html bağlantıları ve PWA bütünlüğünü denetler."""
+        root = self.repo_root
+        missing_province_banners = [k for k, p in self.provinces.items() if not p["has_banner"]]
+        missing_province_galleries = [k for k, p in self.provinces.items() if not p["has_gallery"]]
+
+        # Monument JS modules audit
+        monument_dir = root / "assets" / "monuments"
+        monument_modules = [
+            "js/karavansaray-network.js",
+            "js/architectural-wonders.js",
+            "js/unesco-showcase.js",
+            "js/thermal-nature-wonders.js",
+        ]
+        referenced_monument_ids = []
+        monument_id_pattern = re.compile(
+            r"\{\s*id:\s*['\"]([a-z0-9-]+)['\"][\s\S]{0,350}?(?:provinceKey|province|provinces|city)\s*:"
+        )
+        for rel_mod in monument_modules:
+            mod_path = root / rel_mod
+            if mod_path.exists():
+                txt = mod_path.read_text(encoding="utf-8")
+                referenced_monument_ids.extend(monument_id_pattern.findall(txt))
+
+        unique_monument_ids = sorted(set(referenced_monument_ids))
+        missing_monuments = [
+            mid for mid in unique_monument_ids
+            if not (monument_dir / f"{mid}.jpg").exists() or (monument_dir / f"{mid}.jpg").stat().st_size < 1000
+        ]
+
+        # index.html local asset references audit
+        missing_html_assets = []
+        index_path = root / "index.html"
+        if index_path.exists():
+            html_txt = index_path.read_text(encoding="utf-8")
+            refs = re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html_txt)
+            for ref in refs:
+                if ref.startswith(("http://", "https://", "data:", "#", "mailto:", "javascript:")):
+                    continue
+                clean_ref = ref.split("?")[0].split("#")[0].lstrip("./")
+                if not clean_ref:
+                    continue
+                if not (root / clean_ref).exists():
+                    missing_html_assets.append(clean_ref)
+
+        # PWA manifest & SW check
+        manifest_ok = False
+        manifest_path = root / "manifest.json"
+        if manifest_path.exists():
+            try:
+                mdata = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest_ok = bool(mdata.get("name") and mdata.get("icons"))
+            except Exception:
+                manifest_ok = False
+
+        sw_ok = (root / "sw.js").exists()
+        healthy = (
+            not missing_province_banners
+            and not missing_province_galleries
+            and not missing_monuments
+            and not missing_html_assets
+            and manifest_ok
+            and sw_ok
+        )
+
+        return {
+            "healthy": healthy,
+            "province_photos": self.stats["total_photos"],
+            "monument_photos_expected": len(unique_monument_ids),
+            "monument_photos_found": len(unique_monument_ids) - len(missing_monuments),
+            "missing_province_banners": missing_province_banners,
+            "missing_province_galleries": missing_province_galleries,
+            "missing_monuments": missing_monuments,
+            "missing_html_assets": sorted(set(missing_html_assets)),
+            "manifest_ok": manifest_ok,
+            "sw_ok": sw_ok,
+        }
+
 
 if __name__ == "__main__":
     engine = SeyyahEngine()

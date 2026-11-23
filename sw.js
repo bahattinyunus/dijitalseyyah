@@ -6,28 +6,30 @@
      - Cache-first for static assets (CSS, SVG, images, fonts, manifest)
    ========================================================================== */
 
-const CACHE_VERSION = 'dijital-seyyah-v31';
+const CACHE_VERSION = 'dijital-seyyah-v35';
 
 const PRECACHE_ASSETS = [
   './',
   './index.html',
-  './style.css?v=28',
-  './css/modules.css?v=9',
-  './css/modules-v2.css?v=9',
-  './css/awwwards-polish.css?v=9',
-  './css/nextgen-v4.css?v=21',
-  './css/wave5-masterpiece.css?v=23',
-  './css/wave6-architecture.css?v=24',
-  './css/wave7-irfan-aesthetic.css?v=25',
-  './css/wave8-magnum-opus.css?v=27',
-  './css/wave9-encyclopedia.css?v=31',
-  './css/mobile-responsive-fix.css?v=29',
+  './style.css?v=33',
+  './css/modules.css?v=32',
+  './css/modules-v2.css?v=32',
+  './css/awwwards-polish.css?v=32',
+  './css/nextgen-v4.css?v=32',
+  './css/wave5-masterpiece.css?v=32',
+  './css/wave6-architecture.css?v=32',
+  './css/wave7-irfan-aesthetic.css?v=32',
+  './css/wave8-magnum-opus.css?v=32',
+  './css/wave9-encyclopedia.css?v=32',
+  './css/wave10-ux-polish.css?v=35',
+  './css/mobile-responsive-fix.css?v=32',
   './manifest.json',
   './assets/logo.svg',
   './assets/logo.png',
   './assets/favicon.png',
   './assets/banner.svg',
-  './assets/banner.jpg'
+  './assets/banner.jpg',
+  './assets/og-cover.jpg'
 ];
 
 /**
